@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 커밋 메시지: `feat|fix|refactor|...: 요약` + 빈 줄 + 세부. (대괄호 없이)
 - 현재는 CLAUDE.md가 미니멀하게 되어 있으며, 작업을 하면서 구현된 내용 중 필요한 내용을 추가한다.
 - 한 단위의 작업을 끝내고 ai-usage-log.md에 기록. 디자인이 수정된 경우 impeccable skill 사용해서 디자인도 점검 및 수정 추천
+- **프런트 개발은 mock으로 한다** (`useAgentRun` 기본값 = `createMockClient`). 실제 API(Pi·OpenRouter)는 **검증(V0·백엔드 테스트) 때만** 쓰고, 확인이 끝나면 **다시 mock으로 되돌린다** — 크레딧 절약. (실제↔mock 전환 지점은 `useAgentRun(makeClient)` 한 곳.)
 
 ## ⚠️ Pi SDK 규칙 (가장 중요)
 

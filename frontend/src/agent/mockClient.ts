@@ -79,7 +79,7 @@ export function createMockClient(): AgentClient {
     if (aborted) return;
     emit({ type: "tool_end", result: "총 500만원 항목별 배분", citation: 2 });
 
-    // 중간 모델 전환 토스트 1회 (잠정, V0 확인 대상)
+    // 중간 모델 전환 토스트 1회 (Pi: session.setModel / modelFallbackMessage)
     emit({
       type: "model_switch",
       from: "claude-3.5-haiku",

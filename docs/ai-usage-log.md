@@ -18,6 +18,12 @@
 | Claude Code (Opus 4.8) + impeccable | F3.1–F3.2 S2 기획 폼 + S1 홈: 워크스페이스 store(생성/목록 공유), 기획 폼(서식 토큰 칩+자연어→생성→S3 autostart), 홈 대시보드(2열 타일·진행 미터·알림 센터 팝오버·달력·체크리스트·사례 모음·접이식 행). 공용 `StatusBadge` 추출. 시안(home/workspace_init.png) 대조, puppeteer로 홈→알림→폼→자동시작 검증. | `frontend/src/screens/home/*`, `screens/new/*`, `store/workspaces.tsx`, `components/StatusBadge.*`, `data/*` | 검토 완료(스크린샷 4컷 + 시안 대조) |
 | Claude Code (Opus 4.8) + impeccable(polish) | F0–F3 디자인 점검+수정: 이모지/유니코드 아이콘을 Tabler 라인 아이콘으로 교체(DESIGN §7 정합), 홈 버킷 로직 버그 수정(지연 워크스페이스 누락·기획중 중복 → 진행중=active+late/예정=planning/완료=done). 타임라인 스트리밍 텍스트를 명조→본문 산세리프로(명조는 문서 전용, 사용자 피드백). 다음 세션 시작 가이드 작성. CLAUDE.md·README 현황(F0–F3) 갱신. | `frontend/index.html`, `screens/*`, `shell/Sidebar.tsx`, `plans/NEXT_SESSION.txt`, `CLAUDE.md`, `README.md` | 검토 완료(스크린샷 재캡처) |
 
+## 2026-06-17
+
+| 도구/모델 | 한 일 | 산출물 | 사람 검토·수정 |
+|---|---|---|---|
+| Claude Code (Opus 4.8) | V0 Pi 검증 스파이크: 실제 OpenRouter 키로 `createAgentSession`→`prompt`→`subscribe` 스트리밍 실측 + `.d.ts` 직접 확인. 미검증 3종 해결 — 중지=`abort()`, 모델전환=`setModel()`, 되묻기=ExtensionUIContext(ui.select/confirm). F1 계약 그대로 유효 확정, "잠정" 주석 해제. 프런트는 mock 유지(실 API 미사용). | `scratch/pi-spike.ts`(로컬), `plans/PI_INTEGRATION.md §8`, `plans/TASKS.md`, `frontend/src/agent/contract.ts`(주석), `CLAUDE.md`(mock 개발 규칙) | 검토 완료(스파이크 실행 결과) |
+
 ---
 
 <!-- 새 항목 추가 시 날짜 섹션 + 표 행으로. AI가 생성한 코드는 사람이 검토했음을 명시. -->
