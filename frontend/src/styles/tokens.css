@@ -1,0 +1,144 @@
+/* tokens.css — docs/DESIGN.md §2–8 단일 소스 이식.
+   값은 DESIGN.md의 잠긴 토큰을 그대로 옮긴다(임의 변경 금지). */
+
+:root {
+  /* ── §2.1 surface / neutral ──────────────────────────── */
+  --canvas: #e7efef; /* 앱 바깥 배경(캔버스) */
+  --bg: #ffffff; /* 메인/카드 */
+  --sidebar: #f4f8f8; /* 사이드바 */
+  --inset: #f7fafa; /* 들어간 영역(데이터 블록) */
+  --ink: #15292b; /* 본문 (딥 티얼-잉크) */
+  --ink2: #3d5052; /* 부제목/값 */
+  --muted: #6b7e80; /* 보조 텍스트/라벨 */
+  --faint: #9aabab; /* 플레이스홀더/비활성 */
+  --line: #e8eeee; /* 헤어라인 */
+  --line2: #d7e2e2; /* 강한 구분선/테두리 */
+
+  /* ── §2.1 primary (teal) ─────────────────────────────── */
+  --primary: #0e7c82; /* 버튼·링크·활성 */
+  --primary-deep: #0a585c; /* hover/press, 진한 글씨 */
+  --tint: #e1f0f1; /* 선택 배경 */
+  --tint-soft: #eef6f6; /* 더 옅은 배경 */
+
+  /* ── §2.1 semantic ───────────────────────────────────── */
+  --success: #2f9e5e;
+  --warning: #e0a82e;
+  --error: #d14343;
+  --info: #3b82c4;
+
+  /* ── §3 type families ────────────────────────────────── */
+  --sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --serif: "Noto Serif KR", serif;
+
+  /* ── §3 타입 스케일 (크기 / line-height / 자간) ───────── */
+  --fs-display: 25px;
+  --lh-display: 1.25;
+  --ls-display: -0.02em;
+  --fs-h1: 19px;
+  --lh-h1: 1.3;
+  --ls-h1: -0.02em;
+  --fs-h2: 15.5px;
+  --lh-h2: 1.4;
+  --ls-h2: -0.01em;
+  --fs-body: 14px;
+  --lh-body: 1.6;
+  --fs-doc: 15px;
+  --lh-doc: 1.9; /* 문서 본문은 넉넉하게 */
+  --fs-caption: 12.5px;
+  --lh-caption: 1.5;
+  --fs-eyebrow: 11px;
+  --lh-eyebrow: 1.4;
+  --ls-eyebrow: 0.04em;
+  --fs-tag: 10.5px;
+  --lh-tag: 1.5;
+  --fs-mono: 12.5px;
+
+  /* ── §4 스페이싱 (8px 그리드) ────────────────────────── */
+  --sp-4: 4px;
+  --sp-8: 8px;
+  --sp-12: 12px;
+  --sp-16: 16px;
+  --sp-20: 20px;
+  --sp-24: 24px;
+  --sp-32: 32px;
+  --sp-48: 48px;
+
+  /* ── §4 라운드 ───────────────────────────────────────── */
+  --r-frame: 16px;
+  --r-card: 12px;
+  --r-btn: 9px;
+  --r-badge: 7px;
+  --r-tag: 5px;
+  --r-mini: 6px;
+
+  /* ── §4 레이아웃 치수 ────────────────────────────────── */
+  --sidebar-w: 202px;
+  --content-max: 1060px;
+  --doc-col: 720px;
+  --pad-body: 24px;
+  --pad-card: 16px;
+
+  /* ── §5 elevation (그림자) ───────────────────────────── */
+  --e-frame: 0 1px 2px rgba(21, 41, 43, 0.03); /* 앱 프레임 */
+  --e-nav: 0 1px 2px rgba(21, 41, 43, 0.04); /* 활성 nav 칩 */
+  --e-pop: 0 12px 28px rgba(21, 41, 43, 0.13); /* 팝오버/알림/모달 */
+
+  /* ── §6 모션 ─────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 250ms;
+
+  /* ── §2.2 상태 뱃지 (배경 / 글씨 / 점) ───────────────── */
+  --badge-progress-bg: #dceded;
+  --badge-progress-fg: #0a585c;
+  --badge-progress-dot: #0e7c82;
+  --badge-done-bg: #e4f3ea;
+  --badge-done-fg: #1f7a47;
+  --badge-done-dot: #2f9e5e;
+  --badge-review-bg: #fbefd6;
+  --badge-review-fg: #9a7714;
+  --badge-review-dot: #e0a82e;
+  --badge-late-bg: #faeaea;
+  --badge-late-fg: #b04545;
+  --badge-late-dot: #d14343;
+
+  /* ── §2.3 상태 태그 (잠금 / 계획 / 신선도) ───────────── */
+  --tag-lock-bg: #eef6f6;
+  --tag-lock-fg: #0a585c;
+  --tag-lock-border: #cbe3e3;
+  --tag-plan-bg: #f7fafa;
+  --tag-plan-fg: #6b7e80;
+  --tag-plan-border: #d7e2e2;
+  --tag-stale-bg: #fbefd6;
+  --tag-stale-fg: #9a7714;
+
+  /* ── §2.4 요소 타입 마커 (taxonomy A) ────────────────── */
+  --et-mcp-bg: #e3eef7;
+  --et-mcp-fg: #2a6ca8;
+  --et-ext-bg: #dceded;
+  --et-ext-fg: #0a585c;
+  --et-skill-bg: #ece6f2;
+  --et-skill-fg: #6b5b8e;
+
+  /* ── §2.5 행위자 마커 (taxonomy B) ───────────────────── */
+  --actor-ai-bg: #dceded;
+  --actor-ai-fg: #0a585c;
+  --actor-human-bg: #fbf1d8;
+  --actor-human-fg: #9a7714;
+
+  /* ── §2.6 예산 3상태 막대 ────────────────────────────── */
+  --bbar-spent: #0a585c;
+  --bbar-committed: rgba(14, 124, 130, 0.55); /* 확정·미집행 */
+  --bbar-remaining: #e1f0f1; /* 계획 잔여 */
+
+  /* ── §2.7 차트 6색 (시맨틱과 분리) ───────────────────── */
+  --chart-1: #0e7c82;
+  --chart-2: #3b82c4;
+  --chart-3: #5ba89b;
+  --chart-4: #e0a82e;
+  --chart-5: #8c7bb0;
+  --chart-6: #c2724a;
+}

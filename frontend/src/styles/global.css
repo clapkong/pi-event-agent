@@ -1,0 +1,73 @@
+/* global.css — 리셋 + 베이스. 토큰은 tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01";
+}
+
+/* 데이터·숫자·타임스탬프는 고정폭 (DESIGN §1.2) */
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-mono);
+}
+
+/* 문서 본문 (DESIGN §1.5) */
+.serif {
+  font-family: var(--serif);
+  font-size: var(--fs-doc);
+  line-height: var(--lh-doc);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--primary-deep);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* 키보드 포커스 링만 가시화 (DESIGN §8) */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 모션 최소 · prefers-reduced-motion 존중 (DESIGN §6) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

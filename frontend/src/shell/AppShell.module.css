@@ -1,0 +1,25 @@
+/* 앱 프레임 — 캔버스 배경 위 흰 프레임 (DESIGN §4 라운드 16 · §5 e-frame). */
+
+.canvas {
+  height: 100%;
+  background: var(--canvas);
+  padding: var(--sp-16);
+  display: flex;
+}
+
+.frame {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-frame);
+  box-shadow: var(--e-frame);
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}

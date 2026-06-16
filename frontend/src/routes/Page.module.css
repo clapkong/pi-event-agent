@@ -1,0 +1,88 @@
+/* 라우트 공통 — F0 빈 라우트 플레이스홀더. 타입 스케일·여백 토큰 검증. */
+
+.page {
+  max-width: var(--content-max);
+  padding: var(--sp-48) var(--pad-body);
+}
+
+.eyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: 500;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: var(--sp-8);
+}
+
+.display {
+  font-size: var(--fs-display);
+  font-weight: 600;
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  color: var(--ink);
+}
+
+.h1 {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  line-height: var(--lh-h1);
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+
+.lead {
+  margin-top: var(--sp-12);
+  max-width: 62ch;
+  color: var(--ink2);
+}
+
+.actions {
+  margin-top: var(--sp-24);
+}
+
+.btnPrimary {
+  padding: var(--sp-8) var(--sp-16);
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.btnPrimary:hover {
+  background: var(--primary-deep);
+}
+
+.note {
+  margin-top: var(--sp-32);
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+
+/* ── 워크스페이스 헤더 ───────────────────────────────── */
+.wsHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+}
+.wsDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.badge {
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  padding: 3px var(--sp-8);
+  border-radius: var(--r-badge);
+  background: var(--badge-progress-bg);
+  color: var(--badge-progress-fg);
+}
+
+code.mono {
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r-tag);
+  padding: 1px 5px;
+  font-size: 0.92em;
+}
