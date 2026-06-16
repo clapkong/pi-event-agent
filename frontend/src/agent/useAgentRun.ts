@@ -8,6 +8,14 @@ import type {
   ElementType,
 } from "./contract.ts";
 import { createMockClient } from "./mockClient.ts";
+import { createRealClient } from "./realClient.ts";
+
+// 기본은 mock(프런트 개발 규칙). 실제 백엔드는 env로만 켠다 — 검증/실사용 때:
+//   frontend/.env.local 에 VITE_USE_REAL_AGENT=1  (+ backend 실행)
+const USE_REAL = import.meta.env.VITE_USE_REAL_AGENT === "1";
+const defaultClient: () => AgentClient = USE_REAL
+  ? () => createRealClient()
+  : createMockClient;
 
 export type NodeStatus = "active" | "done" | "error" | "stopped";
 
@@ -84,7 +92,7 @@ function settle(entries: TimelineEntry[]): TimelineEntry[] {
   return entries;
 }
 
-export function useAgentRun(makeClient: () => AgentClient = createMockClient) {
+export function useAgentRun(makeClient: () => AgentClient = defaultClient) {
   const [state, setState] = useState<RunState>(initialState);
   const clientRef = useRef<AgentClient | null>(null);
   const idRef = useRef(0);

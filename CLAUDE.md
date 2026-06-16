@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 커밋 메시지: `feat|fix|refactor|...: 요약` + 빈 줄 + 세부. (대괄호 없이)
 - 현재는 CLAUDE.md가 미니멀하게 되어 있으며, 작업을 하면서 구현된 내용 중 필요한 내용을 추가한다.
 - 한 단위의 작업을 끝내고 ai-usage-log.md에 기록. 디자인이 수정된 경우 impeccable skill 사용해서 디자인도 점검 및 수정 추천
-- **프런트 개발은 mock으로 한다** (`useAgentRun` 기본값 = `createMockClient`). 실제 API(Pi·OpenRouter)는 **검증(V0·백엔드 테스트) 때만** 쓰고, 확인이 끝나면 **다시 mock으로 되돌린다** — 크레딧 절약. (실제↔mock 전환 지점은 `useAgentRun(makeClient)` 한 곳.)
+- **프런트 개발은 mock으로 한다** (`useAgentRun` 기본 = mock). 실제 백엔드(Pi·OpenRouter)는 **검증 때만** — `frontend/.env.local`에 `VITE_USE_REAL_AGENT=1` + `backend` 실행 시에만 `realClient`로 붙는다. 확인 끝나면 env 끄면 자동 mock 복귀(크레딧 절약). 전환은 env 토글 한 곳.
 - **개발 중 Claude 모델 호출은 `plans/claude_test` 방식**을 따른다 — Claude Agent SDK(`@anthropic-ai/claude-agent-sdk`) `query()` + **구독 OAuth**(`claude setup-token` → `CLAUDE_CODE_OAUTH_TOKEN`), `ANTHROPIC_API_KEY`는 unset(종량제 회피). 사용자가 구독 결제해둬서 **개발 중엔 사실상 무료**. 모델: `claude-sonnet-4-6`(어려운 추론)·`claude-haiku-4-5-20251001`(일반). ⚠️ **개발 한정** — 실제 배포/실사용 인증은 다르다(종량제 API 또는 모델 레지스트리/OpenRouter 경로).
 
 ## ⚠️ Pi SDK 규칙 (가장 중요)

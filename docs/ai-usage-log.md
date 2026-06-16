@@ -24,6 +24,7 @@
 |---|---|---|---|
 | Claude Code (Opus 4.8) | V0 Pi 검증 스파이크: 실제 OpenRouter 키로 `createAgentSession`→`prompt`→`subscribe` 스트리밍 실측 + `.d.ts` 직접 확인. 미검증 3종 해결 — 중지=`abort()`, 모델전환=`setModel()`, 되묻기=ExtensionUIContext(ui.select/confirm). F1 계약 그대로 유효 확정, "잠정" 주석 해제. 프런트는 mock 유지(실 API 미사용). | `scratch/pi-spike.ts`(로컬), `plans/PI_INTEGRATION.md §8`, `plans/TASKS.md`, `frontend/src/agent/contract.ts`(주석), `CLAUDE.md`(mock 개발 규칙) | 검토 완료(스파이크 실행 결과) |
 | Claude Code (Opus 4.8) | Claude 경로 스모크 테스트(구독 OAuth) 통과 → 두 프로바이더(OpenRouter·Claude SDK) 다 검증. **B1 백엔드**: `backend/`(Fastify+@fastify/websocket, ESM) `/ws`·`/health`, 모델 레지스트리(`models.ts`)·폴백(`runWithFallback.ts`)+WS 통지(model_current/switch), 단위 테스트 3/3. WS 왕복 검증. prompt 처리부는 데모(B2에서 실제 Pi로 교체). | `backend/*`, `plans/TASKS.md` | 검토 완료(테스트·WS 왕복) |
+| Claude Code (Opus 4.8) | **B2 — M1 달성**: backend 데모를 실제 Pi(`createAgentSession`+`subscribe`→F1 계약 변환, prompt/abort 배선)로 교체. frontend `realClient.ts`(WS) 작성, `useAgentRun`을 env 토글(`VITE_USE_REAL_AGENT`)로 — 기본 mock, 검증 때만 실제. 브라우저에서 실제 Pi(gpt-4o-mini) 응답이 무수정 S3에 스트리밍됨(스크린샷). 루트 spike 패키지는 backend로 정리. | `backend/src/server.ts`, `frontend/src/agent/realClient.ts`·`useAgentRun.ts`, `.gitignore`, `CLAUDE.md` | 검토 완료(M1 스크린샷·실 Pi) |
 
 ---
 
