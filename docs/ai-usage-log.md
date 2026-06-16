@@ -9,7 +9,9 @@
 
 | 도구/모델 | 한 일 | 산출물 | 사람 검토·수정 |
 |---|---|---|---|
-| Claude Code (Opus 4.8) | 정본 plan을 "한 세션=한 태스크" 원자 단위 실행 체크리스트로 분해. Pi 검증 스파이크(V0)를 선행 단계로 분리. | `plans/TASKS.md` | (검토 예정) |
+| Claude Code (Opus 4.8) | 정본 plan을 "한 세션=한 태스크" 원자 단위 실행 체크리스트로 분해. Pi 검증 스파이크(V0)를 선행 단계로 분리. | `plans/TASKS.md` | 검토 완료 |
+| Claude Code (Opus 4.8) + impeccable | F0.1–F0.3 프런트 스캐폴드: Vite+React+TS(ESM), react-router(`/`·`/w/:id`) + S0 사이드바 셸, `DESIGN.md` 토큰을 CSS 변수로 이식 + 폰트(Pretendard·IBM Plex Mono·Noto Serif KR) 로드. `npm run build`·dev 부팅 + headless 스크린샷 검증. | `frontend/*` | 검토 완료(브라우저 확인) |
+| Claude Code (Opus 4.8) | F1.1–F1.4 연결 계약 + Mock(린치핀): `agent/contract.ts`(이벤트 합집합 + `AgentClient` 인터페이스), `agent/mockClient.ts`(스크립트 런 재생), `agent/harness.ts`(콘솔 출력). 시퀀스 순서·단일 백엔드 접점·타입체크 검증. ask/abort/model_switch는 V0 잠정으로 주석. | `frontend/src/agent/*` | 검토 완료(하니스 시퀀스 확인) |
 
 ---
 
