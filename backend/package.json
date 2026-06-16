@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch --env-file=../.env src/server.ts",
     "start": "node --env-file=../.env src/server.ts",
-    "test": "node --test"
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.178",

@@ -9,10 +9,33 @@ import { getModel } from "@earendil-works/pi-ai";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { MODEL_CHAINS, getModelDef } from "./models.ts";
-import type { AgentEvent, ClientMessage } from "./contract.ts";
+import { estimateBudget } from "./tools/estimateBudget.ts";
+import type { AgentEvent, ClientMessage, ElementType } from "./contract.ts";
 
 const PORT = Number(process.env.PORT ?? 8787);
 const WORKSPACE_ROOT = join(process.cwd(), "..", "workspace");
+
+// 등록한 커스텀 도구. 타임라인 라벨·요소 마커 매핑.
+const TOOLS = [estimateBudget];
+const TOOL_META: Record<string, { label: string; element: ElementType }> = {
+  estimate_budget: { label: "예산 산정", element: "Extension" },
+};
+
+// 도구 결과(JSON)를 타임라인용 한 줄 요약으로.
+function summarizeTool(toolName: string, result: unknown): string {
+  try {
+    // AgentToolResult: { content: [{type:"text",text}], details }
+    const r = result as { details?: any; content?: { type: string; text?: string }[] };
+    const d = r?.details ?? JSON.parse(r?.content?.find((c) => c.type === "text")?.text ?? "{}");
+    if (toolName === "estimate_budget" && d?.items) {
+      const man = (n: number) => `${Math.round(n / 10000).toLocaleString("ko-KR")}만`;
+      return `총 ${man(d.totalBudget)}원 → ${d.items.length}개 항목 배분 · 1인 ${Math.round(d.perPerson).toLocaleString("ko-KR")}원`;
+    }
+    return (r?.content?.find((c) => c.type === "text")?.text ?? "완료").slice(0, 140);
+  } catch {
+    return "완료";
+  }
+}
 
 const app = Fastify({ logger: false });
 await app.register(websocket);
@@ -41,11 +64,10 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, req) => {
     send({ type: "model_current", name: def.name });
     const result = await createAgentSession({
       cwd,
-      model: getModel("openrouter", def.ref),
-      // 보안: 내장 도구(bash·read·write·edit·ls 등)를 전부 끈다. cwd만으론 bash가
-      // 상위로 올라가 레포·.env를 읽을 수 있어 격리가 안 됨. 지금은 텍스트 전용.
-      // B3에서 우리 Extension만 tools allowlist로 열고 noTools:"builtin" 유지.
-      noTools: "all",
+      // def.ref는 레지스트리에서 검증된 슬러그(런타임 OK). getModel은 리터럴 유니온을 요구해 any 캐스팅.
+      model: getModel("openrouter", def.ref as never),
+      customTools: TOOLS, // 우리 Extension(estimate_budget 등)
+      tools: TOOLS.map((t) => t.name), // allowlist: 우리 도구만 — 내장 bash/fs 차단(보안)
     });
     session = result.session;
 
@@ -56,8 +78,15 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, req) => {
         event.assistantMessageEvent?.type === "text_delta"
       ) {
         send({ type: "text_delta", delta: event.assistantMessageEvent.delta ?? "" });
+      } else if (event?.type === "tool_execution_start") {
+        const m = TOOL_META[event.toolName] ?? {
+          label: event.toolName,
+          element: "Extension" as ElementType,
+        };
+        send({ type: "tool_start", label: m.label, tool: event.toolName, element: m.element });
+      } else if (event?.type === "tool_execution_end") {
+        send({ type: "tool_end", result: summarizeTool(event.toolName, event.result) });
       }
-      // 도구 이벤트(tool_start/tool_end) 매핑은 B3(커스텀 도구)에서 도구 런으로 확정.
     });
     return session;
   }
