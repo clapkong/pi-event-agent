@@ -1,0 +1,22 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 불변 규칙
+
+- **한국어로 응답**한다.
+- 교수를 가리킬 땐 반드시 **"교수님"**(존칭). "교수"라고만 쓰지 않는다.
+- 기획은 AI로 구체화한 거라 실제와 안 맞을 수 있다. **불확실하면 지어내지 말고 사용자에게 물어본다.**
+- 커밋 메시지: `[feat|fix|refactor|...]: 요약` + 빈 줄 + 세부.
+
+## ⚠️ Pi SDK 규칙 (가장 중요)
+
+Pi(`@earendil-works/pi-coding-agent`)는 학습 컷오프 이후에 나온 도구라 **API를 추측하면 거의 다 틀린다.** `plans/PI_INTEGRATION.md`의 **검증된 사양만** 따르고, 거기 없는 Pi 함수/옵션이 필요하면 **멈춰서 사용자에게 물어본다.** (Pi 주변의 일반 웹앱 골조 — React·Fastify·WebSocket·DB — 는 평범한 작업이니 자유롭게.)
+
+## 프로젝트 & 정본
+
+Pi 기반 **행사 기획 AI 에이전트 웹 서비스**(오픈소스 SW 수업 기말). 아직 **구현 전** — 레포는 프로젝트 골격(`.pi`·`extensions`·`skills`·`.mcp.json`)이고 `frontend/`·`backend/`는 앞으로 만든다.
+
+**불변 원칙:** 행사 1개 = 워크스페이스 1개 = 작업폴더(`cwd`) 1개 = Pi 세션 1개 = 결과 리포트 1개.
+
+정본·문서 맵은 **`plans/PLAN.md` §0**. 거기서 시작하면 나머지 문서로 이어진다. 코딩 전엔 `plans/TASKS.md`, 작업 후엔 `docs/ai-usage-log.md`에 한 줄. 과제 명세 최종 권위는 `plans/DETAILS.md`.

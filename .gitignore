@@ -1,0 +1,7 @@
+.env
+.DS_Store
+node_modules/
+
+# 로컬 전용 기획/작업 문서 (공개 repo엔 코드 + README만)
+plans/
+notes.txt
