@@ -1,0 +1,19 @@
+{
+  "name": "pi-event-agent-backend",
+  "private": true,
+  "type": "module",
+  "description": "얇은 Node + WebSocket + 모델 레지스트리 (B1). Pi 세션 배선은 B2.",
+  "scripts": {
+    "dev": "node --watch --env-file=../.env src/server.ts",
+    "start": "node --env-file=../.env src/server.ts",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^11.0.2",
+    "fastify": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.6.3"
+  }
+}
