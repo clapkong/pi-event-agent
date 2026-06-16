@@ -1,8 +1,9 @@
 import { useParams } from "react-router-dom";
-import { MOCK_WORKSPACES, STATUS_DOT, STATUS_LABEL } from "@/data/workspaces";
+import { MOCK_WORKSPACES } from "@/data/workspaces";
+import { S3View } from "@/screens/workspace/S3View";
 import styles from "./Page.module.css";
 
-// S3/S4 워크스페이스 — F0에선 빈 라우트(헤더만). 대화·타임라인은 F2, 작업공간은 F4.
+// 워크스페이스 = 행사 1개. F2: S3 대화·동작 타임라인을 mock 으로 구동.
 export function Workspace() {
   const { id } = useParams();
   const ws = MOCK_WORKSPACES.find((w) => w.id === id);
@@ -19,21 +20,6 @@ export function Workspace() {
     );
   }
 
-  return (
-    <div className={styles.page}>
-      <div className={styles.wsHead}>
-        <span
-          className={styles.wsDot}
-          style={{ background: STATUS_DOT[ws.status] }}
-          aria-hidden
-        />
-        <h1 className={styles.h1}>{ws.name}</h1>
-        <span className={styles.badge}>{STATUS_LABEL[ws.status]}</span>
-      </div>
-      <p className={styles.lead}>
-        동작 타임라인과 컴포저는 <code className="mono">F2</code>, 작업공간·상태
-        모델은 <code className="mono">F4</code>에서 채워집니다.
-      </p>
-    </div>
-  );
+  // key={ws.id}: 행사 전환 시 S3 상태(타임라인·세션)를 초기화한다.
+  return <S3View key={ws.id} ws={ws} />;
 }

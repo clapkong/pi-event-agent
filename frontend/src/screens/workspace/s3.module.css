@@ -1,0 +1,550 @@
+/* S3 대화·동작 타임라인 (F2) — DESIGN §9.6·§9.9–9.12·§6. */
+
+.screen {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── 상단 바 (§9.6) ──────────────────────────────────── */
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  padding: var(--sp-16) var(--sp-24);
+  border-bottom: 1px solid var(--line);
+}
+.wsName {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+.pencil {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 2px;
+}
+.pencil:hover {
+  color: var(--primary);
+}
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  padding: 3px var(--sp-8);
+  border-radius: var(--r-badge);
+  background: var(--badge-progress-bg);
+  color: var(--badge-progress-fg);
+}
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--badge-progress-dot);
+}
+.spacer {
+  flex: 1;
+}
+.modelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink2);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r-badge);
+  padding: 4px var(--sp-8);
+}
+.modelDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.topAction {
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: 6px var(--sp-12);
+}
+.topAction:disabled {
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+/* ── 본문 스크롤 영역 ────────────────────────────────── */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-24);
+}
+.feed {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* 빈 상태 (§9.30) */
+.empty {
+  max-width: 520px;
+  margin: 8vh auto 0;
+  text-align: center;
+}
+.emptyEyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: 500;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.emptyTitle {
+  margin-top: var(--sp-8);
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+.emptyLead {
+  margin-top: var(--sp-12);
+  color: var(--ink2);
+}
+.startBtn {
+  margin-top: var(--sp-24);
+  padding: var(--sp-8) var(--sp-20);
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.startBtn:hover {
+  background: var(--primary-deep);
+}
+
+/* ── 요소 요약 스트립 ────────────────────────────────── */
+.summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-12);
+  padding-bottom: var(--sp-16);
+  margin-bottom: var(--sp-16);
+  border-bottom: 1px solid var(--line);
+}
+.summaryLabel {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+.summaryItems {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  color: var(--ink2);
+}
+
+/* ── 타임라인 (§9.9) ─────────────────────────────────── */
+.timeline {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 7px;
+  bottom: 7px;
+  width: 1px;
+  background: var(--line2);
+}
+.step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: var(--sp-12);
+  padding-bottom: var(--sp-16);
+}
+.gutter {
+  display: flex;
+  justify-content: center;
+}
+
+/* 노드 상태 (§9.9) */
+.node {
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--line2);
+  z-index: 1;
+}
+.nodeDone {
+  background: var(--primary);
+  box-shadow: none;
+}
+.nodeActive {
+  background: var(--primary);
+  box-shadow: none;
+  animation: nodePulse 2.1s var(--ease-out) infinite;
+}
+.nodeStopped {
+  background: var(--faint);
+  box-shadow: none;
+}
+.nodeError {
+  background: var(--error);
+  box-shadow: none;
+}
+.nodeText {
+  width: 6px;
+  height: 6px;
+  margin-top: 8px;
+  background: var(--line2);
+  box-shadow: none;
+}
+.nodeAsk {
+  background: var(--warning);
+  box-shadow: none;
+}
+.nodeGate {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  background: var(--warning);
+  box-shadow: none;
+}
+@keyframes nodePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(14, 124, 130, 0.34);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(14, 124, 130, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(14, 124, 130, 0);
+  }
+}
+
+.body {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+/* 도구 스텝 */
+.toolHead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-8);
+}
+.toolLabel {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--ink);
+}
+.toolTag {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r-tag);
+  padding: 1px 6px;
+}
+.ts {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+.toolResult {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+}
+.cite {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  vertical-align: super;
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0 2px;
+}
+.cite:hover {
+  color: var(--primary-deep);
+  text-decoration: underline;
+}
+
+/* 스트리밍 텍스트 (명조 + 커서) */
+.stream {
+  font-family: var(--serif);
+  font-size: var(--fs-doc);
+  line-height: 1.75;
+  color: var(--ink);
+}
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--primary);
+  animation: caretBlink 1s step-end infinite;
+}
+@keyframes caretBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── 되묻기 (§9.11) ──────────────────────────────────── */
+.ask {
+  background: var(--tint-soft);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-card);
+  padding: var(--sp-12) var(--sp-16);
+}
+.askQ {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--ink);
+}
+.askWait {
+  margin-top: 2px;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-8);
+  margin-top: var(--sp-12);
+}
+.chip {
+  padding: 5px var(--sp-12);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--ink2);
+  font-size: var(--fs-caption);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.chip:hover {
+  border-color: var(--primary);
+  color: var(--primary-deep);
+}
+.askDone {
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+}
+
+/* ── 승인 게이트 (§9.10) ─────────────────────────────── */
+.gate {
+  background: var(--badge-review-bg);
+  border: 1px solid #ecd9a6;
+  border-radius: var(--r-card);
+  padding: var(--sp-12) var(--sp-16);
+}
+.gateQ {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--badge-review-fg);
+}
+.gateActions {
+  display: flex;
+  gap: var(--sp-8);
+  margin-top: var(--sp-12);
+}
+.btnApprove {
+  padding: 6px var(--sp-16);
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+  font-size: var(--fs-caption);
+}
+.btnApprove:hover {
+  background: var(--primary-deep);
+}
+.btnReject {
+  padding: 6px var(--sp-12);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--ink2);
+  font-size: var(--fs-caption);
+}
+.btnReject:hover {
+  border-color: var(--ink2);
+}
+.gateOk {
+  font-size: var(--fs-caption);
+  color: var(--primary-deep);
+  font-weight: 500;
+}
+.gateNo {
+  font-size: var(--fs-caption);
+  color: var(--badge-review-fg);
+  font-weight: 500;
+}
+
+/* ── 요소 마커 (§2.4 / §9.2) ─────────────────────────── */
+.et {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 1px 6px;
+  border-radius: var(--r-tag);
+}
+.etMcp {
+  background: var(--et-mcp-bg);
+  color: var(--et-mcp-fg);
+}
+.etExt {
+  background: var(--et-ext-bg);
+  color: var(--et-ext-fg);
+}
+.etSkill {
+  background: var(--et-skill-bg);
+  color: var(--et-skill-fg);
+}
+
+/* ── 종료/에러 노트 ──────────────────────────────────── */
+.endNote {
+  margin-top: var(--sp-8);
+  padding-left: 40px;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+.errNote {
+  margin-top: var(--sp-8);
+  padding-left: 40px;
+  font-size: var(--fs-caption);
+  color: var(--error);
+}
+
+/* ── 컴포저 (§9.12) ──────────────────────────────────── */
+.composer {
+  padding: var(--sp-12) var(--sp-24);
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.composerInner {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-8);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+.input {
+  flex: 1;
+  resize: none;
+  max-height: 120px;
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: var(--sp-8) var(--sp-12);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg);
+}
+.sendBtn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sendBtn:hover {
+  background: var(--primary-deep);
+}
+.sendGlyph {
+  font-size: 14px;
+  transform: translateX(1px);
+}
+.stopBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 var(--sp-16);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--ink2);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+}
+.stopBtn:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+.stopGlyph {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--error);
+}
+
+/* ── 모델 전환 토스트 (§5 e-pop) ─────────────────────── */
+.toast {
+  position: absolute;
+  right: var(--sp-24);
+  bottom: 80px;
+  z-index: 20;
+  display: flex;
+  gap: var(--sp-12);
+  max-width: 320px;
+  padding: var(--sp-12) var(--sp-16);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-card);
+  box-shadow: var(--e-pop);
+}
+.toastSwap {
+  color: var(--primary);
+  font-size: 16px;
+  line-height: 1.4;
+}
+.toastTitle {
+  font-size: var(--fs-caption);
+  color: var(--ink);
+}
+.toastReason {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--muted);
+}

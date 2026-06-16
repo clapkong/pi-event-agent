@@ -2,19 +2,16 @@
 
 .canvas {
   height: 100%;
-  background: var(--canvas);
-  padding: var(--sp-16);
+  background: var(--bg);
   display: flex;
 }
 
+/* 전체 화면 풀블리드 — 캔버스 위 떠 있는 프레임이 아니라 창을 꽉 채운다. */
 .frame {
   flex: 1;
   display: flex;
   min-height: 0;
   background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--r-frame);
-  box-shadow: var(--e-frame);
   overflow: hidden;
 }
 
