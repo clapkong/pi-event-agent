@@ -484,6 +484,24 @@
   font-size: var(--fs-eyebrow);
   color: var(--faint);
 }
+.outLink {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-caption);
+  color: var(--primary);
+  text-align: left;
+}
+.outLink:hover {
+  color: var(--primary-deep);
+}
+.outLink i {
+  color: var(--muted);
+}
 
 /* D-레일 (§9.20) */
 .drail {

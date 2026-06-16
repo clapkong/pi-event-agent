@@ -60,7 +60,11 @@ export function Home() {
             ))}
           </CollapsibleRow>
 
-          <button type="button" className={styles.caseRow} disabled title="사례 상세 (F5)">
+          <button
+            type="button"
+            className={styles.caseRow}
+            onClick={() => navigate("/case/c-meetup-2024")}
+          >
             <span className={styles.caseTitle}>과거 진행 사례 모음</span>
             <span className={styles.caseHint}>완료된 행사를 사례로 재사용 · S6 →</span>
           </button>

@@ -179,7 +179,12 @@ export function S4View({ ws }: { ws: Workspace }) {
 
               <Card title="산출물">
                 <ul className={styles.outputs}>
-                  <li><i className="ti ti-file-text" aria-hidden /> 제안서 v{board.proposalVersion}<span className={styles.outMeta}>편집 → S5</span></li>
+                  <li>
+                    <button className={styles.outLink} onClick={() => nav(`/w/${ws.id}/doc`)}>
+                      <i className="ti ti-file-text" aria-hidden /> 제안서 v{board.proposalVersion}
+                      <span className={styles.outMeta}>편집 →</span>
+                    </button>
+                  </li>
                   <li><i className="ti ti-table" aria-hidden /> 업체 비교표</li>
                   <li><i className="ti ti-alert-triangle" aria-hidden /> 우천 대비 리스크{board.weather.stale && <span className={styles.staleTag}>재검토</span>}</li>
                 </ul>

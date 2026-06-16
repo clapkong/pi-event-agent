@@ -1,0 +1,108 @@
+/* S7 보조 — 연결 상태 패널 (DESIGN §9.27). */
+
+.wrap {
+  position: relative;
+}
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  width: 100%;
+  padding: var(--sp-8);
+  background: none;
+  border: none;
+  border-radius: var(--r-btn);
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  text-align: left;
+}
+.trigger:hover {
+  background: var(--tint-soft);
+  color: var(--ink2);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+.panel {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 31;
+  width: 280px;
+  padding: var(--sp-12);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-card);
+  box-shadow: var(--e-pop);
+}
+.panelTitle {
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: var(--sp-8);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: 6px 2px;
+}
+.rowDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rowName {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--ink);
+  width: 78px;
+}
+.etMcp {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--et-mcp-fg);
+  background: var(--et-mcp-bg);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.rowSub {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rowStatus {
+  font-size: 10px;
+  font-weight: 500;
+}
+.sConnected {
+  background: var(--success);
+  color: var(--success);
+}
+.sOff {
+  background: var(--faint);
+  color: var(--faint);
+}
+.sReconnect {
+  background: var(--warning);
+  color: var(--warning);
+}

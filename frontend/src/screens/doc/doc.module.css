@@ -1,0 +1,310 @@
+/* S5 결과 문서 (F5) — DESIGN §9.13–9.15. 문서 본문은 명조. */
+
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  padding: var(--sp-16) var(--sp-24);
+  border-bottom: 1px solid var(--line);
+}
+.wsName {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+.vBadge {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink2);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r-badge);
+  padding: 3px var(--sp-8);
+}
+.spacer {
+  flex: 1;
+}
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: 6px var(--sp-12);
+}
+.action:hover {
+  border-color: var(--primary);
+  color: var(--primary-deep);
+}
+.actionPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--r-btn);
+  padding: 6px var(--sp-12);
+}
+.actionPrimary:hover {
+  background: var(--primary-deep);
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.docScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-32) var(--sp-24);
+}
+
+/* 문서 (명조, 읽기 좋은 컬럼) */
+.doc {
+  max-width: var(--doc-col);
+  margin: 0 auto;
+}
+.docH {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: var(--sp-24) 0 var(--sp-12);
+  line-height: 1.5;
+}
+.docH:first-child {
+  margin-top: 0;
+}
+.docP {
+  font-family: var(--serif);
+  font-size: var(--fs-doc);
+  line-height: var(--lh-doc);
+  color: var(--ink);
+  margin-bottom: var(--sp-16);
+}
+.docP [contenteditable="true"]:focus {
+  outline: 2px solid var(--tint);
+  border-radius: 4px;
+}
+.lockChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 3px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--tag-lock-fg);
+  background: var(--tag-lock-bg);
+  border: 1px solid var(--tag-lock-border);
+  border-radius: var(--r-tag);
+  padding: 0 6px;
+  vertical-align: 1px;
+}
+.lockChip i {
+  font-size: 11px;
+}
+.cite {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  vertical-align: super;
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0 1px;
+}
+.cite:hover {
+  color: var(--primary-deep);
+  text-decoration: underline;
+}
+
+/* 버전 이력 (§9.15) */
+.vh {
+  max-width: var(--doc-col);
+  margin: 0 auto var(--sp-24);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: var(--sp-16);
+}
+.banner {
+  border-left: 3px solid var(--primary);
+  background: var(--tint-soft);
+  padding: var(--sp-8) var(--sp-12);
+  border-radius: 0 var(--r-tag) var(--r-tag) 0;
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+  margin-bottom: var(--sp-12);
+}
+.vhList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.vhItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: 6px 0;
+}
+.vhDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.vhAi {
+  background: var(--actor-ai-fg);
+}
+.vhHuman {
+  background: var(--actor-human-fg);
+}
+.vhV {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink2);
+  width: 26px;
+}
+.actor {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: var(--r-tag);
+  padding: 1px 6px;
+}
+.actorAi {
+  color: var(--actor-ai-fg);
+  background: var(--actor-ai-bg);
+}
+.actorHuman {
+  color: var(--actor-human-fg);
+  background: var(--actor-human-bg);
+}
+.vhSummary {
+  flex: 1;
+  font-size: var(--fs-caption);
+  color: var(--ink);
+}
+.vhAt {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* 인용 드로어 (§9.14) */
+.drawer {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--line);
+  padding: var(--sp-20);
+  overflow-y: auto;
+  background: var(--bg);
+}
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.drawerN {
+  font-family: var(--mono);
+  font-size: var(--fs-caption);
+  color: var(--primary);
+}
+.drawerClose {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+}
+.drawerClose:hover {
+  color: var(--ink);
+}
+.drawerTitle {
+  margin-top: var(--sp-12);
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--ink);
+}
+.drawerMeta {
+  margin-top: 2px;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+.scores {
+  margin: var(--sp-16) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.score {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+}
+.scoreLabel {
+  width: 56px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.scoreTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--inset);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.scoreFill {
+  height: 100%;
+  background: var(--line2);
+  border-radius: 999px;
+}
+.scoreFillP {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+.scoreVal {
+  width: 32px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink2);
+}
+.excerpt {
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink2);
+  border-left: 3px solid var(--line2);
+  padding-left: var(--sp-12);
+}
+.source {
+  margin-top: var(--sp-12);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+.caseLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: var(--sp-16);
+  font-size: var(--fs-caption);
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0;
+}
+.caseLink:hover {
+  color: var(--primary-deep);
+}

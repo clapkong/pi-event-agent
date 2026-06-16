@@ -5,6 +5,8 @@ import { Home } from "@/screens/home/Home";
 import { NewEvent } from "@/screens/new/NewEvent";
 import { Workspace } from "@/routes/Workspace";
 import { Board } from "@/routes/Board";
+import { Doc } from "@/routes/Doc";
+import { CaseView } from "@/screens/case/CaseView";
 
 // 라우팅: / 홈(S1) · /new 기획 폼(S2) · /w/:id 워크스페이스(S3), 전역 셸 안에서.
 const router = createBrowserRouter([
@@ -16,6 +18,8 @@ const router = createBrowserRouter([
       { path: "new", element: <NewEvent /> },
       { path: "w/:id", element: <Workspace /> },
       { path: "w/:id/board", element: <Board /> },
+      { path: "w/:id/doc", element: <Doc /> },
+      { path: "case/:id", element: <CaseView /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },

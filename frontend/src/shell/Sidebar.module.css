@@ -112,19 +112,7 @@
   font-weight: 600;
 }
 
-/* ── 연결 인디케이터 ─────────────────────────────────── */
-.conn {
+/* ── 연결 상태 슬롯 (하단 고정) ──────────────────────── */
+.connSlot {
   margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-8);
-  padding: var(--sp-8);
-  font-size: var(--fs-caption);
-  color: var(--muted);
-}
-.connDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--success);
 }

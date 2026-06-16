@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { STATUS_DOT } from "@/data/workspaces";
 import { useWorkspaces } from "@/store/workspaces";
+import { ConnPanel } from "@/screens/aux/ConnPanel";
 import styles from "./Sidebar.module.css";
 
 // S0 전역 셸 사이드바 (DESIGN §9.5).
@@ -57,10 +58,9 @@ export function Sidebar() {
         새 행사
       </button>
 
-      {/* 연결 인디케이터 (DESIGN §9.5) — F0에선 정적 표시 */}
-      <div className={styles.conn} title="필수 5요소 중 연결됨">
-        <span className={styles.connDot} aria-hidden />
-        연결됨 <span className="mono">4/5</span>
+      {/* 연결 상태 (S7) — 클릭 시 패널 */}
+      <div className={styles.connSlot}>
+        <ConnPanel />
       </div>
     </aside>
   );

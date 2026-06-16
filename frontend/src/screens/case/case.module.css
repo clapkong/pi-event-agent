@@ -1,0 +1,194 @@
+/* S6 사례 상세 (F5) — DESIGN. 전문은 명조. */
+
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  padding: var(--sp-16) var(--sp-24);
+  border-bottom: 1px solid var(--line);
+}
+.back {
+  border: 1px solid var(--line2);
+  background: var(--bg);
+  border-radius: var(--r-btn);
+  color: var(--ink2);
+  padding: 5px 8px;
+  font-size: 14px;
+}
+.back:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.title {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+.doneBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  padding: 3px var(--sp-8);
+  border-radius: var(--r-badge);
+  background: var(--badge-done-bg);
+  color: var(--badge-done-fg);
+}
+.doneDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--badge-done-dot);
+}
+.spacer {
+  flex: 1;
+}
+.source {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-24);
+}
+.grid {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--sp-24);
+  align-items: start;
+}
+.main {
+  min-width: 0;
+}
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-16);
+  padding-bottom: var(--sp-16);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-16);
+}
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.metaLabel {
+  font-size: var(--fs-eyebrow);
+  color: var(--muted);
+}
+.metaValue {
+  font-size: var(--fs-caption);
+  color: var(--ink);
+  font-weight: 500;
+}
+.sectionTitle {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-12);
+}
+.full {
+  font-family: var(--serif);
+  font-size: var(--fs-doc);
+  line-height: var(--lh-doc);
+  color: var(--ink);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-16);
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: var(--sp-16);
+}
+.cardTitle {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-12);
+}
+.budget {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.budget li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+  border-bottom: 1px solid var(--line);
+}
+.budgetTotal {
+  font-weight: 600;
+  color: var(--ink);
+}
+.budgetTotal {
+  border-bottom: none;
+}
+.amount {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.cited {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cited button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-caption);
+  color: var(--primary);
+}
+.cited button:hover {
+  color: var(--primary-deep);
+}
+.cited i {
+  color: var(--muted);
+}
+.none {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+
+.empty {
+  padding: var(--sp-48) var(--sp-24);
+  text-align: center;
+}
+.emptyEyebrow {
+  font-size: var(--fs-eyebrow);
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.emptyTitle {
+  margin-top: var(--sp-8);
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  color: var(--ink);
+}
