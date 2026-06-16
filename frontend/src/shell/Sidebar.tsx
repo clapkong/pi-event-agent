@@ -1,12 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { MOCK_WORKSPACES, STATUS_DOT } from "@/data/workspaces";
+import { STATUS_DOT } from "@/data/workspaces";
+import { useWorkspaces } from "@/store/workspaces";
 import styles from "./Sidebar.module.css";
 
 // S0 전역 셸 사이드바 (DESIGN §9.5).
 // 브랜드 마크 + 홈 + 행사 목록(상태 점) + ＋ 새 행사 + 연결 인디케이터.
-// F0: 워크스페이스 목록 + "＋ 새 행사"가 핵심. 조용하게.
 export function Sidebar() {
   const navigate = useNavigate();
+  const { workspaces } = useWorkspaces();
 
   return (
     <aside className={styles.sidebar}>
@@ -29,7 +30,7 @@ export function Sidebar() {
 
       <div className={styles.sectionLabel}>행사</div>
       <nav className={styles.nav}>
-        {MOCK_WORKSPACES.map((w) => (
+        {workspaces.map((w) => (
           <NavLink
             key={w.id}
             to={`/w/${w.id}`}
@@ -50,7 +51,7 @@ export function Sidebar() {
       <button
         type="button"
         className={styles.newBtn}
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/new")}
       >
         <span className={styles.plus} aria-hidden>
           ＋

@@ -1,0 +1,430 @@
+/* S1 홈 · 대시보드 (F3.2) — DESIGN §9.8·§9.21·§9.26. */
+
+.home {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-24) var(--sp-32) var(--sp-48);
+}
+
+/* ── 헤더 ────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-24);
+}
+.title {
+  font-size: var(--fs-display);
+  font-weight: 600;
+  letter-spacing: var(--ls-display);
+  color: var(--ink);
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+}
+.newBtn {
+  padding: var(--sp-8) var(--sp-16);
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+  font-size: var(--fs-body);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.newBtn:hover {
+  background: var(--primary-deep);
+}
+
+/* ── 섹션 ────────────────────────────────────────────── */
+.section {
+  margin-bottom: var(--sp-32);
+}
+.sectionTitle {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: var(--ls-h2);
+  color: var(--ink);
+  margin-bottom: var(--sp-12);
+}
+
+/* ── 워크스페이스 타일 (§9.8) ────────────────────────── */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-16);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-12);
+  text-align: left;
+  padding: var(--pad-card);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.tile:hover {
+  border-color: var(--line2);
+}
+.tileHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+}
+.tileDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tileName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tileSummary {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+.meter {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+}
+.meterTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.meterFill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+.meterPct {
+  width: 38px;
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--ink2);
+}
+
+/* ── 빈 상태 ─────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-16);
+  padding: 10vh 0;
+}
+.emptyTitle {
+  color: var(--muted);
+}
+
+/* ── 접히는 행 (진행 예정/완료) ──────────────────────── */
+.collapse {
+  margin-bottom: var(--sp-12);
+}
+.collapseHead {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-8) 0;
+  background: none;
+  border: none;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--ink2);
+}
+.collapseHead:hover {
+  color: var(--ink);
+}
+.collapseCaret {
+  color: var(--muted);
+  font-size: 11px;
+}
+.collapseCount {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--inset);
+  border-radius: var(--r-tag);
+  padding: 1px 6px;
+}
+.collapse .tileGrid {
+  margin-top: var(--sp-8);
+}
+
+/* ── 과거 사례 모음 행 ───────────────────────────────── */
+.caseRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--sp-16);
+  margin-bottom: var(--sp-32);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  text-align: left;
+}
+.caseRow:disabled {
+  cursor: not-allowed;
+}
+.caseTitle {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--ink);
+}
+.caseHint {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+
+/* ── 하단 2열 ────────────────────────────────────────── */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-24);
+}
+
+/* 체크리스트 */
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  padding: 10px var(--sp-16);
+  border-bottom: 1px solid var(--line);
+}
+.checkRow:last-child {
+  border-bottom: none;
+}
+.check {
+  accent-color: var(--primary);
+  width: 15px;
+  height: 15px;
+}
+.checkDate {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--muted);
+  width: 42px;
+}
+.checkWs {
+  width: 108px;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.checkTask {
+  flex: 1;
+  font-size: var(--fs-body);
+  color: var(--ink);
+}
+.checkTaskDone {
+  flex: 1;
+  font-size: var(--fs-body);
+  color: var(--faint);
+  text-decoration: line-through;
+}
+
+/* ── 달력 (§9.21) ────────────────────────────────────── */
+.calendar {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: var(--sp-16);
+}
+.calHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--sp-12);
+}
+.calMonth {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.calLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-8);
+}
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.calWeekday {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding-bottom: 4px;
+}
+.calDay {
+  text-align: center;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  color: var(--ink2);
+  padding: 6px 0;
+  border-radius: 6px;
+}
+.dayToday {
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+  color: var(--primary);
+}
+.dayEvent {
+  background: var(--primary);
+  color: #fff;
+}
+.dayMilestone {
+  background: var(--tint);
+  color: var(--ink);
+}
+.dayRehearsal {
+  background: var(--badge-review-bg);
+  color: var(--badge-review-fg);
+}
+
+/* ── 알림 센터 (§9.26) ───────────────────────────────── */
+.notifWrap {
+  position: relative;
+}
+.bell {
+  position: relative;
+  padding: 6px 8px;
+  font-size: 16px;
+  background: none;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  line-height: 1;
+}
+.bell:hover {
+  background: var(--inset);
+}
+.bellCount {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #fff;
+  background: var(--error);
+  border-radius: 999px;
+}
+.notifBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+.notifPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 31;
+  width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--sp-8);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-card);
+  box-shadow: var(--e-pop);
+}
+.notifGroup {
+  margin-bottom: var(--sp-8);
+}
+.notifGroupLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--sp-4) var(--sp-8);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.notifGroupCount {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.kindReview {
+  color: var(--warning);
+}
+.kindApproval {
+  color: var(--primary);
+}
+.kindDeadline {
+  color: var(--info);
+}
+.notifItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-8);
+  background: none;
+  border: none;
+  border-radius: var(--r-btn);
+}
+.notifItem:hover {
+  background: var(--inset);
+}
+.notifWs {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.notifMsg {
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+}
+.notifWhen {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}

@@ -1,0 +1,155 @@
+/* S2 새 행사 · 기획 폼 (F3.1) — DESIGN §9.6 상단바 + ~680px 폼. */
+
+.screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  padding: var(--sp-16) var(--sp-24);
+  border-bottom: 1px solid var(--line);
+}
+.topName {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+.planBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  padding: 3px var(--sp-8);
+  border-radius: var(--r-badge);
+  background: var(--badge-progress-bg);
+  color: var(--badge-progress-fg);
+}
+.planDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--badge-progress-dot);
+}
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-32) var(--sp-24);
+}
+.form {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.formTitle {
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ls-h1);
+  color: var(--ink);
+}
+.formGuide {
+  margin-top: var(--sp-8);
+  color: var(--ink2);
+}
+
+.label {
+  display: block;
+  margin-top: var(--sp-24);
+  margin-bottom: var(--sp-8);
+  font-size: var(--fs-eyebrow);
+  font-weight: 500;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nameInput {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: var(--sp-8) var(--sp-12);
+}
+.nameInput:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg);
+}
+
+.chipRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-8);
+  margin-top: var(--sp-20);
+}
+.chipLabel {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  margin-right: var(--sp-4);
+}
+.chip {
+  padding: 5px var(--sp-12);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--ink2);
+  font-size: var(--fs-caption);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.chip:hover {
+  border-color: var(--primary);
+  color: var(--primary-deep);
+}
+
+.editor {
+  width: 100%;
+  margin-top: var(--sp-12);
+  resize: vertical;
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-card);
+  padding: var(--sp-12) var(--sp-16);
+}
+.editor:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg);
+}
+
+.hint {
+  margin-top: var(--sp-12);
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-24);
+}
+.startBtn {
+  padding: var(--sp-8) var(--sp-20);
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.startBtn:hover {
+  background: var(--primary-deep);
+}

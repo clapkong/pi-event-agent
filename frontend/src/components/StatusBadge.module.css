@@ -1,0 +1,38 @@
+/* 상태 뱃지 (DESIGN §2.2 / §9.1) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  padding: 3px var(--sp-8);
+  border-radius: var(--r-badge);
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.progress {
+  background: var(--badge-progress-bg);
+  color: var(--badge-progress-fg);
+}
+.progress .dot {
+  background: var(--badge-progress-dot);
+}
+.done {
+  background: var(--badge-done-bg);
+  color: var(--badge-done-fg);
+}
+.done .dot {
+  background: var(--badge-done-dot);
+}
+.late {
+  background: var(--badge-late-bg);
+  color: var(--badge-late-fg);
+}
+.late .dot {
+  background: var(--badge-late-dot);
+}

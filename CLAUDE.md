@@ -21,7 +21,7 @@ Pi 기반 **행사 기획 AI 에이전트 웹 서비스**(오픈소스 SW 수업
 
 > ⚠️ **현재 프런트는 전부 mock 데이터로 동작한다.** 백엔드가 없어서 가짜로 돌리는 임시 상태다. 실제 데이터 붙일 때(Phase B) **반드시 제거·교체**할 곳:
 > - `frontend/src/agent/mockClient.ts` — 에이전트 진행 대본(가짜). `realClient`(WebSocket)로 교체. 교체 지점은 `useAgentRun(makeClient)` 기본값 한 곳.
-> - `frontend/src/data/workspaces.ts` `MOCK_WORKSPACES` — 사이드바 행사 목록 시드(가짜). 스토어/백엔드 조회로 교체.
+> - `frontend/src/data/workspaces.ts` `SEED_WORKSPACES` (+ `data/home.ts`의 알림·체크리스트·달력 mock) — 가짜 시드. `store/workspaces.tsx`가 들고 있음. 백엔드 조회로 교체.
 > 경계는 `frontend/src/agent/contract.ts`(계약). UI는 이 계약만 의존하므로 위 두 곳만 바꾸면 컴포넌트는 무수정.
 
 **불변 원칙:** 행사 1개 = 워크스페이스 1개 = 작업폴더(`cwd`) 1개 = Pi 세션 1개 = 결과 리포트 1개.

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Workspace } from "@/data/workspaces";
 import { useAgentRun } from "@/agent/useAgentRun";
 import { TopBar } from "./TopBar";
@@ -6,9 +7,20 @@ import { Composer } from "./Composer";
 import { ModelToast } from "./ModelToast";
 import styles from "./s3.module.css";
 
-// S3 대화·동작 타임라인 (시그니처). mockClient 구동. (F2)
-export function S3View({ ws }: { ws: Workspace }) {
+// S3 대화·동작 타임라인 (시그니처). mockClient 구동. (F2/F3)
+export function S3View({ ws, autostart = false }: { ws: Workspace; autostart?: boolean }) {
   const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRun();
+  const autostartedRef = useRef(false);
+
+  // 폼(S2)에서 생성돼 들어온 경우 mock 런 1회 자동 시작.
+  useEffect(() => {
+    if (autostart && !autostartedRef.current) {
+      autostartedRef.current = true;
+      start();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autostart]);
+
   const { entries, counts } = state;
   const started = entries.length > 0 || state.running;
 

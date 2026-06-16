@@ -1,15 +1,18 @@
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { WorkspaceProvider } from "@/store/workspaces";
 import { AppShell } from "@/shell/AppShell";
-import { Home } from "@/routes/Home";
+import { Home } from "@/screens/home/Home";
+import { NewEvent } from "@/screens/new/NewEvent";
 import { Workspace } from "@/routes/Workspace";
 
-// 라우팅 (TASKS F0.2): / 홈 · /w/:id 워크스페이스, 전역 셸 안에서.
+// 라우팅: / 홈(S1) · /new 기획 폼(S2) · /w/:id 워크스페이스(S3), 전역 셸 안에서.
 const router = createBrowserRouter([
   {
     path: "/",
     element: <AppShell />,
     children: [
       { index: true, element: <Home /> },
+      { path: "new", element: <NewEvent /> },
       { path: "w/:id", element: <Workspace /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
@@ -17,5 +20,9 @@ const router = createBrowserRouter([
 ]);
 
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <WorkspaceProvider>
+      <RouterProvider router={router} />
+    </WorkspaceProvider>
+  );
 }

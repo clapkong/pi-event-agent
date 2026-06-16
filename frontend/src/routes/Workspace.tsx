@@ -1,12 +1,17 @@
-import { useParams } from "react-router-dom";
-import { MOCK_WORKSPACES } from "@/data/workspaces";
+import { useParams, useLocation } from "react-router-dom";
+import { useWorkspaces } from "@/store/workspaces";
 import { S3View } from "@/screens/workspace/S3View";
 import styles from "./Page.module.css";
 
-// 워크스페이스 = 행사 1개. F2: S3 대화·동작 타임라인을 mock 으로 구동.
+// 워크스페이스 = 행사 1개. F2/F3: S3 대화·동작 타임라인을 mock 으로 구동.
 export function Workspace() {
   const { id } = useParams();
-  const ws = MOCK_WORKSPACES.find((w) => w.id === id);
+  const { get } = useWorkspaces();
+  const location = useLocation();
+  const ws = id ? get(id) : undefined;
+
+  // 폼(S2)에서 막 생성돼 들어왔으면 mock 런 자동 시작.
+  const autostart = (location.state as { autostart?: boolean } | null)?.autostart ?? false;
 
   if (!ws) {
     return (
@@ -21,5 +26,5 @@ export function Workspace() {
   }
 
   // key={ws.id}: 행사 전환 시 S3 상태(타임라인·세션)를 초기화한다.
-  return <S3View key={ws.id} ws={ws} />;
+  return <S3View key={ws.id} ws={ws} autostart={autostart} />;
 }

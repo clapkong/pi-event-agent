@@ -15,6 +15,7 @@
 | Claude Code (Opus 4.8) + impeccable | F2.1–F2.4 S3 대화·동작 타임라인(시그니처): `useAgentRun` 훅(이벤트→화면 상태), run-of-show 타임라인(노드·요소 마커·모노 도구 태그·타임스탬프·인용 #N), 요소 요약 스트립, 스트리밍 텍스트+커서, 되묻기/승인 게이트, 컴포저(전송+중지), 모델 뱃지+전환 토스트. puppeteer로 시작→되묻기→승인→완료 4상태 캡처 검증. 사용자 피드백 반영: 읽기 칼럼을 콘텐츠 최대폭으로 넓히고 컴포저 정렬 일치(공간 활용 개선). | `frontend/src/screens/workspace/*`, `agent/useAgentRun.ts` | 검토 완료(스크린샷 4상태 + 레이아웃 피드백) |
 | Claude Code (Opus 4.8) | 현재 프런트가 mock 데이터로 동작함을 문서화 — Phase B에서 제거·교체할 두 곳(`mockClient.ts`→realClient, `MOCK_WORKSPACES`→스토어/백엔드)과 경계(`contract.ts`) 명시. | `CLAUDE.md` | (사용자 지시로 기록) |
 | Claude Code (Opus 4.8) | 사용자 결정으로 앱 셸을 풀블리드로 변경(캔버스 여백·둥근 프레임·그림자 제거, 창 꽉 채움). `DESIGN.md` §2.1·§4·§5를 결정에 맞게 동기화(문서-코드 일치 유지). | `frontend/src/shell/AppShell.module.css`, `docs/DESIGN.md` | 검토 완료(스크린샷) |
+| Claude Code (Opus 4.8) + impeccable | F3.1–F3.2 S2 기획 폼 + S1 홈: 워크스페이스 store(생성/목록 공유), 기획 폼(서식 토큰 칩+자연어→생성→S3 autostart), 홈 대시보드(2열 타일·진행 미터·알림 센터 팝오버·달력·체크리스트·사례 모음·접이식 행). 공용 `StatusBadge` 추출. 시안(home/workspace_init.png) 대조, puppeteer로 홈→알림→폼→자동시작 검증. | `frontend/src/screens/home/*`, `screens/new/*`, `store/workspaces.tsx`, `components/StatusBadge.*`, `data/*` | 검토 완료(스크린샷 4컷 + 시안 대조) |
 
 ---
 
