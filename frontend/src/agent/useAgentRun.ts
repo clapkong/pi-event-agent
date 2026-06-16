@@ -13,9 +13,6 @@ import { createRealClient } from "./realClient.ts";
 // 기본은 mock(프런트 개발 규칙). 실제 백엔드는 env로만 켠다 — 검증/실사용 때:
 //   frontend/.env.local 에 VITE_USE_REAL_AGENT=1  (+ backend 실행)
 const USE_REAL = import.meta.env.VITE_USE_REAL_AGENT === "1";
-const defaultClient: () => AgentClient = USE_REAL
-  ? () => createRealClient()
-  : createMockClient;
 
 export type NodeStatus = "active" | "done" | "error" | "stopped";
 
@@ -97,13 +94,15 @@ function settle(entries: TimelineEntry[]): TimelineEntry[] {
   return entries;
 }
 
-export function useAgentRun(makeClient: () => AgentClient = defaultClient) {
+// wsId: 행사별 백엔드 세션·cwd 분리 (행사 1개 = 세션 1개 = cwd 1개). mock은 무시.
+export function useAgentRun(wsId = "demo") {
   const [state, setState] = useState<RunState>(initialState);
   const clientRef = useRef<AgentClient | null>(null);
   const idRef = useRef(0);
   const nextId = () => (idRef.current += 1);
 
-  if (!clientRef.current) clientRef.current = makeClient();
+  if (!clientRef.current)
+    clientRef.current = USE_REAL ? createRealClient(wsId) : createMockClient();
 
   useEffect(() => {
     const client = clientRef.current!;

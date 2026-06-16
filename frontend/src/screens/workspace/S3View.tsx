@@ -17,7 +17,7 @@ export function S3View({
   autostart?: boolean;
   initialPrompt?: string;
 }) {
-  const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRun();
+  const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRun(ws.id);
   const autostartedRef = useRef(false);
 
   // 폼(S2)에서 생성돼 들어온 경우 폼 입력(initialPrompt)으로 1회 자동 시작.
