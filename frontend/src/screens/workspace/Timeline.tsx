@@ -18,6 +18,7 @@ export function Timeline({ entries, onAnswerAsk, onApprove, onReject }: Props) {
           <span className={styles.gutter}>{node(e)}</span>
           <div className={styles.body}>
             {e.kind === "tool" && <ToolStep entry={e} />}
+            {/* 에이전트 대화는 본문 산세리프 (명조는 문서에만) */}
             {e.kind === "text" && (
               <p className={styles.stream}>
                 {e.text}

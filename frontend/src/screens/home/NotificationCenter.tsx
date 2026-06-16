@@ -23,7 +23,7 @@ export function NotificationCenter() {
         onClick={() => setOpen((v) => !v)}
         aria-label={`알림 ${count}건`}
       >
-        <span aria-hidden>🔔</span>
+        <i className="ti ti-bell" aria-hidden />
         {count > 0 && <span className={styles.bellCount}>{count}</span>}
       </button>
 

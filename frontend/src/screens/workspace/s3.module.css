@@ -289,11 +289,11 @@
   text-decoration: underline;
 }
 
-/* 스트리밍 텍스트 (명조 + 커서) */
+/* 스트리밍 텍스트 (본문 산세리프 + 커서). 명조는 문서(S5/S6)에만. */
 .stream {
-  font-family: var(--serif);
-  font-size: var(--fs-doc);
-  line-height: 1.75;
+  font-family: var(--sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--ink);
 }
 .caret {
@@ -486,13 +486,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 17px;
 }
 .sendBtn:hover {
   background: var(--primary-deep);
-}
-.sendGlyph {
-  font-size: 14px;
-  transform: translateX(1px);
 }
 .stopBtn {
   flex-shrink: 0;

@@ -12,7 +12,9 @@ export function Home() {
   const { byStatus } = useWorkspaces();
   const navigate = useNavigate();
 
-  const inProgress = byStatus("active", "planning");
+  // 진행 중 = 진행중(active)+지연(late) · 진행 예정 = 기획중(planning) · 완료 = done.
+  // (중복·누락 방지: 각 워크스페이스는 정확히 한 버킷)
+  const inProgress = byStatus("active", "late");
   const upcoming = byStatus("planning");
   const completed = byStatus("done");
 
@@ -23,7 +25,7 @@ export function Home() {
         <span className={styles.headerActions}>
           <NotificationCenter />
           <button type="button" className={styles.newBtn} onClick={() => navigate("/new")}>
-            ＋ 새 행사
+            <i className="ti ti-plus" aria-hidden /> 새 행사
           </button>
         </span>
       </header>
@@ -32,7 +34,7 @@ export function Home() {
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>아직 진행 중인 행사가 없어요</p>
           <button type="button" className={styles.newBtn} onClick={() => navigate("/new")}>
-            ＋ 새 행사 만들기
+            <i className="ti ti-plus" aria-hidden /> 새 행사 만들기
           </button>
         </div>
       ) : (
@@ -109,7 +111,10 @@ function CollapsibleRow({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        <span className={styles.collapseCaret}>{open ? "▾" : "▸"}</span>
+        <i
+          className={`ti ti-chevron-${open ? "down" : "right"} ${styles.collapseCaret}`}
+          aria-hidden
+        />
         {title}
         <span className={styles.collapseCount}>{count}</span>
       </button>

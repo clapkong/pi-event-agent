@@ -16,6 +16,7 @@
 | Claude Code (Opus 4.8) | 현재 프런트가 mock 데이터로 동작함을 문서화 — Phase B에서 제거·교체할 두 곳(`mockClient.ts`→realClient, `MOCK_WORKSPACES`→스토어/백엔드)과 경계(`contract.ts`) 명시. | `CLAUDE.md` | (사용자 지시로 기록) |
 | Claude Code (Opus 4.8) | 사용자 결정으로 앱 셸을 풀블리드로 변경(캔버스 여백·둥근 프레임·그림자 제거, 창 꽉 채움). `DESIGN.md` §2.1·§4·§5를 결정에 맞게 동기화(문서-코드 일치 유지). | `frontend/src/shell/AppShell.module.css`, `docs/DESIGN.md` | 검토 완료(스크린샷) |
 | Claude Code (Opus 4.8) + impeccable | F3.1–F3.2 S2 기획 폼 + S1 홈: 워크스페이스 store(생성/목록 공유), 기획 폼(서식 토큰 칩+자연어→생성→S3 autostart), 홈 대시보드(2열 타일·진행 미터·알림 센터 팝오버·달력·체크리스트·사례 모음·접이식 행). 공용 `StatusBadge` 추출. 시안(home/workspace_init.png) 대조, puppeteer로 홈→알림→폼→자동시작 검증. | `frontend/src/screens/home/*`, `screens/new/*`, `store/workspaces.tsx`, `components/StatusBadge.*`, `data/*` | 검토 완료(스크린샷 4컷 + 시안 대조) |
+| Claude Code (Opus 4.8) + impeccable(polish) | F0–F3 디자인 점검+수정: 이모지/유니코드 아이콘을 Tabler 라인 아이콘으로 교체(DESIGN §7 정합), 홈 버킷 로직 버그 수정(지연 워크스페이스 누락·기획중 중복 → 진행중=active+late/예정=planning/완료=done). 타임라인 스트리밍 텍스트를 명조→본문 산세리프로(명조는 문서 전용, 사용자 피드백). 다음 세션 시작 가이드 작성. CLAUDE.md·README 현황(F0–F3) 갱신. | `frontend/index.html`, `screens/*`, `shell/Sidebar.tsx`, `plans/NEXT_SESSION.txt`, `CLAUDE.md`, `README.md` | 검토 완료(스크린샷 재캡처) |
 
 ---
 

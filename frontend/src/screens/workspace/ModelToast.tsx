@@ -5,9 +5,7 @@ import styles from "./s3.module.css";
 export function ModelToast({ toast }: { toast: Toast }) {
   return (
     <div className={styles.toast} role="status">
-      <span className={styles.toastSwap} aria-hidden>
-        ⇄
-      </span>
+      <i className={`ti ti-arrows-exchange ${styles.toastSwap}`} aria-hidden />
       <div>
         <p className={styles.toastTitle}>
           {toast.from ? `${toast.from} → ` : ""}

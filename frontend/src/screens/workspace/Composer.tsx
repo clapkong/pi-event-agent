@@ -51,9 +51,7 @@ export function Composer({ running, onSend, onStop }: Props) {
           aria-label="전송"
           title="전송"
         >
-          <span className={styles.sendGlyph} aria-hidden>
-            ➤
-          </span>
+          <i className="ti ti-send" aria-hidden />
         </button>
       )}
      </div>

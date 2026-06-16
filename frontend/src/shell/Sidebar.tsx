@@ -53,9 +53,7 @@ export function Sidebar() {
         className={styles.newBtn}
         onClick={() => navigate("/new")}
       >
-        <span className={styles.plus} aria-hidden>
-          ＋
-        </span>
+        <i className={`ti ti-plus ${styles.plus}`} aria-hidden />
         새 행사
       </button>
 

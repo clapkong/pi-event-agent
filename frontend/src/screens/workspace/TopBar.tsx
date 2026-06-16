@@ -12,7 +12,7 @@ export function TopBar({ ws, model }: Props) {
     <header className={styles.top}>
       <h1 className={styles.wsName}>{ws.name}</h1>
       <button type="button" className={styles.pencil} title="이름 수정" aria-label="이름 수정">
-        ✎
+        <i className="ti ti-pencil" aria-hidden />
       </button>
       <span className={styles.statusBadge}>
         <span className={styles.statusDot} aria-hidden />

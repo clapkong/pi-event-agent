@@ -25,6 +25,9 @@
   gap: var(--sp-12);
 }
 .newBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: var(--sp-8) var(--sp-16);
   border: none;
   border-radius: var(--r-btn);
@@ -154,7 +157,7 @@
 }
 .collapseCaret {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 15px;
 }
 .collapseCount {
   font-family: var(--mono);
