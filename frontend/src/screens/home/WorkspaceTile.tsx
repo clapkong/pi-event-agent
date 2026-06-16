@@ -7,7 +7,7 @@ import styles from "./home.module.css";
 export function WorkspaceTile({ ws }: { ws: Workspace }) {
   const navigate = useNavigate();
   return (
-    <button type="button" className={styles.tile} onClick={() => navigate(`/w/${ws.id}`)}>
+    <button type="button" className={styles.tile} onClick={() => navigate(`/w/${ws.id}/board`)}>
       <div className={styles.tileHead}>
         <span
           className={styles.tileDot}

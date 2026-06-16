@@ -30,6 +30,7 @@
 | Claude Code | M1 검증 후 버그 수정: 컴포저 텍스트 전달, 타임라인 이어붙이기 + 사용자 메시지 표시 | **실제 프롬프트로 직접 M1 검증, 컴포저·"메시지가 사라지는" 타임라인 초기화 버그 직접 발견·지적, "되묻기(ask)는 B3냐" 질문** | `S3View.tsx`, `useAgentRun.ts`, `Timeline.tsx` |
 | Claude Code | 폼(S2) 입력을 초기 프롬프트로 전달. **보안: 에이전트 내장 도구 전부 차단(`noTools:"all"`)** — cwd만으론 bash가 상위로 올라가 레포·`.env`를 읽던 것 차단(검증: 디렉토리 안 보임). B3에선 우리 Extension만 allowlist로. | **"폼 조건이 자동으로 안 들어간다", "에이전트가 어떻게 내 디렉토리를 보냐" 직접 발견·지적(보안 이슈 제기)** | `NewEvent.tsx`, `backend/src/server.ts` |
 | Claude Code | 행사별 백엔드 세션·cwd 분리(`useAgentRun(wsId)`→`realClient(wsId)`, 행사1개=세션1개=cwd1개). mock 복귀(서버 정리·`.env.local` 삭제). 핸드오프 문서 정리(NEXT_SESSION·README·CLAUDE·TASKS 현황 갱신). | **mock 복귀 지시, "F 관련 마무리까지 하고 next session 잘 넘기게 .md 제대로 갱신" 지시, 커밋이 너무 잘게 나뉜다 지적→의미 단위로 묶기 결정** | `useAgentRun.ts`, `S3View.tsx`, `README.md`·`CLAUDE.md` |
+| Claude Code + impeccable | **F4 S4 작업공간 + 상태 모델**: `boardState.ts`(3겹·잠금/신선도·예산 3상태·업체 4단계·stale + `useBoard` 인터랙션), S4 화면(상태 스트립·재기획 배너·조건·예산 막대+표+잠금·업체 미니 스테퍼·지도/날씨·D-레일). 라우트 `/w/:id/board`. 재기획 시나리오(F4.4) puppeteer 3상태 검증. | **"토큰 남은 김에 F4 진행" 결정, 인프라 없는 자율 단위(F4) 선택, "안 더러워지게 한 덩어리만" 방침** | `frontend/src/data/boardState.ts`, `screens/workspace/S4View.*`, `routes/Board.tsx`, 라우팅·TopBar·타일 |
 
 ---
 
