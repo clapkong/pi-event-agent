@@ -42,6 +42,10 @@ app.get("/ws", { websocket: true }, (socket: WebSocket, req) => {
     const result = await createAgentSession({
       cwd,
       model: getModel("openrouter", def.ref),
+      // 보안: 내장 도구(bash·read·write·edit·ls 등)를 전부 끈다. cwd만으론 bash가
+      // 상위로 올라가 레포·.env를 읽을 수 있어 격리가 안 됨. 지금은 텍스트 전용.
+      // B3에서 우리 Extension만 tools allowlist로 열고 noTools:"builtin" 유지.
+      noTools: "all",
     });
     session = result.session;
 

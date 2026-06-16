@@ -28,6 +28,7 @@
 | Claude Code | Claude 경로 검증 + B1 백엔드(Fastify+WS, 모델 레지스트리·폴백, 단위 테스트 3/3) | **Claude 구독 결제·OAuth 셋업 제공, "개발 중 Claude는 `claude_test` 방식" 규칙 지시, B1 진행 지시** | `backend/*` |
 | Claude Code | B2: 실제 Pi(`createAgentSession`)→계약 변환→`realClient`(env 토글) = **M1 달성** | **"백엔드 먼저, 그다음 프런트" 순서 결정, 루트 spike 패키지 정리 지시** | `backend/src/server.ts`, `frontend/src/agent/realClient.ts` |
 | Claude Code | M1 검증 후 버그 수정: 컴포저 텍스트 전달, 타임라인 이어붙이기 + 사용자 메시지 표시 | **실제 프롬프트로 직접 M1 검증, 컴포저·"메시지가 사라지는" 타임라인 초기화 버그 직접 발견·지적, "되묻기(ask)는 B3냐" 질문** | `S3View.tsx`, `useAgentRun.ts`, `Timeline.tsx` |
+| Claude Code | 폼(S2) 입력을 초기 프롬프트로 전달. **보안: 에이전트 내장 도구 전부 차단(`noTools:"all"`)** — cwd만으론 bash가 상위로 올라가 레포·`.env`를 읽던 것 차단(검증: 디렉토리 안 보임). B3에선 우리 Extension만 allowlist로. | **"폼 조건이 자동으로 안 들어간다", "에이전트가 어떻게 내 디렉토리를 보냐" 직접 발견·지적(보안 이슈 제기)** | `NewEvent.tsx`, `backend/src/server.ts` |
 
 ---
 
