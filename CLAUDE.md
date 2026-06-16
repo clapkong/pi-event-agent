@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **한국어로 응답**한다.
 - 교수를 가리킬 땐 반드시 **"교수님"**(존칭). "교수"라고만 쓰지 않는다.
 - 기획은 AI로 구체화한 거라 실제와 안 맞을 수 있다. **불확실하면 지어내지 말고 사용자에게 물어본다.**
-- 커밋 메시지: `[feat|fix|refactor|...]: 요약` + 빈 줄 + 세부.
+- 커밋 메시지: `feat|fix|refactor|...: 요약` + 빈 줄 + 세부. (대괄호 없이)
 - 현재는 CLAUDE.md가 미니멀하게 되어 있으며, 작업을 하면서 구현된 내용 중 필요한 내용을 추가한다.
 - 한 단위의 작업을 끝내고 ai-usage-log.md에 기록
 
