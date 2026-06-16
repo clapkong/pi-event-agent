@@ -8,15 +8,23 @@ import { ModelToast } from "./ModelToast";
 import styles from "./s3.module.css";
 
 // S3 대화·동작 타임라인 (시그니처). mockClient 구동. (F2/F3)
-export function S3View({ ws, autostart = false }: { ws: Workspace; autostart?: boolean }) {
+export function S3View({
+  ws,
+  autostart = false,
+  initialPrompt = "",
+}: {
+  ws: Workspace;
+  autostart?: boolean;
+  initialPrompt?: string;
+}) {
   const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRun();
   const autostartedRef = useRef(false);
 
-  // 폼(S2)에서 생성돼 들어온 경우 mock 런 1회 자동 시작.
+  // 폼(S2)에서 생성돼 들어온 경우 폼 입력(initialPrompt)으로 1회 자동 시작.
   useEffect(() => {
     if (autostart && !autostartedRef.current) {
       autostartedRef.current = true;
-      start();
+      start(initialPrompt);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autostart]);
@@ -58,7 +66,7 @@ export function S3View({ ws, autostart = false }: { ws: Workspace; autostart?: b
         )}
       </div>
 
-      <Composer running={state.running} onSend={() => start()} onStop={stop} />
+      <Composer running={state.running} onSend={(text) => start(text)} onStop={stop} />
 
       {state.toast && <ModelToast toast={state.toast} />}
     </div>

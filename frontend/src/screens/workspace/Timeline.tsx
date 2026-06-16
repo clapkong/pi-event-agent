@@ -17,6 +17,12 @@ export function Timeline({ entries, onAnswerAsk, onApprove, onReject }: Props) {
         <li key={e.id} className={styles.step}>
           <span className={styles.gutter}>{node(e)}</span>
           <div className={styles.body}>
+            {e.kind === "user" && (
+              <div className={styles.userMsg}>
+                <span className={styles.userTag}>나</span>
+                <span className={styles.userText}>{e.text}</span>
+              </div>
+            )}
             {e.kind === "tool" && <ToolStep entry={e} />}
             {/* 에이전트 대화는 본문 산세리프 (명조는 문서에만) */}
             {e.kind === "text" && (
@@ -102,6 +108,9 @@ function ToolStep({ entry }: { entry: ToolEntry }) {
 
 // 노드 (DESIGN §9.9): done 채움 · active 맥동 링 · gate 앰버 마름모 · stopped 중립 · error 빨강.
 function node(e: TimelineEntry) {
+  if (e.kind === "user") {
+    return <span className={`${styles.node} ${styles.nodeUser}`} aria-hidden />;
+  }
   if (e.kind === "gate") {
     return <span className={`${styles.node} ${styles.nodeGate}`} aria-hidden />;
   }

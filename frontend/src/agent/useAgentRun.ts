@@ -49,7 +49,12 @@ export interface GateEntry {
   question: string;
   decision?: "approved" | "rejected";
 }
-export type TimelineEntry = ToolEntry | TextEntry | AskEntry | GateEntry;
+export interface UserEntry {
+  kind: "user";
+  id: number;
+  text: string;
+}
+export type TimelineEntry = ToolEntry | TextEntry | AskEntry | GateEntry | UserEntry;
 
 export interface ModelToast {
   from?: string;
@@ -206,10 +211,17 @@ export function useAgentRun(makeClient: () => AgentClient = defaultClient) {
     return unsubscribe;
   }, []);
 
+  // 첫 실행이면 새로 시작, 이미 대화가 있으면 이어붙인다(이전 메시지 유지).
   const start = (text = "") => {
-    idRef.current = 0;
-    setState(initialState);
-    setState((s) => ({ ...s, running: true }));
+    setState((s) => {
+      const fresh = s.entries.length === 0;
+      if (fresh) idRef.current = 0;
+      const base = fresh ? initialState : s;
+      const entries = text.trim()
+        ? [...base.entries, { kind: "user" as const, id: nextId(), text }]
+        : base.entries;
+      return { ...base, entries, running: true, finished: false, error: null };
+    });
     clientRef.current!.prompt(text);
   };
 

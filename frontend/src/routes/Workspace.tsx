@@ -10,8 +10,10 @@ export function Workspace() {
   const location = useLocation();
   const ws = id ? get(id) : undefined;
 
-  // 폼(S2)에서 막 생성돼 들어왔으면 mock 런 자동 시작.
-  const autostart = (location.state as { autostart?: boolean } | null)?.autostart ?? false;
+  // 폼(S2)에서 막 생성돼 들어왔으면 자동 시작 + 폼 입력을 초기 프롬프트로.
+  const navState = location.state as { autostart?: boolean; prompt?: string } | null;
+  const autostart = navState?.autostart ?? false;
+  const initialPrompt = navState?.prompt ?? "";
 
   if (!ws) {
     return (
@@ -26,5 +28,5 @@ export function Workspace() {
   }
 
   // key={ws.id}: 행사 전환 시 S3 상태(타임라인·세션)를 초기화한다.
-  return <S3View key={ws.id} ws={ws} autostart={autostart} />;
+  return <S3View key={ws.id} ws={ws} autostart={autostart} initialPrompt={initialPrompt} />;
 }

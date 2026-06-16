@@ -225,6 +225,33 @@
   background: var(--warning);
   box-shadow: none;
 }
+.nodeUser {
+  background: var(--actor-human-fg);
+  box-shadow: none;
+}
+
+/* 사용자 메시지 (행위자=사람, DESIGN §2.5) */
+.userMsg {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-8);
+  padding: var(--sp-8) var(--sp-12);
+  background: var(--actor-human-bg);
+  border-radius: var(--r-card);
+}
+.userTag {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--actor-human-fg);
+  background: #fff;
+  border-radius: var(--r-tag);
+  padding: 1px 6px;
+}
+.userText {
+  color: var(--ink);
+  white-space: pre-wrap;
+}
 @keyframes nodePulse {
   0% {
     box-shadow: 0 0 0 0 rgba(14, 124, 130, 0.34);

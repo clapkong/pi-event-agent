@@ -6,8 +6,8 @@ node_modules/
 plans/
 notes.txt
 
-# 런타임 워크스페이스 (행사별 cwd: 제안서·예산 등 산출물)
-workspace/
+# 런타임 워크스페이스 (행사별 cwd: 제안서·예산 등 산출물) — 루트만(프런트 screens/workspace 제외)
+/workspace/
 
 # V0 스파이크 잔여 (있을 경우)
 scratch/

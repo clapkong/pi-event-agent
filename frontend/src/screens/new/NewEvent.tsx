@@ -20,15 +20,21 @@ export function NewEvent() {
   };
 
   const start = () => {
-    const summary =
-      conditions
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean)
-        .join(" · ") || "조건 미정";
+    const lines = conditions
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const summary = lines.join(" · ") || "조건 미정";
+    // 폼 입력 → 에이전트 초기 프롬프트.
+    const promptText = [
+      name.trim() ? `"${name.trim()}" 행사를 기획해줘.` : "행사를 기획해줘.",
+      lines.length ? `조건:\n${lines.join("\n")}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
     const ws = add({ name, summary });
-    // autostart: S3 진입 시 mock 런 자동 시작 (location state로 전달).
-    navigate(`/w/${ws.id}`, { state: { autostart: true } });
+    // autostart + 초기 프롬프트를 S3에 전달(location state).
+    navigate(`/w/${ws.id}`, { state: { autostart: true, prompt: promptText } });
   };
 
   return (
