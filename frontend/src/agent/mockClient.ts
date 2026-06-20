@@ -1,6 +1,6 @@
 // agent/mockClient.ts — 스크립트 런 재생 (TASKS F1.3).
 //
-// 시퀀스: case_search(Extension) → ask(되묻기) → estimate_budget(Extension)
+// 시퀀스: case_search(Extension) → ask(되묻기) → estimate_budget(Tool)
 //        → gate(승인) → proposal-writer(Skill) 스트리밍, 중간 model_switch 1회.
 // 실제 Pi 없이 계약(contract.ts) 형태로만 이벤트를 흘린다. 백엔드(B2)가 같은
 // 형태를 구현하면 프런트는 무수정.
@@ -68,12 +68,12 @@ export function createMockClient(): AgentClient {
     if (aborted) return;
     await streamText(`${place}(으)로 잡고 예산을 짜볼게요. `);
 
-    // 3) 예산 산정 (Extension)
+    // 3) 예산 산정 (Tool — 결정론 계산. 5요소 아님)
     emit({
       type: "tool_start",
       label: "예산 산정",
       tool: "estimate_budget",
-      element: "Extension",
+      element: "Tool",
     });
     await sleep(520);
     if (aborted) return;

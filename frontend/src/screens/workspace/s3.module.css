@@ -456,6 +456,10 @@
   background: var(--et-skill-bg);
   color: var(--et-skill-fg);
 }
+.etTool {
+  background: var(--et-tool-bg);
+  color: var(--et-tool-fg);
+}
 
 /* ── 종료/에러 노트 ──────────────────────────────────── */
 .endNote {

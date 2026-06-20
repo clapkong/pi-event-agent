@@ -119,6 +119,9 @@
   --et-ext-fg: #0a585c;
   --et-skill-bg: #ece6f2;
   --et-skill-fg: #6b5b8e;
+  /* 평범한 커스텀 도구(5요소 아님) — 중성 회색으로 한 단계 약하게 */
+  --et-tool-bg: #eceef0;
+  --et-tool-fg: #5b626b;
 
   /* ── §2.5 행위자 마커 (taxonomy B) ───────────────────── */
   --actor-ai-bg: #dceded;

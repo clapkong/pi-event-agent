@@ -7,8 +7,9 @@
 //    ask → ExtensionUIContext `ui.select`, gate → `ui.confirm`,
 //    abort → `session.abort()`, model_switch → `session.setModel()`+modelFallbackMessage.
 
-/** 타임라인 스텝이 어떤 Pi 요소인지 (DESIGN §2.4 taxonomy A). */
-export type ElementType = "MCP" | "Extension" | "Skill";
+/** 타임라인 스텝의 종류 (DESIGN §2.4 taxonomy A). MCP/Extension/Skill = Pi 5요소,
+ *  Tool = 평범한 커스텀 도구(5요소 아님 — 요약 카운트 제외). */
+export type ElementType = "MCP" | "Extension" | "Skill" | "Tool";
 
 /** 서버→프런트로 흐르는 단일 이벤트 (type 으로 구분되는 합집합). */
 export type AgentEvent =

@@ -67,7 +67,7 @@ export interface RunState {
   pending: "ask" | "gate" | null;
   toast: ModelToast | null;
   error: string | null;
-  counts: Record<ElementType, number>;
+  counts: Record<Exclude<ElementType, "Tool">, number>; // 5요소만 집계(Tool 제외)
 }
 
 const initialState: RunState = {
@@ -140,7 +140,10 @@ export function useAgentRun(wsId = "demo") {
                 status: "active",
               },
             ],
-            counts: { ...s.counts, [e.element]: s.counts[e.element] + 1 },
+            counts:
+              e.element === "Tool"
+                ? s.counts
+                : { ...s.counts, [e.element]: s.counts[e.element] + 1 },
           };
         case "tool_end":
           return {
