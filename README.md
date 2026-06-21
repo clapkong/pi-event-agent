@@ -48,24 +48,25 @@ pi install npm:@tintinweb/pi-subagents -l
 pi install npm:pi-local-rag -l        # 사례 RAG (하이브리드 검색)
 ```
 
-### MCP(Gmail) 셋업
+### MCP 셋업 (메일·캘린더·지도)
 
-메일 읽기·초안(공식 원격 MCP) + 발송(자작 MCP). **비밀은 `.env` 한 곳만** 채우면 된다 — 나머지(`.pi/mcp.json`)는 `setup.mjs`가 생성한다.
+외부 도구는 **커뮤니티 MCP 서버**(npx)를 **전역** `~/.config/mcp/mcp.json`에 등록해 모든 Pi 세션·워크스페이스에서 공유한다. 전부 표준 Google API라 개인 계정으로 바로 작동한다. (공식 Google Workspace 원격 MCP는 Developer Preview Program 등록 게이팅이라 일반 계정으로 사용 불가 — 그래서 커뮤니티 서버 채택.)
 
-```bash
-cp .env.example .env           # 1) GMAIL_OAUTH_CLIENT_ID / SECRET 채우기 (유일한 수기 입력)
-node mcp-servers/setup.mjs     # 2) .pi/mcp.json 생성 + deps + 자작 서버 인증(브라우저)
-#   3) Pi 안에서:  /mcp-auth gmail   (공식 서버 인증, 1회)  →  /mcp reconnect gmail gmail-send
-```
+| 도구 | 서버 | 인증 |
+|---|---|---|
+| 메일 | `@gongrzhe/server-gmail-autoauth-mcp` | `npx -y @gongrzhe/server-gmail-autoauth-mcp auth` (브라우저 1회) |
+| 캘린더 | `@cocal/google-calendar-mcp` | `GOOGLE_OAUTH_CREDENTIALS=<oauth.json> npx -y @cocal/google-calendar-mcp auth` |
+| 지도 | `@modelcontextprotocol/server-google-maps` | env `GOOGLE_MAPS_API_KEY` (Google Maps는 결제 사용 설정 필요) |
 
-- OAuth 클라이언트 발급 등 상세 절차·트러블슈팅: **`docs/MCP_GUIDE.md`**
-- 비밀(`.env`·`.pi/mcp.json`·`.token.json`)은 전부 gitignore — 커밋되지 않는다.
-- MCP는 lazy라 **이 셋업 없이도 앱은 실행**된다(검색·기획 동작, 메일 기능만 비활성).
+- 사전: Google Cloud 개인 프로젝트에서 Gmail·Calendar API 사용 설정 + **데스크톱 OAuth 클라이언트** 발급(`gcp-oauth.json`), Maps는 결제(카드) + API 키.
+- 전역 설정·토큰은 `~/.config/mcp/`, `~/.gmail-mcp/`, `~/.config/google-calendar-mcp/` 에 — **repo엔 비밀·설정 없음.**
+- MCP는 lazy라 **이 셋업 없이도 앱은 실행**된다(검색·기획 동작, 외부 도구만 비활성).
+- **상세·처음부터 재현·트러블슈팅: [`docs/MCP_DETAILS.md`](docs/MCP_DETAILS.md)**
 
 ## Pi 필수 5요소
 
 - **Pi** — 코어 임베드 + 스트리밍
 - **Skill** — `skills/<이름>/SKILL.md` 절차
-- **MCP** — 외부 소비(검색·지도/날씨·Gmail·캘린더, `.mcp.json`). 사례 검색은 `pi-local-rag`(.md 인덱싱), 자작 MCP 노출은 P3 가점
+- **MCP** — 외부 소비(메일·캘린더·지도 = 커뮤니티 서버, 전역 `~/.config/mcp/mcp.json`). 사례 검색은 `pi-local-rag`(.md 인덱싱)
 - **Pi Extension** — `extensions/`의 커스텀 결정론적 도구
 - **Web UI** — CLI 아닌 React
