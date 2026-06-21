@@ -4,13 +4,14 @@
 > 아키텍처는 `AGENTS_DETAILS.md`·`docs/AGENTS_DETAILS.md`, 진행 정본은 `plans/`(로컬), 작업 규칙은 `CLAUDE.md`.
 
 ## 자작 Pi Extension (미구현 — `AGENTS.md`가 참조만 함)
-- [ ] **`case_search`** — 과거 사례 DB(pgvector RAG) 조회. Planner가 직접 호출해 외부 조사와 종합. (`extensions/` 비어 있음)
+- [x] **사례 RAG** — 직접 안 만들고 **`pi-local-rag` 익스텐션 채택**(설치·현재 Pi 0.79.8 로드 검증 완료). 도구 `rag_query`(조회)·`rag_index`(적립). 사례 = 공통 `cases/*.md`. *(`case_search` 자작 폐기)*
 - [ ] **`update_state`** — 보드 상태 쓰기 통로. **hook으로 잠금(confirmed🔒)·집행(spent) 가드 + 발송/적립 승인 게이트** 내장. 모든 상태 변경은 이 통로로만.
   - 프런트 상태 모델 참고: `frontend/src/data/boardState.ts`(3겹·예산 3상태·업체 4단계·stale).
 
-## Skill (미작성 — `skills/` 비어 있음)
-- [ ] **meeting-notes** — 슬랙 날것 메시지 뭉치 → 회의록 정리 (secretary/Planner가 호출).
-- [ ] 제안서 작성·리스크 점검 등 절차 Skill 후보 (추후 정리).
+## Skill (`.pi/skills/` — 4종 작성됨, 카탈로그 `plans/PI_ELEMENTS.md §5`)
+- [x] **budget-policy** · **notice-writer** · **risk-assessment**(omnibus: 리스크·컴플라이언스·접근성·비상·식이) · **satisfaction-survey**(P3).
+- 흡수돼 별도 skill 없음: `meeting-notes`→secretary 프롬프트, `proposal-writer`→writer, `clarify-questions`→Planner, `task-checklist`→build_checklist.
+- [x] skill 자동 발견·로드 검증 — pi 0.79.8 로더 소스(`core/skills.js`) 대조: 스캔 경로 `.pi/skills`·`SKILL.md` 루트·`description` 규칙(≤1024자) 전부 충족, 헤드리스 startup 무에러(모델 401까지 도달=로드 OK). 남은 건 실제 모델이 task 매칭 시 *호출*하는지(라이브, 크레딧 소요 — 검증 타이밍 사용자 결정).
 
 ## MCP (`.mcp.json` = `{"mcpServers":{}}` — 비어 있음)
 - [ ] **Gmail** — secretary 통신 읽기 / Planner 발송. (없으면 secretary가 읽을 통신이 없음)
