@@ -49,5 +49,13 @@ export function createRealClient(wsId = "demo", baseUrl = DEFAULT_URL): AgentCli
     abort() {
       sendMsg({ kind: "abort" });
     },
+    close() {
+      handlers.clear();
+      try {
+        ws.close();
+      } catch {
+        /* 이미 닫힘 */
+      }
+    },
   };
 }

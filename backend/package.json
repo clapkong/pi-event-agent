@@ -1,0 +1,24 @@
+{
+  "name": "pi-event-agent-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "행사 기획 에이전트 백엔드 — pi --mode rpc 서브프로세스를 WS로 중계(B방식)",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "check": "tsc --noEmit",
+    "test": "node --import tsx --test src/*.test.ts",
+    "smoke": "tsx src/smoke-pi-session.ts",
+    "smoke:e2e": "tsx src/smoke-e2e.ts"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^11.0.0",
+    "fastify": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

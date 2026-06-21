@@ -133,5 +133,12 @@ export function createMockClient(): AgentClient {
       timers.clear();
       resolvePending = null;
     },
+    close() {
+      aborted = true;
+      for (const t of timers) clearTimeout(t);
+      timers.clear();
+      resolvePending = null;
+      handlers.clear();
+    },
   };
 }

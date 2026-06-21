@@ -101,11 +101,11 @@ export function useAgentRun(wsId = "demo") {
   const idRef = useRef(0);
   const nextId = () => (idRef.current += 1);
 
-  if (!clientRef.current)
-    clientRef.current = USE_REAL ? createRealClient(wsId) : createMockClient();
-
+  // ⚠️ client(=WS 연결)는 반드시 effect 안에서 생성·정리한다. render 본문에서 만들면
+  // StrictMode(개발) 이중 마운트로 WS가 2개 열려 pi 프로세스도 2배가 된다.
   useEffect(() => {
-    const client = clientRef.current!;
+    const client = USE_REAL ? createRealClient(wsId) : createMockClient();
+    clientRef.current = client;
     const reduce = (s: RunState, e: AgentEvent): RunState => {
       switch (e.type) {
         case "model_current":
@@ -210,8 +210,12 @@ export function useAgentRun(wsId = "demo") {
       }
       setState((s) => reduce(s, e));
     });
-    return unsubscribe;
-  }, []);
+    return () => {
+      unsubscribe();
+      client.close();
+      clientRef.current = null;
+    };
+  }, [wsId]);
 
   // 첫 실행이면 새로 시작, 이미 대화가 있으면 이어붙인다(이전 메시지 유지).
   const start = (text = "") => {

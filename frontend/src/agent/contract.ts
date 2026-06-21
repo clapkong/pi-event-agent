@@ -54,4 +54,6 @@ export interface AgentClient {
   answer(choice: string): void;
   /** 진행 중인 런 중지. Pi: `session.abort()`. */
   abort(): void;
+  /** 연결 종료(정리). 컴포넌트 언마운트 시 호출 — WS 닫고 자원 해제. */
+  close(): void;
 }

@@ -52,4 +52,10 @@
 
 | Claude Code (Opus 4.8) | A 파이프라인 실측에서 버그 2건 진단·수정 — ① **fuzzy `haiku`가 구형 `claude-3-haiku`(도구 미지원·출력 4.1K)에 오매칭**돼 writer 빈출력 → writer/critic/monitor 모델을 명시 ID(`anthropic/claude-haiku-4.5`·`anthropic/claude-sonnet-4.6`)로 핀. 헤드리스 재테스트로 writer 정상 출력 + **writer⇄critic 루프 끝까지 검증**(판정 키워드·처리주체 분류[writer/재조사/사용자 판단]·writer 재작성 1회·통과; critic이 케이터링/장소 예산 비현실성·추석 충돌까지 포착). ② `ask_user_question` **5옵션 검증 실패** → "질문당 2~4개, 초과 시 추천순 상위 4+Other" 규칙 + writer/critic **foreground 회수 힌트** 추가. (앞서 secretary·monitor도 헤드리스 검증, secretary 환각 가드 추가) | **"전체 파이프라인 시험"·"테스트 해보자" 지시, pi 실행 로그 직접 제공·관찰(선택게이트·병렬 관전포인트 지정), 버그 현상 보고** | `.pi/agents/{writer,critic,monitor,secretary}.md`, `AGENTS.md`, `plans/test/*`(로컬) |
 
+## 2026-06-22
+
+| 도구 | AI 구현 | **내 역할 (지시·결정·피드백·검증)** | 산출물 |
+|---|---|---|---|
+| Claude Code (Opus 4.8) | **백엔드 B(pi rpc↔WS 브리지) 구축·브라우저 실증**: 방식 A(SDK 인프로세스) vs B(`pi --mode rpc` 서브프로세스)를 공식문서·교수님 레퍼런스·rpc.md로 비교 후 **B 확정**. `backend/`(TS+tsx) 책임분리 구축 — config·workspace·rpc/contract 타입 + **bridge**(순수 변환, 단위테스트 10)·**pi-session**(JSONL LF split)·**ws-handler**·**server**(Fastify /ws·/health). 프런트 실연결: contract/realClient/mockClient에 `close()` + `useAgentRun`를 effect-lifecycle로(StrictMode 이중연결 수정)·main.tsx StrictMode 임시 off. **브라우저 풀 파이프라인 실증**: 연결 유지 시 백그라운드 서브 완료→followUp 자동 이어짐→`get_subagent_result` 회수→종합→`ask_user_question`까지. 진단: rpiv-ask-user-question이 `ui.custom`(TUI 전용)이라 웹 비호환→자작 ask 필요 규명, setStatus 등 표시용 ui 이벤트 무시 매핑, cwd=레포루트 임시(공유 agentDir는 TODO) | **A/B 차이를 끝까지 캐물어 직접 판단(터미널과 "똑같이" 동작 요구), "구조부터—한 파일에 다 넣지 말라" 지시, contract 정본=백엔드 결정(사본 거부), 브라우저 직접 실행·화면/로그 제보, 더블연결·완료 조기표시 현상 보고, 잡파일 정리·우리 파일만 커밋 지시** | `backend/*`, `frontend/src/agent/{contract,realClient,mockClient,useAgentRun}.ts`, `frontend/src/main.tsx`, `TODO.md` |
+
 <!-- 새 항목: 날짜 섹션 + 표 행. AI 구현은 사람이 검토하고, 결정·피드백을 '내 역할'에 구체적으로 남긴다. -->

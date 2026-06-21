@@ -18,15 +18,23 @@
 - [ ] Slack(회의록 원천)·지도. *검색·날씨는 `pi-web-access`로 일부 대체 가능.*
 
 ## 백엔드 (Pi부터 새로 작성 예정 — `backend/` 없음)
-- [ ] `createAgentSession` + WebSocket 스트리밍. **행사별 cwd + 공유 agentDir(SYSTEM/agents/extensions)** 구조.
-- [ ] **monitor·secretary 트리거 인프라** — 둘은 Planner가 spawn하지 않고 **백엔드가 트리거**한다: secretary=통신 도착 훅(Gmail watch/poll), monitor=주기 cron. 트리거 결과(회의록·판정)를 세션에 주입 → Planner가 대응. (pi의 in-agent `schedule`은 세션 스코프라 부족.)
+- **방식 확정: B = `pi --mode rpc` 서브프로세스** (SDK 인프로세스 A 아님). 근거: pi 철학(코어 그대로+능력만 확장)·교수님 레퍼런스(CLI+구조화출력 패턴)·rpc.md가 "외부 UI용"으로 권장·되묻기/게이트가 `extension_ui_request`로 깔끔. 백엔드 = 웹서버 + 워크스페이스별 `pi` 자식프로세스 + rpc↔`contract.ts` 브리지 + 상태파일.
+- [x] **rpc 브리지** — `backend/src/bridge.ts`(순수, 테스트 9개) + `pi-session.ts`(JSONL LF split) + `ws-handler.ts`(tee). 매핑 검증됨.
+- [x] **WebSocket 스트리밍 v1** — `server.ts`(/ws·/health) + 행사별 cwd. **e2e 통과**(smoke모드: client→server→pi→client 한바퀴). 남음: 풀 에이전트(비smoke) + 실제 프런트 연결.
+- [ ] **thinking 표시(프런트+contract)** — 추론 블록을 UI에 노출. `contract.ts`에 `{type:"thinking_delta",delta}` 추가 + S3 타임라인에 **기본 접힘·흐린 색 토글 패널**. (thinking 수다스러우니 펼침은 선택. 발표 임팩트 좋음.) ✅rpc 필드 확정: `message_update`/`assistantMessageEvent.type==="thinking_delta"`/`.delta`.
+- [x] **rpc 스모크** — `pi --mode rpc` 자식 구동·이벤트 수신 확인(스모크 파일은 구조 재정비로 삭제). 프로토콜은 메모리 `pi-rpc-protocol`에 영속.
+- [x] **백엔드 구조 스캐폴드** — `backend/`(TS+tsx): contract·rpc·config·workspace(완성) + bridge·pi-session·ws-handler·server(골격). typecheck 통과. 모듈지도 `backend/README.md`.
+- [ ] **citation `[n]` → pi-local-rag 출처 연결** — 본문 `[n]` / 출처를 `rag_query` 결과(cases)에 매핑해 인용 드로어로. (rpc `tool_end`엔 citation 번호 없음 → 본문 파싱 or rag 출처 기반.)
+- [ ] **보드 상태 동기화** — `contract.ts`엔 보드 이벤트 없음 → 별도 REST `GET /api/workspaces/:id`(상태파일 `workspace/<id>/state.json`). update_state가 유일 writer.
+- **결정: 자동 트리거 안 함.** monitor/secretary는 백그라운드 cron/메일폴링 X → **온디맨드**(대화 중 Planner 추천 / 사용자 "재검토" / 견적 메일 도착 시). 재기획은 *추천만*, 프런트 배너로 표시. → 백엔드에 트리거 서브시스템 불필요(더 얇아짐).
+- [ ] **홈 알림 센터 소스 정의(설계 구멍)** — 자동 트리거 없음 → 비동기 알림이 어디서 오나? 후보: Planner 대화 추천 / 사용자 액션 / secretary 온디맨드. 정해야 알림이 채워짐.
 - [ ] **메인 세션 도구 제한 주의** — `tools` 허용목록을 좁히면 `ask_user_question`·`Agent`·`web_search` 등이 빠질 수 있음. 메인엔 제한을 걸지 않거나 명시 포함.
 - [ ] `ask_user_question`/승인 게이트의 RPC `extension_ui_request` 이벤트 → 프런트 `ask`/`gate` 타임라인 매핑 (PI_INTEGRATION §8).
 - [ ] 프런트 mock→실제 교체 지점: `frontend/src/agent/mockClient.ts`, `data/workspaces.ts` (CLAUDE.md 참조).
 
 ## 검증
-- [ ] 실제 `pi` 세션에서 위임·**선택 게이트(ask_user_question)**·writer↔critic 루프 동작 실측.
-- [ ] **fuzzy 모델**(`sonnet`/`haiku`)이 OpenRouter 경유로 실제 해석되는지 확인 (안 잡히면 조용히 폴백).
+- [x] 실제 `pi` 세션에서 **풀 파이프라인 라이브 동작 확인**(2026-06-21): researcher 3개 병렬 fan-out → `ask_user_question` 선택 게이트(장소·케이터링·예산방향) → writer(haiku) → critic(sonnet, 치명3/권고4) → 예산 사용자판단 재게이트. 한 세션에서 쭉 돔.
+- [x] **fuzzy 모델** 해석 확인 — 라이브 런에서 writer=`claude haiku 4.5`, critic=`claude sonnet 4.6`로 정상 해석·실행됨.
 
 ## 문서 정리
 - [ ] **이름 충돌**: 루트 `AGENTS_DETAILS.md`(아키텍처)와 `docs/AGENTS_DETAILS.md`(역할 요약)가 **같은 파일명**. 하나로 통합하거나 이름을 구분(예: docs/는 `AGENT_ROLES.md`).
