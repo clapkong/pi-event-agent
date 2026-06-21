@@ -57,10 +57,21 @@ const config = {
       },
     },
     "gmail-send": { command: "node", args: ["./mcp-servers/gmail-send/index.mjs"] },
+    calendar: {
+      url: "https://calendarmcp.googleapis.com/mcp/v1",
+      auth: "oauth",
+      oauth: {
+        clientId,
+        clientSecret,
+        redirectUri: "http://localhost:3118/callback",
+        // 읽기 + 쓰기(create/update/delete/respond). read-only면 calendar.events → calendar.events.readonly 로 교체
+        scope: "https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.freebusy https://www.googleapis.com/auth/calendar.events",
+      },
+    },
   },
 };
 writeFileSync(PI_MCP, JSON.stringify(config, null, 2) + "\n");
-console.log("✓ .pi/mcp.json 생성 (gmail + gmail-send)");
+console.log("✓ .pi/mcp.json 생성 (gmail + gmail-send + calendar)");
 
 // 2) 자작 서버 의존성
 if (!existsSync(join(GMAIL_DIR, "node_modules"))) {
@@ -86,7 +97,8 @@ if (existsSync(TOKEN)) {
   }
 }
 
-console.log("\n남은 1단계 (Pi 안에서):");
-console.log("  /mcp-auth gmail            # 공식 서버 인증 (브라우저, 1회)");
-console.log("  /mcp reconnect gmail gmail-send");
+console.log("\n남은 단계 (Pi 안에서):");
+console.log("  /mcp-auth gmail            # 공식 Gmail 인증 (브라우저, 1회)");
+console.log("  /mcp-auth calendar         # 공식 Calendar 인증 (브라우저, 1회)");
+console.log("  /mcp reconnect gmail gmail-send calendar");
 console.log("\n셋업 완료 ✅");
