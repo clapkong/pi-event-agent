@@ -1,0 +1,9 @@
+{
+  "defaultProvider": "openrouter",
+  "defaultModel": "google/gemini-2.5-flash",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:@tintinweb/pi-subagents",
+    "npm:pi-mcp-adapter"
+  ]
+}
