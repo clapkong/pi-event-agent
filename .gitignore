@@ -5,12 +5,6 @@ node_modules/
 # Pi 확장 설치 캐시 (node_modules). 매니페스트(.pi/settings.json)만 커밋, 복원은 `pi install`
 .pi/npm/
 
-# Pi MCP 로컬 오버라이드 (OAuth client id/secret 리터럴 — 절대 커밋 금지)
-.pi/mcp.json
-
-# 자작 Gmail 발송 서버 토큰 (refresh token — 절대 커밋 금지)
-mcp-servers/gmail-send/.token.json
-
 # 로컬 전용 기획/작업 문서 (공개 repo엔 코드 + README만)
 plans/
 notes.txt
@@ -20,3 +14,6 @@ notes.txt
 
 # V0 스파이크 잔여 (있을 경우)
 scratch/
+
+# 커뮤니티 MCP OAuth 클라이언트 키 (비밀 — 커밋 금지)
+gcp-oauth.json

@@ -1,7 +1,7 @@
 # MCP 연동 상세 (메일·캘린더·지도)
 
 > 행사 기획 에이전트가 쓰는 외부 도구(MCP)를 Pi에 붙이는 **현행 셋업 + 재현 가이드.**
-> 결론: **커뮤니티 MCP 서버(npx)를 개인 Google 계정 + 전역 설정으로** 쓴다. 공식 Google Workspace 원격 MCP는 **프리뷰 게이팅**이라 일반 계정으로 사용 불가(아래 §0).
+> 결론: **커뮤니티 MCP 서버(npx)를 개인 Google 계정**으로 쓰고, 설정은 **`.pi/mcp.json`(프로젝트, 커밋됨)** 에 둔다. 비밀은 `${VAR}`로 빼서 repo엔 노출 0. 공식 Google Workspace 원격 MCP는 **프리뷰 게이팅**이라 일반 계정으로 사용 불가(아래 §0).
 
 ---
 
@@ -26,22 +26,23 @@ Google은 공식 원격 MCP(`gmailmcp.googleapis.com`·`calendarmcp.googleapis.c
 | **지도** | `@modelcontextprotocol/server-google-maps` | Google Maps Platform | API 키 (결제 필요) |
 
 - 모두 **개인 Google 계정**(예: `clapkong23@gmail.com`) + **개인 Cloud 프로젝트**.
-- 설정은 **전역** `~/.config/mcp/mcp.json` — 모든 Pi 세션·워크스페이스가 공유(행사마다 cwd 달라도 OK). pi-mcp-adapter가 이 경로를 읽음.
+- 설정은 **`.pi/mcp.json`** (프로젝트 루트 `.pi/`, skills·extensions와 같은 자리, **커밋됨**). pi-mcp-adapter가 이 파일을 자동 로드.
+- **비밀은 파일에 안 박는다** — maps 키·OAuth 클라이언트 경로는 `${VAR}`/`${HOME}`로 참조. 실제 값은 홈 디렉터리·셸 env에.
 - 별도 Pi 익스텐션 `pi-mcp-adapter`가 이 서버들을 에이전트에 노출(프록시). 검색은 `pi-web-access`(네이티브, MCP 아님)로 별도.
 
 ---
 
-## 2. 파일·위치 (전부 repo 밖, 홈 디렉터리)
+## 2. 파일·위치
 
-```
-~/.config/mcp/mcp.json              # 전역 MCP 설정 (서버 3개 + maps 키)
-~/.config/mcp/gcp-oauth.json        # calendar용 OAuth 클라이언트 (GOOGLE_OAUTH_CREDENTIALS)
-~/.gmail-mcp/gcp-oauth.keys.json    # gmail용 OAuth 클라이언트
-~/.gmail-mcp/credentials.json       # gmail 토큰(refresh 포함)
-~/.config/google-calendar-mcp/tokens.json  # calendar 토큰
-```
+| 위치 | 커밋? | 내용 |
+|---|---|---|
+| `.pi/mcp.json` | ✅ 커밋 | 서버 3개 정의 (비밀은 `${VAR}`) |
+| `~/.gmail-mcp/gcp-oauth.keys.json` | ✗ (홈) | **OAuth 클라이언트** (gmail·calendar 공용) |
+| `~/.gmail-mcp/credentials.json` | ✗ (홈) | gmail 토큰(refresh 포함) |
+| `~/.config/google-calendar-mcp/tokens.json` | ✗ (홈) | calendar 토큰 |
+| `~/.zshrc` 의 `GOOGLE_MAPS_API_KEY` | ✗ (셸 env) | maps API 키 |
 
-> **repo엔 MCP 비밀·설정이 없다.** 전부 홈 디렉터리. 그래서 커밋물엔 노출 0.
+> **커밋되는 건 `.pi/mcp.json` 뿐이고, 비밀은 전부 홈/env.** 그래서 repo에 비밀 노출 0.
 
 ---
 
@@ -58,9 +59,7 @@ Google은 공식 원격 MCP(`gmailmcp.googleapis.com`·`calendarmcp.googleapis.c
    https://mail.google.com/
    https://www.googleapis.com/auth/calendar
    ```
-4. **OAuth 클라이언트 → 데스크톱 앱** 생성 → **JSON 다운로드** → `gcp-oauth.json` 으로 저장.
-   - calendar용: `~/.config/mcp/gcp-oauth.json` 로 복사.
-   - gmail용: `~/.gmail-mcp/gcp-oauth.keys.json` 로 복사.
+4. **OAuth 클라이언트 → 데스크톱 앱** 생성 → **JSON 다운로드** → **`~/.gmail-mcp/gcp-oauth.keys.json`** 으로 저장 (gmail·calendar **공용**).
 
 ### 3.2 인증 (각 서버, 브라우저 1회)
 ```bash
@@ -68,8 +67,8 @@ Google은 공식 원격 MCP(`gmailmcp.googleapis.com`·`calendarmcp.googleapis.c
 npx -y @gongrzhe/server-gmail-autoauth-mcp auth
 #  → ~/.gmail-mcp/credentials.json 생성
 
-# calendar
-GOOGLE_OAUTH_CREDENTIALS="$HOME/.config/mcp/gcp-oauth.json" npx -y @cocal/google-calendar-mcp auth
+# calendar (같은 OAuth 클라이언트 재사용)
+GOOGLE_OAUTH_CREDENTIALS="$HOME/.gmail-mcp/gcp-oauth.keys.json" npx -y @cocal/google-calendar-mcp auth
 #  → ~/.config/google-calendar-mcp/tokens.json 생성
 ```
 > 테스트 모드 앱이라 "확인되지 않은 앱" 경고 → **고급 → 계속.**
@@ -81,24 +80,29 @@ gcloud services enable geocoding-backend.googleapis.com places-backend.googleapi
   directions-backend.googleapis.com distance-matrix-backend.googleapis.com \
   elevation-backend.googleapis.com apikeys.googleapis.com --project=<PID>
 gcloud services api-keys create --display-name="Maps MCP" --project=<PID>   # keyString 복사
+
+# 키를 셸 env로 (커밋 안 됨)
+echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zshrc
 ```
 > ⚠️ 학교(Workspace) 계정은 보통 카드 결제가 막힘 → Maps는 **개인 계정**에서.
 
-### 3.4 전역 설정 `~/.config/mcp/mcp.json`
+### 3.4 설정 `.pi/mcp.json` (커밋됨)
 ```json
 {
   "mcpServers": {
     "gmail":    { "command": "npx", "args": ["-y", "@gongrzhe/server-gmail-autoauth-mcp"] },
     "calendar": { "command": "npx", "args": ["-y", "@cocal/google-calendar-mcp"],
-                  "env": { "GOOGLE_OAUTH_CREDENTIALS": "<HOME>/.config/mcp/gcp-oauth.json" } },
+                  "env": { "GOOGLE_OAUTH_CREDENTIALS": "${HOME}/.gmail-mcp/gcp-oauth.keys.json" } },
     "maps":     { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-google-maps"],
-                  "env": { "GOOGLE_MAPS_API_KEY": "<MAPS_API_KEY>" } }
+                  "env": { "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}" } }
   }
 }
 ```
+- `${HOME}`·`${GOOGLE_MAPS_API_KEY}`는 어댑터가 **env 필드에서 보간**(process env에서 읽음). → 비밀 없이 커밋 가능.
+- maps 키는 셸 env(§3.3)에 있어야 하므로 **`~/.zshrc`가 로드된 새 터미널에서 Pi 실행.**
 
 ### 3.5 사용·검증 (Pi 안)
-Pi 재시작 후:
+**새 터미널에서** Pi 실행 후:
 ```
 "내 메일 라벨 보여줘"        → gmail_list_email_labels
 "내 캘린더 일정 보여줘"      → calendar_list-calendars / list-events
@@ -114,21 +118,21 @@ Pi 재시작 후:
 | 공식 MCP가 `The caller does not have permission` | 프리뷰 게이팅 → 공식은 못 씀. 커뮤니티 서버로(§0). |
 | `/mcp` 패널에 `(not cached)` | 새 서버 첫 세션. `/mcp reconnect <서버>` 또는 Pi 재시작. npx 첫 다운로드라 잠깐 걸림. |
 | `MCP: 1/3` 등 일부만 연결 | lazy라 **쓴 서버만** 연결됨. 정상. |
+| Maps만 안 됨 / 키 없음 | `${GOOGLE_MAPS_API_KEY}` 미설정 — **새 터미널**(`~/.zshrc` 로드)에서 Pi 실행. 키 전파 1~2분. |
 | "확인되지 않은 앱" 경고 | 테스트 모드. 고급 → 계속. |
-| Maps `REQUEST_DENIED` | 키 전파 1~2분 / 결제 미연결 / 해당 Maps API 미사용 설정. |
 | gmail/calendar 권한 거부 | 학교(Workspace) 조직이 third-party 앱 차단 가능 → **개인 계정** 사용. |
 
 ---
 
 ## 5. 보안
 
-- 비밀(OAuth 클라이언트·토큰·Maps 키)은 **전부 홈 디렉터리**, repo 커밋물에 없음.
+- 커밋되는 `.pi/mcp.json`엔 **비밀 없음**(`${VAR}`만). 실제 비밀(OAuth 클라이언트·토큰·Maps 키)은 **홈 디렉터리·셸 env**.
 - 스코프: gmail = `mail.google.com`, calendar = `calendar`. Maps 키는 데모용 무제한 — 운영 시 API/도메인 제한 권장.
 - 모든 작업은 사용자 계정 권한을 상속(데이터 거버넌스). 발송·생성 등은 에이전트 응답을 검토하고 사용.
 
 ---
 
 ## 6. 관련
-- 어댑터: `pi-mcp-adapter` (전역 `~/.config/mcp/mcp.json` 자동 로드)
+- 어댑터: `pi-mcp-adapter` (`.pi/mcp.json` 자동 로드)
 - 검색·웹: `pi-web-access` (네이티브 확장, MCP 아님)
 - 작업 기록: `docs/ai-usage-log.md`

@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@gongrzhe/server-gmail-autoauth-mcp"
+      ],
+      "directTools": true
+    },
+    "calendar": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@cocal/google-calendar-mcp"
+      ],
+      "env": {
+        "GOOGLE_OAUTH_CREDENTIALS": "${HOME}/.gmail-mcp/gcp-oauth.keys.json"
+      },
+      "directTools": true
+    },
+    "maps": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-google-maps"
+      ],
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
+      },
+      "directTools": true
+    }
+  }
+}
