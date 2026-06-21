@@ -31,4 +31,15 @@
 
 ---
 
+## 2026-06-21
+
+| 도구 | AI 구현 | **내 역할 (지시·결정·피드백·검증)** | 산출물 |
+|---|---|---|---|
+| Claude Code (Opus 4.8) | `.pi/agents/` 6개 서브에이전트 정의를 `@tintinweb/pi-subagents` v0.10.3 정본 사양과 대조·수정: secretary의 잘못된 `mcp` 도구명 제거(로드 실패 버그), researcher·monitor의 `isolated:true` 제거(외부 조사·날씨 접근 차단 버그), writer/monitor/critic 모델을 fuzzy 이름(`haiku`/`sonnet`)으로, Planner 위임 대상을 실제 spawn 타입명(`researcher`/`writer`/`critic`/`monitor`/`secretary`)으로 정렬, monitor의 "깃발 push"→"결과 반환" 멘탈모델 정정 | **"`.pi/agents` 검토·개선" 지시, 범위를 `.pi/agents`로 한정, Planner를 워크스페이스당 1개로 두는 이유 설명→서브에이전트 유지 결정, 모델 fuzzy 방식 채택 결정** | `.pi/agents/*.md` |
+| Claude Code (Opus 4.8) | Pi 시스템 프롬프트 빌드 경로 실측(`system-prompt.js`: 기본 "coding assistant" 정체성은 `SYSTEM.md`(=`customPrompt`)가 있으면 통째 교체, 없으면 `AGENTS.md`/`CLAUDE.md`를 `<project_context>`로 덧붙임)으로 "메인=세션 자체" 구조 확정. Planner(`event-organizer-main.md`)를 서브에이전트 디렉터리에서 빼서 **`AGENTS.md`(세션 메인 프롬프트)로 이동**, `.pi/agents/`엔 서브 5개만 남김 | **"행사마다 세션을 따로 관리하니 main을 서브가 아닌 메인으로" 직접 결정, "Pi 내부 너무 건드리는 것 아닌가" 우려 제기→교재(11·12장)로 정식 기능임 확인 후 가장 가벼운 `AGENTS.md` 경로 선택** | `AGENTS.md`(신규), `.pi/agents/event-organizer-main.md`(삭제) |
+| Claude Code (Opus 4.8) | 위임 오케스트레이션 명문화: `Agent` 도구 병렬 방식 실측(`tasks[]` 없음 → 한 메시지에 다중 `Agent` 호출 + 각 `run_in_background`, 동시성 4) 확인 후 ① 조사 = researcher **병렬 fan-out**(타입 1개·인스턴스 N), 과거 사례 DB는 main이 `case_search` 직접, ② 작성·검토 = writer ⇄ critic **순차 루프(≤2회)** 를 Planner 프롬프트와 두 아키텍처 문서에 반영. 협업 흐름도도 병렬·루프판으로 교체 | **"researcher 하나보다 여러 개 병렬이 낫지 않나, writer↔critic 관계가 안 드러난다" 직접 지적, 사례 DB 조회 주체=main 직접 선택, 반영 범위=프롬프트+문서 둘 다 선택** | `AGENTS.md`, `docs/AGENTSDOCS.md`, `AGENTS_DETAILS.md` |
+| Claude Code (Opus 4.8) | 프런트 구조 진단(pi 패키지 층 관계 실측: `pi-coding-agent` = `pi-agent-core` + 파일도구, `pi-web-ui`도 같은 토대) + 화면 부품 과분할 정리: Home(타일·알림·달력 3파일) → `Home.tsx` 1개, S3 대화(상단바·타임라인·컴포저·토스트·마커 5파일) → `S3View.tsx` 1개로 통합(S4 단일파일 패턴에 맞춤), 설계 참조 주석(§9.x) 제거. 시각 변화 0, `tsc` 통과, 36→28파일 | **"화면만 보여줘야 하는데 로직·파일이 너무 많다" 직접 진단→로직은 `boardState`·`useAgentRun` 2곳에 모여있음 확인, "부품을 너무 쪼개놨다, S4처럼 한 파일로" 통합 방향 결정, 파일 수↓ vs 파일 길이↓ 트레이드오프 중 전자 선택** | `screens/home/Home.tsx`, `screens/workspace/S3View.tsx`(통합), 8파일 삭제 |
+
+| Claude Code (Opus 4.8) | 에이전트 `.md` 프롬프트 엔지니어링 패스(한 파일씩): 5개 서브 + `AGENTS.md`에 **입력 계약·출력 계약·역할 경계** 신설. researcher=다후보(검증된 것만·추천순)·web_search/fetch_content, writer=블록 포맷(`[잠금]`·`[n]`)+inherit_context, critic=판정 키워드+치명/권고+**수정 방향·처리 주체 분류**+inherit_context+tools=read, secretary=**추출만**(분리형), monitor=`판정: 재기획` 구조화. `AGENTS.md`에 조사 입력→**선택 게이트(ask_user_question)**→writer↔critic **루프 라우팅**→**변화 대응** 전 구간 배선 + ask_user_question 사용 정책·예시. 미구현 도구(`case_search`·`update_state`) TODO 표시. 두 아키텍처 문서 흐름도 동기화. 루트 `TODO.md` 신설 | **방식=한 파일씩 같이, 목표=역할별 꼭 필요한 것+입출력 구조화 직접 지정; researcher 다후보·secretary 분리형·case_search=main 직접·inherit_context(writer/critic)·critic이 수정방향+처리주체로 무한루프 차단 등 설계 결정; "ask_user_question 호출 가능?"·"호출할 줄 모르지 않나" 직접 점검→사용 정책 명문화 유도; TODO.md 생성 지시** | `.pi/agents/*.md`, `AGENTS.md`, `AGENTS_DETAILS.md`, `docs/AGENTS_DETAILS.md`, `TODO.md` |
+
 <!-- 새 항목: 날짜 섹션 + 표 행. AI 구현은 사람이 검토하고, 결정·피드백을 '내 역할'에 구체적으로 남긴다. -->
