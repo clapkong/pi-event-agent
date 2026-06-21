@@ -1,19 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/store/workspaces";
-import { MOCK_CHECKLIST } from "@/data/home";
-import { WorkspaceTile } from "./WorkspaceTile";
-import { NotificationCenter } from "./NotificationCenter";
-import { MiniCalendar } from "./MiniCalendar";
+import { STATUS_DOT, type Workspace } from "@/data/workspaces";
+import {
+  MOCK_CHECKLIST,
+  MOCK_NOTIFS,
+  NOTIF_GROUPS,
+  CALENDAR_MARKS,
+  CALENDAR_MONTH,
+  type NotifKind,
+  type DayMark,
+} from "@/data/home";
+import { StatusBadge } from "@/components/StatusBadge";
 import styles from "./home.module.css";
 
-// S1 홈 · 대시보드 (F3.2).
+// 홈 · 대시보드. 화면 전체와 그 안에서만 쓰는 부품(타일·알림·달력)을 한 파일에 둔다.
 export function Home() {
   const { byStatus } = useWorkspaces();
   const navigate = useNavigate();
 
-  // 진행 중 = 진행중(active)+지연(late) · 진행 예정 = 기획중(planning) · 완료 = done.
-  // (중복·누락 방지: 각 워크스페이스는 정확히 한 버킷)
+  // 진행 중 = 진행중+지연 · 진행 예정 = 기획중 · 완료 = done.
+  // 각 워크스페이스는 정확히 한 버킷(중복·누락 없음).
   const inProgress = byStatus("active", "late");
   const upcoming = byStatus("planning");
   const completed = byStatus("done");
@@ -96,7 +103,7 @@ export function Home() {
   );
 }
 
-// 접히는 행 (진행 예정·완료) — 기본 접힘 (시안: toggle off).
+// 접히는 행 (진행 예정·완료). 기본 접힘.
 function CollapsibleRow({
   title,
   count,
@@ -124,5 +131,143 @@ function CollapsibleRow({
       </button>
       {open && <div className={styles.tileGrid}>{children}</div>}
     </section>
+  );
+}
+
+// 워크스페이스 타일. 클릭 → 작업 보드.
+function WorkspaceTile({ ws }: { ws: Workspace }) {
+  const navigate = useNavigate();
+  return (
+    <button type="button" className={styles.tile} onClick={() => navigate(`/w/${ws.id}/board`)}>
+      <div className={styles.tileHead}>
+        <span className={styles.tileDot} style={{ background: STATUS_DOT[ws.status] }} aria-hidden />
+        <span className={styles.tileName}>{ws.name}</span>
+        <StatusBadge status={ws.status} />
+      </div>
+      <p className={styles.tileSummary}>{ws.summary}</p>
+      <div className={styles.meter}>
+        <div className={styles.meterTrack}>
+          <div className={styles.meterFill} style={{ width: `${ws.progress}%` }} />
+        </div>
+        <span className={styles.meterPct}>{ws.progress}%</span>
+      </div>
+    </button>
+  );
+}
+
+// 알림 센터: 벨 + 카운트 + 그룹 패널.
+const NOTIF_KIND_CLASS: Record<NotifKind, string> = {
+  review: styles.kindReview,
+  approval: styles.kindApproval,
+  deadline: styles.kindDeadline,
+};
+
+function NotificationCenter() {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const count = MOCK_NOTIFS.length;
+
+  return (
+    <div className={styles.notifWrap}>
+      <button
+        type="button"
+        className={styles.bell}
+        onClick={() => setOpen((v) => !v)}
+        aria-label={`알림 ${count}건`}
+      >
+        <i className="ti ti-bell" aria-hidden />
+        {count > 0 && <span className={styles.bellCount}>{count}</span>}
+      </button>
+
+      {open && (
+        <>
+          <div className={styles.notifBackdrop} onClick={() => setOpen(false)} />
+          <div className={styles.notifPanel} role="dialog" aria-label="알림">
+            {NOTIF_GROUPS.map((g) => {
+              const items = MOCK_NOTIFS.filter((n) => n.kind === g.kind);
+              if (items.length === 0) return null;
+              return (
+                <div key={g.kind} className={styles.notifGroup}>
+                  <p className={`${styles.notifGroupLabel} ${NOTIF_KIND_CLASS[g.kind]}`}>
+                    {g.label} <span className={styles.notifGroupCount}>{items.length}</span>
+                  </p>
+                  {items.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      className={styles.notifItem}
+                      onClick={() => {
+                        setOpen(false);
+                        navigate(`/w/${n.wsId}`);
+                      }}
+                    >
+                      <span className={styles.notifWs}>{n.wsName}</span>
+                      <span className={styles.notifMsg}>{n.message}</span>
+                      <span className={styles.notifWhen}>{n.when}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// 미니 달력: 월 격자 + 범례. (2026년 6월 고정 mock)
+const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const DAY_MARK_CLASS: Record<DayMark, string> = {
+  today: styles.dayToday,
+  event: styles.dayEvent,
+  milestone: styles.dayMilestone,
+  rehearsal: styles.dayRehearsal,
+};
+const CAL_LEGEND: { mark: DayMark; label: string }[] = [
+  { mark: "today", label: "오늘" },
+  { mark: "event", label: "행사일" },
+  { mark: "milestone", label: "마일스톤" },
+  { mark: "rehearsal", label: "리허설" },
+];
+
+function MiniCalendar() {
+  const firstWeekday = new Date(2026, 5, 1).getDay();
+  const daysInMonth = new Date(2026, 6, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array(firstWeekday).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  return (
+    <div className={styles.calendar}>
+      <div className={styles.calHead}>
+        <span className={styles.calMonth}>{CALENDAR_MONTH}</span>
+        <span className={styles.calLegend}>
+          {CAL_LEGEND.map((l) => (
+            <span key={l.mark} className={styles.legendItem}>
+              <span className={`${styles.legendDot} ${DAY_MARK_CLASS[l.mark]}`} aria-hidden />
+              {l.label}
+            </span>
+          ))}
+        </span>
+      </div>
+      <div className={styles.calGrid}>
+        {CAL_WEEKDAYS.map((d) => (
+          <span key={d} className={styles.calWeekday}>
+            {d}
+          </span>
+        ))}
+        {cells.map((day, i) => {
+          if (day === null) return <span key={`e${i}`} />;
+          const mark = CALENDAR_MARKS[day];
+          return (
+            <span key={day} className={`${styles.calDay} ${mark ? DAY_MARK_CLASS[mark] : ""}`}>
+              {day}
+            </span>
+          );
+        })}
+      </div>
+    </div>
   );
 }
