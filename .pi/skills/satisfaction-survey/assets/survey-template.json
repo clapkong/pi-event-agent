@@ -1,0 +1,54 @@
+{
+  "_doc": "satisfaction-survey 권장 문항 세트(바로 배포 가능한 출발점). 행사 직후 감사 메일에 링크. 5~8문항·5분 이내 원칙. 행사 성격에 맞춰 areas/options를 가감한다.",
+  "title": "{{행사명}} 만족도 조사",
+  "intro": "참석해 주셔서 감사합니다. 더 나은 다음 행사를 위해 약 5분 부탁드립니다.",
+  "estimatedMinutes": 5,
+  "questions": [
+    {
+      "id": "overall",
+      "type": "scale_5",
+      "label": "전반적인 만족도는 어떠셨나요?",
+      "required": true,
+      "scale": { "min": 1, "max": 5, "minLabel": "매우 불만족", "maxLabel": "매우 만족" }
+    },
+    {
+      "id": "by_area",
+      "type": "scale_5_matrix",
+      "label": "영역별로 평가해 주세요.",
+      "required": true,
+      "areas": ["프로그램·콘텐츠", "장소·시설", "진행·운영", "케이터링(F&B)"],
+      "scale": { "min": 1, "max": 5, "minLabel": "불만족", "maxLabel": "만족" }
+    },
+    {
+      "id": "best",
+      "type": "free_text",
+      "label": "가장 좋았던 점은 무엇인가요?",
+      "required": false
+    },
+    {
+      "id": "improve",
+      "type": "free_text",
+      "label": "아쉬웠던 점 / 개선했으면 하는 점은?",
+      "required": false
+    },
+    {
+      "id": "nps",
+      "type": "scale_11",
+      "label": "이 행사를 동료·지인에게 추천하시겠어요?",
+      "required": true,
+      "scale": { "min": 0, "max": 10, "minLabel": "전혀 아니다", "maxLabel": "매우 그렇다" }
+    },
+    {
+      "id": "next_topic",
+      "type": "free_text",
+      "label": "(선택) 다음 행사에서 다뤘으면 하는 주제·형식이 있나요?",
+      "required": false
+    }
+  ],
+  "analysis": {
+    "_doc": "결과 분석 시 계산 규칙. SKILL.md §2와 동기.",
+    "nps": "추천(9~10%) − 비추천(0~6%). 7~8은 중립(제외).",
+    "priorityTarget": "by_area 중 평균 최저 영역 = 1차 개선 대상",
+    "qualitative": "best/improve 자유서술을 긍정/중립/부정 분류 + 반복 키워드 빈도순. 안전·접근성·식이 불만은 risk-assessment로 회수."
+  }
+}

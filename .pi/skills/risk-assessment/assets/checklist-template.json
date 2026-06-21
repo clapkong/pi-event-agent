@@ -1,0 +1,53 @@
+{
+  "_doc": "risk-assessment 사전 점검을 채워 넣는 구조화 체크리스트. status는 OK/주의/누락/확인불가 중 하나. '해당없음'도 명시(점검했으나 무관 vs 안 봄 구분). critic이 쓸 땐 owner로 처리 주체를 분류. 과거 사고는 rag_query 결과를 note에 인용.",
+  "statusEnum": ["OK", "주의", "누락", "확인불가", "해당없음"],
+  "ownerEnum": ["writer", "재조사", "사용자 판단"],
+  "severityEnum": ["치명", "권고"],
+  "dimensions": [
+    {
+      "key": "operational_risk",
+      "label": "리스크(운영)",
+      "items": [
+        { "id": "weather", "label": "날씨(옥외): 우천·폭염·한파 대안", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "vendor_backup", "label": "핵심 업체 취소 시 백업·위약 조항", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "schedule_conflict", "label": "장소 이중예약·인접 행사·교통 통제", "status": "", "severity": "", "owner": "", "note": "" }
+      ]
+    },
+    {
+      "key": "compliance",
+      "label": "행정 컴플라이언스 (심화: references/permits-insurance.md)",
+      "items": [
+        { "id": "permits", "label": "인허가(집회·옥외·도로·음향)", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "insurance", "label": "행사배상책임보험", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "fire_safety", "label": "소방·안전(수용한도·비상구·소화기·신고)", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "food_license", "label": "케이터링 영업신고·위생", "status": "", "severity": "", "owner": "", "note": "" }
+      ]
+    },
+    {
+      "key": "accessibility",
+      "label": "접근성",
+      "items": [
+        { "id": "mobility", "label": "휠체어 동선·경사로·승강기·장애인 화장실/주차", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "info_access", "label": "수어·자막·점자/큰글씨 안내", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "seating", "label": "휠체어석·동반자석", "status": "", "severity": "", "owner": "", "note": "" }
+      ]
+    },
+    {
+      "key": "emergency",
+      "label": "비상 대응",
+      "items": [
+        { "id": "evacuation", "label": "화재/정전/응급: 대피경로·집결지·비상연락망", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "first_aid", "label": "구급함·AED·가까운 병원", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "site_lead", "label": "현장 책임자·역할 분담 확정", "status": "", "severity": "", "owner": "", "note": "" }
+      ]
+    },
+    {
+      "key": "dietary",
+      "label": "식이 안전",
+      "items": [
+        { "id": "allergy", "label": "알레르기(견과·갑각류 등) 표기·분리 조리", "status": "", "severity": "", "owner": "", "note": "" },
+        { "id": "religious_diet", "label": "할랄·채식·코셔 옵션(사전 수요조사 → 발주 반영)", "status": "", "severity": "", "owner": "", "note": "" }
+      ]
+    }
+  ]
+}
