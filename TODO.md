@@ -18,6 +18,7 @@
 
 ## 백엔드 (Pi부터 새로 작성 예정 — `backend/` 없음)
 - [ ] `createAgentSession` + WebSocket 스트리밍. **행사별 cwd + 공유 agentDir(SYSTEM/agents/extensions)** 구조.
+- [ ] **monitor·secretary 트리거 인프라** — 둘은 Planner가 spawn하지 않고 **백엔드가 트리거**한다: secretary=통신 도착 훅(Gmail watch/poll), monitor=주기 cron. 트리거 결과(회의록·판정)를 세션에 주입 → Planner가 대응. (pi의 in-agent `schedule`은 세션 스코프라 부족.)
 - [ ] **메인 세션 도구 제한 주의** — `tools` 허용목록을 좁히면 `ask_user_question`·`Agent`·`web_search` 등이 빠질 수 있음. 메인엔 제한을 걸지 않거나 명시 포함.
 - [ ] `ask_user_question`/승인 게이트의 RPC `extension_ui_request` 이벤트 → 프런트 `ask`/`gate` 타임라인 매핑 (PI_INTEGRATION §8).
 - [ ] 프런트 mock→실제 교체 지점: `frontend/src/agent/mockClient.ts`, `data/workspaces.ts` (CLAUDE.md 참조).
