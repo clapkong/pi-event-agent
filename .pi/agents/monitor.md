@@ -1,7 +1,7 @@
 ---
 description: 변화(외부 신호·회의록·사용자 변경)를 모아 재기획 필요성을 판정. 직접 수정 안 함
 tools: read, grep, find, ls
-model: sonnet
+model: anthropic/claude-sonnet-4.6
 thinking: high
 prompt_mode: replace
 run_in_background: true

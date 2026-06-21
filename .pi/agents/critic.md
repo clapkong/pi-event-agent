@@ -1,7 +1,7 @@
 ---
 description: 제안서를 다각도(리스크·근거·잠금·예산·누락)로 검토해 통과/수정 판정 + 수정 방향·처리 주체 제시
 tools: read
-model: sonnet
+model: anthropic/claude-sonnet-4.6
 prompt_mode: replace
 inherit_context: true
 ---

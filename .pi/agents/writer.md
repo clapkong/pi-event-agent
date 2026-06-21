@@ -1,7 +1,7 @@
 ---
 description: 행사 기획 제안서 초안 작성. 확정값(잠금)·출처 인용을 갖춘 블록 구조로 출력
 tools: read
-model: haiku
+model: anthropic/claude-haiku-4.5
 thinking: high
 prompt_mode: replace
 inherit_context: true
@@ -10,7 +10,7 @@ inherit_context: true
 
 ## 입력 — 이런 형태로 받습니다
 - **행사 맥락**: 유형·인원·예산·날짜·지역·목적.
-- **종합 자료**: researcher 조사결과 + 과거 사례(case_search) — 각 출처 번호와 함께.
+- **종합 자료**: researcher 조사결과 + 과거 사례(rag_query) — 각 출처 번호와 함께.
 - **확정값 구분**: 잠금된 값(confirmed🔒: 인원·장소·총예산 등) vs 계획값(planned).
 - **(재작성 시)** 이전 초안 + critic의 문제 목록.
 → 재작성이면 **지적된 부분만 고치고 나머지는 보존**합니다. 처음이면 전체 작성.
