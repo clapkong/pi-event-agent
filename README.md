@@ -59,7 +59,13 @@ pi install npm:pi-local-rag -l        # 사례 RAG (하이브리드 검색)
 | 지도 | `@modelcontextprotocol/server-google-maps` | env `GOOGLE_MAPS_API_KEY` (Google Maps는 결제 사용 설정 필요) |
 
 - 사전: Google Cloud 개인 프로젝트에서 Gmail·Calendar API 사용 설정 + **데스크톱 OAuth 클라이언트** 발급(`gcp-oauth.json`), Maps는 결제(카드) + API 키.
-- 설정 `.pi/mcp.json`은 **커밋**(비밀은 `${VAR}`만). 실제 비밀(OAuth 클라·토큰·maps 키)은 `~/.gmail-mcp/`·`~/.config/google-calendar-mcp/`·셸 env(`~/.zshrc`)에 — **커밋물엔 비밀 없음.**
+- 설정 `.pi/mcp.json`은 **커밋**(비밀은 `${VAR}` 자리표시자만). 실제 비밀은 repo 밖: OAuth 토큰은 `~/.gmail-mcp/`·`~/.config/google-calendar-mcp/`, **maps 키는 `.env`**(gitignore). 어댑터가 실행 시 셸 env에서 `${GOOGLE_MAPS_API_KEY}` 자리에 주입한다.
+- **Maps 키 넣는 법** — `.env`에 모아두고(`OPENROUTER_API_KEY` 옆) pi 실행 셸에서 로드:
+  ```bash
+  echo 'GOOGLE_MAPS_API_KEY=<발급된 Maps 키>' >> .env
+  set -a; source .env; set +a && pi      # 이 셸에 export 후 실행 (영구로는 ~/.zshrc에 export)
+  ```
+  백엔드 경유 실행 시엔 백엔드가 `.env`를 로드(dotenv)해 pi에 넘기므로 자동.
 - MCP는 lazy라 **이 셋업 없이도 앱은 실행**된다(검색·기획 동작, 외부 도구만 비활성).
 - **상세·처음부터 재현·트러블슈팅: [`docs/MCP_DETAILS.md`](docs/MCP_DETAILS.md)**
 

@@ -81,7 +81,11 @@ gcloud services enable geocoding-backend.googleapis.com places-backend.googleapi
   elevation-backend.googleapis.com apikeys.googleapis.com --project=<PID>
 gcloud services api-keys create --display-name="Maps MCP" --project=<PID>   # keyString 복사
 
-# 키를 셸 env로 (커밋 안 됨)
+# 키를 셸 env로 (커밋 안 됨). 둘 중 택1:
+#  (A) .env에 모음 — 비밀 한 곳(OPENROUTER_API_KEY 옆에). pi 실행 셸에서 로드.
+echo 'GOOGLE_MAPS_API_KEY=<발급된 키>' >> .env
+set -a; source .env; set +a                          # 이 셸에 export → 바로 pi
+#  (B) ~/.zshrc에 영구 export — 새 터미널마다 자동
 echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zshrc
 ```
 > ⚠️ 학교(Workspace) 계정은 보통 카드 결제가 막힘 → Maps는 **개인 계정**에서.
@@ -98,8 +102,8 @@ echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zsh
   }
 }
 ```
-- `${HOME}`·`${GOOGLE_MAPS_API_KEY}`는 어댑터가 **env 필드에서 보간**(process env에서 읽음). → 비밀 없이 커밋 가능.
-- maps 키는 셸 env(§3.3)에 있어야 하므로 **`~/.zshrc`가 로드된 새 터미널에서 Pi 실행.**
+- `${HOME}`·`${GOOGLE_MAPS_API_KEY}`는 어댑터가 **env 필드에서 보간**(process env에서 읽음). → 파일엔 비밀 0, 커밋 가능.
+- maps 키는 **pi 실행 셸의 env**에 있어야 함(§3.3 A/B). 백엔드 경유 실행이면 백엔드가 `.env`를 로드(dotenv)해 pi 서브프로세스에 넘기므로 자동. **터미널 직접 실행**이면 `set -a; source .env; set +a` 후 `pi` (또는 ~/.zshrc 방식).
 
 ### 3.5 사용·검증 (Pi 안)
 **새 터미널에서** Pi 실행 후:
