@@ -130,7 +130,9 @@ export function S4View({ ws }: { ws: Workspace }) {
   // ⑥ 주기 점검 — 운영 단계 워크스페이스를 열었는데 마지막 점검이 1주 넘었으면 자동 1회 점검(백그라운드).
   const autoChecked = useRef(false);
   useEffect(() => {
-    if (autoChecked.current || state.running) return;
+    // 이미 점검함 / 런 진행 중 / **이 세션에 대화·런이 있음**(기획·점검 중) 이면 자동 점검 안 함.
+    // → 자동 점검은 "운영 워크스페이스를 콜드로 열었을 때"만. 진행 중 런을 가로채지 않는다.
+    if (autoChecked.current || state.running || state.entries.length > 0) return;
     if (board.stage === "기획") return; // 운영 단계(진행중/완료)만 — 기획 중엔 점검 안 함
     const WEEK = 7 * 24 * 60 * 60 * 1000;
     const stale = !board.checkedAt || Date.now() - new Date(board.checkedAt).getTime() > WEEK;
@@ -139,7 +141,7 @@ export function S4View({ ws }: { ws: Workspace }) {
       refresh();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [board.stage, board.checkedAt, state.running]);
+  }, [board.stage, board.checkedAt, state.running, state.entries.length]);
 
   // 점검(런)이 끝나면 보드·통신을 다시 읽어 결과 반영. running 이 true→false 로 떨어질 때.
   const prevRunning = useRef(false);
