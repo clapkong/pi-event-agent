@@ -41,6 +41,14 @@ test("rpc → contract: tool_start + element 분류", () => {
   assert.equal(classifyElement("researcher"), "Tool");
 });
 
+test("rpc → contract: 서브에이전트 스폰(Agent)은 subagent_type 으로 라벨", () => {
+  const out = rpcToContract(
+    { type: "tool_execution_start", toolName: "Agent", args: { subagent_type: "critic" } },
+    noop
+  );
+  assert.deepEqual(out, { type: "tool_start", label: "critic · 검토", tool: "Agent", element: "Tool" });
+});
+
 test("rpc → contract: ask(select) 가 pending 설정", () => {
   let pending: PendingUi | null = null;
   const out = rpcToContract(

@@ -11,6 +11,19 @@ export function classifyElement(tool = ""): ElementType {
   return "Tool";
 }
 
+// 서브에이전트 스폰을 사람이 알아볼 라벨로 (Agent 도구의 subagent_type → 역할).
+const SUBAGENT_ROLE: Record<string, string> = {
+  researcher: "조사",
+  writer: "초안 작성",
+  critic: "검토",
+  monitor: "변화 점검",
+  secretary: "통신 정리",
+};
+export function subagentLabel(sub: string): string {
+  const role = SUBAGENT_ROLE[sub];
+  return role ? `${sub} · ${role}` : sub;
+}
+
 function short(v: unknown, max = 400): string {
   const s = typeof v === "string" ? v : JSON.stringify(v ?? "");
   return s.length > max ? `${s.slice(0, max)}…` : s;
@@ -51,13 +64,17 @@ export function rpcToContract(ev: RpcEvent, setPending: (p: PendingUi | null) =>
       return null;
     }
 
-    case "tool_execution_start":
+    case "tool_execution_start": {
+      const tool = ev.toolName ?? "tool";
+      // 서브에이전트 스폰(Agent 도구)은 어떤 서브인지(researcher/writer/critic…) 라벨에 드러낸다.
+      const sub = tool === "Agent" ? (ev.args?.subagent_type as string | undefined) : undefined;
       return {
         type: "tool_start",
-        label: ev.toolName ?? "tool",
-        tool: ev.toolName ?? "tool",
-        element: classifyElement(ev.toolName),
+        label: sub ? subagentLabel(sub) : tool,
+        tool,
+        element: classifyElement(tool),
       };
+    }
 
     case "tool_execution_end":
       return { type: "tool_end", result: short(toolResultText(ev.result)) };

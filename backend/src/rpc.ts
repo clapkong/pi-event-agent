@@ -14,7 +14,7 @@ export type RpcEvent =
   | { type: "agent_end"; messages?: unknown[] }
   | { type: "message_start"; message?: { role?: string; model?: string; provider?: string } }
   | { type: "message_update"; assistantMessageEvent?: AssistantMessageEvent }
-  | { type: "tool_execution_start"; toolName?: string }
+  | { type: "tool_execution_start"; toolName?: string; args?: Record<string, unknown> }
   | { type: "tool_execution_end"; result?: unknown }
   | { type: "extension_ui_request"; id: string; method: string; title?: string; message?: string; options?: string[] };
 // 그 외(turn_start/end·message_end·thinking_start/end·text_start/end …)는 bridge default에서 무시.
