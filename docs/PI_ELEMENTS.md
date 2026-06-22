@@ -30,10 +30,12 @@
 |---|---|---|---|
 | **메인 (Planner)** | 세션 메인 엔진 — 대화·되묻기·예산·발송 판단·위임 종합·재기획 | `AGENTS.md`(세션 프롬프트) | 세션 시작 시 로드 |
 | `researcher` | 외부 조사(장소·업체·시세·날씨). 출처 필수, 병렬 fan-out | `.pi/agents/researcher.md` | 메인이 spawn · `run_in_background` |
-| `writer` | 제안서 초안(출처 인용 `[n]`·확정값 표기) | `.pi/agents/writer.md` | 메인이 spawn · `read`만·haiku |
-| `critic` | 초안 다각도 검토 + 처리주체 라우팅(직접 수정 안 함) | `.pi/agents/critic.md` | 메인이 spawn · sonnet·`inherit_context:false` |
+| `writer` | 제안서 초안(출처 인용 `[n]`·확정값 표기) | `.pi/agents/writer.md` | 메인이 spawn · `read`만·`inherit_context:true` |
+| `critic` | 초안 다각도 검토 + 처리주체 라우팅(직접 수정 안 함) | `.pi/agents/critic.md` | 메인이 spawn · `inherit_context:false` |
 | `secretary` | 통신(메일) → 중립 회의록(사실 추출·태깅) | `.pi/agents/secretary.md` | 작업공간 **'점검'**으로 호출(수동·주기 자동) |
 | `monitor` | 변화 감지 → 재기획 필요성 판정(직접 수정 안 함) | `.pi/agents/monitor.md` | 작업공간 **'점검'**으로 호출(수동·주기 자동) |
+
+> **역할별 모델**(각 `.pi/agents/*.md` frontmatter): 메인 `claude-sonnet-4.6`(`.pi/settings.json`) · researcher·secretary `gemini-2.5-flash` · writer·critic·monitor `claude-haiku-4.5`. 도구도 역할에 맞춰 제한(writer·critic=`read`만, researcher=웹검색 포함).
 
 > "바깥 정보"를 다루는 셋은 방향이 달라 안 겹친다: **researcher=나가서 찾음 · monitor=지켜봄 · secretary=들어온 걸 받음.**
 

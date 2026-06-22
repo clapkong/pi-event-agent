@@ -40,7 +40,7 @@
 | 백엔드 | Fastify + `@fastify/websocket` |
 | 에이전트 | **`pi`(`@earendil-works/pi-coding-agent`) `--mode rpc` 자식 프로세스** |
 | Pi 패키지(`.pi/settings.json`) | `@tintinweb/pi-subagents` · `pi-mcp-adapter` · `pi-web-access` · `pi-local-rag` |
-| LLM | openrouter · `anthropic/claude-sonnet-4.6` (`defaultThinkingLevel: medium`) |
+| LLM | openrouter — 메인 `anthropic/claude-sonnet-4.6`(`.pi/settings.json`, thinking medium), 서브에이전트는 역할별 `google/gemini-2.5-flash`·`anthropic/claude-haiku-4.5`(각 `.pi/agents/*.md`) |
 | 데이터/RAG | `.md`/`.json` 파일 + `pi-local-rag`(내부 SQLite FTS5 + sqlite-vec 하이브리드, 임베딩 내장·오프라인) |
 | 날씨 | Open-Meteo (백엔드 `weather.ts`, MCP 아님) |
 
@@ -96,10 +96,10 @@
 
 ## 5. LLM (모델)
 
-- 모델은 **`.pi/settings.json`의 `defaultProvider:openrouter`·`defaultModel:anthropic/claude-sonnet-4.6`** 하나로 고정.
+- **메인 세션** 모델은 `.pi/settings.json`의 `defaultProvider:openrouter`·`defaultModel:anthropic/claude-sonnet-4.6`.
+- **서브에이전트**는 각 `.pi/agents/<name>.md` frontmatter의 `model`을 따른다 — researcher·secretary=`google/gemini-2.5-flash`(빠른 조사/정리), writer·critic·monitor=`anthropic/claude-haiku-4.5`. 즉 **역할별로 모델을 분리**한다(비용·속도 최적화).
 - **현재 모델 표시**(`model_current`)는 pi의 `message_start.message.model`을 그대로 읽어 전달한다.
-- `model_switch`/자동 폴백은 **계약에는 있으나(타입) 정교한 모델 레지스트리/체인은 미구현** — 단일 모델 운용.
-  (옛 `MODEL_CHAINS`/`runWithFallback` 설계는 스코프에서 잘라냄. 필요 시 향후 확장.)
+- `model_switch`/자동 폴백은 **계약에는 있으나(타입) 정교한 모델 레지스트리/체인은 미구현**(옛 `MODEL_CHAINS`/`runWithFallback` 설계는 스코프에서 잘라냄). 모델 선택은 위처럼 세션/에이전트 단위로 **정적 지정**.
 - 개발 중 Claude 직접 호출은 구독 OAuth(`CLAUDE_CODE_OAUTH_TOKEN`) 경로 — CLAUDE.md 참조.
 
 ---
