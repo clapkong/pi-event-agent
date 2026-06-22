@@ -427,6 +427,9 @@
   font-size: 10px;
   color: var(--muted);
 }
+.kindOverdue {
+  color: var(--error);
+}
 .kindReview {
   color: var(--warning);
 }

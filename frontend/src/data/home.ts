@@ -1,6 +1,6 @@
 // 홈 대시보드 타입 — 알림·체크리스트는 실제 보드(state.json)에서 파생한다(Home.tsx). mock 없음.
 
-export type NotifKind = "review" | "approval" | "deadline";
+export type NotifKind = "overdue" | "deadline" | "review" | "approval";
 
 export interface Notif {
   id: string;
@@ -12,9 +12,10 @@ export interface Notif {
 }
 
 export const NOTIF_GROUPS: { kind: NotifKind; label: string }[] = [
+  { kind: "overdue", label: "지연" },
+  { kind: "deadline", label: "마감 임박" },
   { kind: "review", label: "재검토 필요" },
   { kind: "approval", label: "승인 대기" },
-  { kind: "deadline", label: "마감 임박" },
 ];
 
 export interface ChecklistItem {

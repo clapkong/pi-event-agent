@@ -46,7 +46,17 @@ function deriveNotifs(boards: WsBoard[]): Notif[] {
       const due = new Date(`${m.due}T00:00:00`);
       if (Number.isNaN(due.getTime())) continue;
       const days = Math.round((due.getTime() - today.getTime()) / 86400000);
-      if (days >= 0 && days <= 7) {
+      if (days < 0) {
+        // 마감 지난 미완료 → 지연 알림.
+        out.push({
+          id: `${ws.id}-late-${m.title}`,
+          kind: "overdue",
+          wsId: ws.id,
+          wsName: ws.name,
+          message: m.title,
+          when: `지연 ${-days}일`,
+        });
+      } else if (days <= 7) {
         out.push({
           id: `${ws.id}-${m.title}`,
           kind: "deadline",
@@ -56,6 +66,18 @@ function deriveNotifs(boards: WsBoard[]): Notif[] {
           when: days === 0 ? "오늘" : `D-${days}`,
         });
       }
+    }
+    // 업체가 '견적' 단계면 계약 결정 대기 → 승인 대기 알림.
+    const quoting = board.vendors.filter((v) => v.stage === "견적");
+    if (quoting.length > 0) {
+      out.push({
+        id: `${ws.id}-approval`,
+        kind: "approval",
+        wsId: ws.id,
+        wsName: ws.name,
+        message: `업체 견적 검토 — ${quoting.map((v) => v.name).slice(0, 2).join(", ")}${quoting.length > 2 ? " 외" : ""}`,
+        when: "승인 대기",
+      });
     }
   }
   return out;
@@ -244,9 +266,10 @@ function WorkspaceTile({ ws }: { ws: Workspace }) {
 
 // 알림 센터: 벨 + 카운트 + 그룹 패널. (실데이터 파생 — Home에서 notifs 주입)
 const NOTIF_KIND_CLASS: Record<NotifKind, string> = {
+  overdue: styles.kindOverdue,
+  deadline: styles.kindDeadline,
   review: styles.kindReview,
   approval: styles.kindApproval,
-  deadline: styles.kindDeadline,
 };
 
 function NotificationCenter({ notifs }: { notifs: Notif[] }) {

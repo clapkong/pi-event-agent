@@ -1,5 +1,5 @@
 {
-  "stage": "기획",
+  "stage": "정산·완료",
   "budgetTotal": 60000000,
   "proposalVersion": 1,
   "conditions": [
@@ -212,5 +212,6 @@
       "at": "2026-06-22T11:28:57.263Z",
       "summary": "AI 제안서 저장"
     }
-  ]
+  ],
+  "caseId": "c-brand-market-2026"
 }
