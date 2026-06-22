@@ -1,4 +1,4 @@
-// S4 작업공간 상태 모델 (F4.1) — DATA_MODEL §1·§2.
+// S4 작업공간 상태 모델 (F4.1) — STATE_MODEL §1·§2.
 // 세 겹(입력/가정·기획 산출·실행/확정) + 두 꼬리표(잠금·신선도) + 예산 3상태 + 업체 4단계 + 재기획.
 // 데이터: 백엔드 REST(GET /api/workspaces/:id ← update_state state.json). mock seed 없음.
 
@@ -15,7 +15,7 @@ export interface Condition {
   locked: boolean; // 확정🔒 ↔ 계획
 }
 
-/** 예산 항목 — 3상태(계획/확정🔒/집행) (DATA_MODEL §1.4). */
+/** 예산 항목 — 3상태(계획/확정🔒/집행) (STATE_MODEL §1.4). */
 export interface BudgetItem {
   id: string;
   name: string;
@@ -25,7 +25,7 @@ export interface BudgetItem {
   stale: boolean; // 재검토 필요(신선도)
 }
 
-/** 업체 — 4단계 state machine (DATA_MODEL §1.5). */
+/** 업체 — 4단계 state machine (STATE_MODEL §1.5). */
 export type VendorStage = "후보" | "견적" | "확정" | "계약";
 export interface Vendor {
   id: string;

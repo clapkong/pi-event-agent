@@ -1,6 +1,6 @@
 # DESIGN — 행사 기획 에이전트
 
-> 시각 토큰 + 컴포넌트 카탈로그 단일 소스. 화면별 배치는 `../plans/SCREENS.md`, 상태/제품 규칙은 `../plans/DATA_MODEL.md`·`../plans/PLAN.md`.
+> 시각 토큰 + 컴포넌트 카탈로그 단일 소스. 상태 규칙은 `STATE_MODEL.md`, 시스템 구조는 `ARCHITECTURE.md`, 화면 구현은 `frontend/src/screens/`.
 > 방향성 한 줄: **흰 바탕 · 헤어라인 · 여백으로 위계, 데이터는 고정폭 숫자, 힘은 한 곳(동작 타임라인)에만. 티얼은 절제.**
 
 ---

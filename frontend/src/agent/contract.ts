@@ -3,7 +3,7 @@
 // 이건 *우리가 정의하는 추상화 레이어*다. 백엔드(B2)가 Pi `session.subscribe`
 // 이벤트를 이 형태로 변환하고, 프런트는 mock이든 실제든 이 계약만 본다.
 //
-// ✅ V0 검증 완료(PI_INTEGRATION.md §8): 계약 그대로 유효. Pi 매핑 —
+// ✅ V0 검증 완료(docs/ARCHITECTURE.md §8): 계약 그대로 유효. Pi 매핑 —
 //    ask → ExtensionUIContext `ui.select`, gate → `ui.confirm`,
 //    abort → `session.abort()`, model_switch → `session.setModel()`+modelFallbackMessage.
 

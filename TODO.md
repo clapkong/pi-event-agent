@@ -1,13 +1,13 @@
 # TODO
 
 > 아직 안 만든 것 / 마저 해야 할 것 (2026-06-21 기준).
-> 아키텍처는 `docs/AGENTS_DETAILS.md`, 진행 정본은 `plans/`(로컬), 작업 규칙은 `CLAUDE.md`.
+> 아키텍처는 `docs/ARCHITECTURE.md`·`docs/AGENTS_DETAILS.md`, 설계 정본은 `docs/`, 작업 규칙은 `CLAUDE.md`.
 
 ## 자작 ask
 - [x] `ask_user_question` 도구(event-tools, `ctx.ui.select`) + rpiv 미사용(settings.json에 없음). 게이트·되묻기 라이브 검증됨.
 - [ ] (선택·미화) ask를 타임라인 칩 대신 **별도 React 다이얼로그/모달**로. 지금도 칩으로 동작하니 기능상 필수 아님.
 
-## Skill (`.pi/skills/` — 4종 작성됨, 카탈로그 `plans/PI_ELEMENTS.md §5`)
+## Skill (`.pi/skills/` — 4종 작성됨, 카탈로그 `docs/PI_ELEMENTS.md §4`)
 - 흡수돼 별도 skill 없음: `meeting-notes`→secretary 프롬프트, `proposal-writer`→writer, `clarify-questions`→Planner, `task-checklist`→build_checklist.
 - [x] skill 자동 발견·로드 검증 — pi 0.79.8 로더 소스(`core/skills.js`) 대조: 스캔 경로 `.pi/skills`·`SKILL.md` 루트·`description` 규칙(≤1024자) 전부 충족, 헤드리스 startup 무에러(모델 401까지 도달=로드 OK). 남은 건 실제 모델이 task 매칭 시 *호출*하는지(라이브, 크레딧 소요 — 검증 타이밍 사용자 결정).
 
