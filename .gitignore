@@ -30,11 +30,5 @@ notes.txt
 # 런타임 워크스페이스 (행사별 cwd: 제안서·예산 등 산출물) — 루트만(프런트 screens/workspace 제외)
 /workspace/
 
-# 에이전트 보드 상태 (개발 중 cwd=레포 루트일 때 update_state가 루트에 떨굼)
-/state.json
-
-# V0 스파이크 잔여 (있을 경우)
-scratch/
-
 # 커뮤니티 MCP OAuth 클라이언트 키 (비밀 — 커밋 금지)
 gcp-oauth.json
