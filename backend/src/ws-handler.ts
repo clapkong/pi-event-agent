@@ -10,9 +10,10 @@ import { sessionId } from "./workspace.ts";
 
 /** 연결 하나를 처리: 워크스페이스용 pi 세션을 열고 socket ↔ bridge ↔ session 연결. */
 export function handleConnection(socket: WebSocket, wsId: string): void {
-  // ⚠️ TODO(격리): 원래 cwd=workspaceCwd(wsId) 로 행사별 폴더 격리해야 하나,
-  // pi 는 cwd/.pi 만 봐서 레포 루트의 .pi(뇌)를 못 찾음. 임시로 REPO_ROOT 에서 띄움(파일 격리 X).
-  // 해결책: 공유 agentDir 지정(PI_CODING_AGENT_DIR) + AGENTS.md 경로 처리. 대화는 sessionId 로 분리됨.
+  // cwd=REPO_ROOT: pi 는 cwd/.pi 만 보고 상위로 안 올라가므로 뇌(.pi·AGENTS.md)가 있는
+  // 레포 루트에서 띄운다. 대화는 sessionId(`ws-<wsId>`)로 분리되고, 보드 state.json 도
+  // event-tools 가 그 sessionId 로 행사를 식별해 `workspace/<wsId>/state.json` 에 쓴다(cwd 안 건드림).
+  // (proposal.md 등 다른 cwd-상대 산출물의 완전 격리는 후속.)
   const session = new PiSession({ cwd: REPO_ROOT, sessionId: sessionId(wsId), smoke: SMOKE });
   let pending: PendingUi | null = null;
 

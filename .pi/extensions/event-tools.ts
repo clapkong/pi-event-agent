@@ -123,7 +123,20 @@ function mergeById<T>(cur: T[], patch: T[] | undefined, key: keyof T): T[] {
 	return [...map.values()];
 }
 
-const STATE_FILE = (cwd: string) => join(cwd, "state.json");
+// 보드 상태 파일 경로 — 행사별로 분리한다.
+// pi 는 cwd(=레포 루트)에서 뇌(.pi)를 읽지만, 세션마다 cwd 가 같아 state.json 이 섞인다.
+// 그래서 pi 가 떠 있는 **세션 ID**(`pi --session-id ws-<wsId>`, process.argv 에 있음)로
+// 행사를 식별해 backend 가 읽는 `<cwd>/workspace/<wsId>/state.json` 에 직접 쓴다.
+// (cwd·심링크·env 안 건드림. 세션 ID 하나가 채팅↔보드를 묶음.) 세션 ID 없으면(smoke 등) cwd 직하.
+function sessionWsId(): string | null {
+	const i = process.argv.indexOf("--session-id");
+	const sid = i >= 0 ? process.argv[i + 1] : undefined;
+	return sid?.startsWith("ws-") ? sid.slice(3) : null;
+}
+const STATE_FILE = (cwd: string) => {
+	const wsId = sessionWsId();
+	return wsId ? join(cwd, "workspace", wsId, "state.json") : join(cwd, "state.json");
+};
 
 function emptyBoard(): BoardState {
 	return {
@@ -148,7 +161,9 @@ async function readState(cwd: string): Promise<BoardState> {
 	}
 }
 async function writeState(cwd: string, s: BoardState): Promise<void> {
-	await fs.writeFile(STATE_FILE(cwd), `${JSON.stringify(s, null, 2)}\n`, "utf-8");
+	const file = STATE_FILE(cwd);
+	await fs.mkdir(dirname(file), { recursive: true }); // 행사 폴더 보장
+	await fs.writeFile(file, `${JSON.stringify(s, null, 2)}\n`, "utf-8");
 }
 
 const round10k = (n: number) => Math.round(n / 10000) * 10000;
