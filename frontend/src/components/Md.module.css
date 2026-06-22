@@ -1,0 +1,107 @@
+/* 마크다운 렌더 — 타임라인/패널 안에서 컴팩트하게. */
+.md {
+  line-height: 1.6;
+  word-break: break-word;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p {
+  margin: 0.4em 0;
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  margin: 0.7em 0 0.3em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.md h1 {
+  font-size: 1.25em;
+}
+.md h2 {
+  font-size: 1.15em;
+}
+.md h3 {
+  font-size: 1.05em;
+}
+.md ul,
+.md ol {
+  margin: 0.4em 0;
+  padding-left: 1.3em;
+}
+.md li {
+  margin: 0.15em 0;
+}
+.md strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.md code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--inset);
+  border-radius: var(--r-tag);
+  padding: 1px 5px;
+}
+.md pre {
+  background: var(--inset);
+  border-radius: 8px;
+  padding: 0.7em 0.9em;
+  overflow-x: auto;
+}
+.md pre code {
+  background: none;
+  padding: 0;
+}
+.md a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+/* 인용 마커 [n] — 클릭 시 출처 드로어 */
+.cite {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--primary);
+  background: var(--tint-soft);
+  border: none;
+  border-radius: 4px;
+  padding: 1px 3px;
+  margin: 0 1px;
+  cursor: pointer;
+}
+.cite:hover {
+  background: var(--tint);
+}
+.md blockquote {
+  margin: 0.5em 0;
+  padding-left: 0.8em;
+  border-left: 3px solid var(--line);
+  color: var(--ink2);
+}
+.md table {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 0.95em;
+}
+.md th,
+.md td {
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  text-align: left;
+}
+.md th {
+  background: var(--inset);
+  font-weight: 600;
+}
+.md hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0.8em 0;
+}

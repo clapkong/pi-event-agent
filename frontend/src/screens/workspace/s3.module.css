@@ -297,6 +297,68 @@
   font-size: 11.5px;
   color: var(--faint);
 }
+.elapsed {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--primary);
+}
+.elapsed::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: elapsePulse 1s ease-in-out infinite;
+}
+@keyframes elapsePulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.thinking {
+  font-size: var(--fs-caption);
+  color: var(--faint);
+}
+.thinkingSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--muted);
+  font-weight: 500;
+  user-select: none;
+}
+.thinkingSummary::-webkit-details-marker {
+  display: none;
+}
+.thinkingSummary::before {
+  content: "▸";
+  font-size: 9px;
+}
+details[open] .thinkingSummary::before {
+  content: "▾";
+}
+.thinkingText {
+  margin-top: var(--sp-8);
+  padding-left: var(--sp-12);
+  border-left: 2px solid var(--line);
+  color: var(--faint);
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+.subagentId {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--inset);
+  border-radius: var(--r-tag);
+  padding: 1px 5px;
+}
 .toolResult {
   margin-top: var(--sp-4);
   font-size: var(--fs-caption);
@@ -365,6 +427,94 @@
   flex-wrap: wrap;
   gap: var(--sp-8);
   margin-top: var(--sp-12);
+}
+/* 되묻기 모달 (화면 가운데 다이얼로그) */
+.askModalBackdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(21, 41, 43, 0.18);
+  z-index: 50;
+  padding: var(--sp-24);
+}
+.askModal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(21, 41, 43, 0.18);
+  padding: var(--sp-24);
+}
+.askModalEyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--primary-deep);
+  margin-bottom: var(--sp-8);
+}
+.askModalQ {
+  font-size: var(--fs-h3, 16px);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-bottom: var(--sp-16);
+}
+.askModalChips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+}
+.askModalChip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--sp-12);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+.askModalChip:hover {
+  border-color: var(--primary);
+  background: var(--tint-soft);
+}
+.askModalForm {
+  display: flex;
+  gap: var(--sp-8);
+}
+.askModalInput {
+  flex: 1;
+  font: inherit;
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: var(--sp-8) var(--sp-12);
+}
+.askModalInput:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg);
+}
+.askModalSend {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--r-btn);
+  padding: var(--sp-8) var(--sp-16);
+  cursor: pointer;
+}
+.askModalSend:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .chip {
   display: flex;

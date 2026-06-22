@@ -1,15 +1,48 @@
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CASES } from "@/data/cases";
+import type { Case } from "@/data/cases";
+import { Md } from "@/components/Md";
+import { API_BASE } from "@/config";
 import styles from "./case.module.css";
 
 const man = (n: number) => `${Math.round(n / 10000).toLocaleString("ko-KR")}만`;
 
-// S6 사례 상세 + 역추적(citedBy) (F5.3). mock.
+// S6 사례 상세 (pi-local-rag와 같은 cases/*.md). 백엔드 /api/cases/:id 에서 읽음.
 export function CaseView() {
   const { id } = useParams();
   const nav = useNavigate();
-  const c = id ? CASES[id] : undefined;
+  const [c, setC] = useState<Case | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    fetch(`${API_BASE}/api/cases/${encodeURIComponent(id ?? "")}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive) return;
+        setC(d && !d.error ? (d as Case) : null);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (alive) {
+          setC(null);
+          setLoading(false);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className={styles.empty}>
+        <p className={styles.emptyEyebrow}>사례</p>
+        <h1 className={styles.emptyTitle}>불러오는 중…</h1>
+      </div>
+    );
+  }
   if (!c) {
     return (
       <div className={styles.empty}>
@@ -24,7 +57,7 @@ export function CaseView() {
   return (
     <div className={styles.screen}>
       <header className={styles.top}>
-        <button className={styles.back} onClick={() => nav("/")} aria-label="홈">
+        <button className={styles.back} onClick={() => nav("/cases")} aria-label="사례 목록">
           <i className="ti ti-arrow-left" aria-hidden />
         </button>
         <h1 className={styles.title}>사례 · {c.title}</h1>
@@ -33,7 +66,7 @@ export function CaseView() {
           완료
         </span>
         <span className={styles.spacer} />
-        <span className={styles.source}>Extension case_get · pgvector</span>
+        <span className={styles.source}>pi-local-rag · cases/{c.id}.md</span>
       </header>
 
       <div className={styles.scroll}>
@@ -47,7 +80,9 @@ export function CaseView() {
               <Meta label="만족도" value={`★ ${c.satisfaction}`} />
             </div>
             <h2 className={styles.sectionTitle}>사례 전문</h2>
-            <p className={styles.full}>{c.summary}</p>
+            <div className={styles.full}>
+              <Md>{c.body}</Md>
+            </div>
           </div>
 
           <aside className={styles.side}>
@@ -65,23 +100,6 @@ export function CaseView() {
                   <span className={styles.amount}>{man(total)}</span>
                 </li>
               </ul>
-            </section>
-
-            <section className={styles.card}>
-              <h3 className={styles.cardTitle}>이 사례를 인용한 행사</h3>
-              {c.citedBy.length === 0 ? (
-                <p className={styles.none}>아직 없음</p>
-              ) : (
-                <ul className={styles.cited}>
-                  {c.citedBy.map((w) => (
-                    <li key={w.wsId}>
-                      <button onClick={() => nav(`/w/${w.wsId}/board`)}>
-                        <i className="ti ti-arrow-back-up" aria-hidden /> {w.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </section>
           </aside>
         </div>

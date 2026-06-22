@@ -17,5 +17,5 @@ export function Workspace() {
       </div>
     );
   }
-  return <S3View ws={ws} />;
+  return <S3View />;
 }

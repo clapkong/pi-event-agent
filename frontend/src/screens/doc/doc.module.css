@@ -73,10 +73,291 @@
   padding: var(--sp-32) var(--sp-24);
 }
 
-/* 문서 (명조, 읽기 좋은 컬럼) */
+/* 문서 — 읽기 좋은 컬럼 + 명조 본문(DESIGN §1.5·§3·§4). Md 위에 문서 타이포를 덧입힌다.
+   (doc.module 은 Md.module 뒤에 로드되므로 동일 특이도에서 이 규칙이 이긴다. 에이전트 채팅엔 영향 없음.) */
 .doc {
-  max-width: var(--doc-col);
+  max-width: 800px;
   margin: 0 auto;
+  font-family: var(--serif);
+  color: var(--ink);
+}
+.doc h1 {
+  font-family: var(--serif);
+  font-size: 1.7em;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 1.5em 0 0.5em;
+}
+.doc h1:first-child {
+  margin-top: 0;
+}
+.doc h2 {
+  font-family: var(--serif);
+  font-size: 1.3em;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1.7em 0 0.6em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--line);
+}
+.doc h3 {
+  font-family: var(--serif);
+  font-size: 1.12em;
+  font-weight: 600;
+  margin: 1.3em 0 0.4em;
+}
+.doc p,
+.doc li {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--ink2);
+}
+.doc p {
+  margin: 0.7em 0;
+}
+.doc ul,
+.doc ol {
+  margin: 0.6em 0;
+  padding-left: 1.4em;
+}
+.doc li {
+  margin: 0.25em 0;
+}
+.doc strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+.doc blockquote {
+  margin: 1em 0;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 3px solid var(--line2);
+  color: var(--muted);
+}
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-family: var(--sans);
+  font-size: 13.5px;
+}
+.doc th,
+.doc td {
+  border: 1px solid var(--line);
+  padding: 7px 10px;
+  text-align: left;
+}
+.doc th {
+  background: var(--inset);
+  font-weight: 600;
+}
+.doc code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--inset);
+  border-radius: var(--r-tag);
+  padding: 1px 5px;
+}
+.doc hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 1.8em 0;
+}
+/* 비-제안서 산출물 파일명 헤더 */
+.docFileName {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: var(--sp-12);
+  padding-bottom: var(--sp-8);
+  border-bottom: 1px solid var(--line);
+}
+/* 문서 도구막대 (편집/저장) — 우측 정렬, 조용히 */
+.docBar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-8);
+  margin-bottom: var(--sp-16);
+}
+.barGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: 5px var(--sp-12);
+  cursor: pointer;
+}
+.barGhost:hover {
+  border-color: var(--primary);
+  color: var(--primary-deep);
+}
+.barPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--r-btn);
+  padding: 5px var(--sp-12);
+  cursor: pointer;
+}
+.barPrimary:hover {
+  background: var(--primary-deep);
+}
+.barPrimary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+/* 마크다운 편집기 */
+.editor {
+  width: 100%;
+  min-height: 60vh;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--line2);
+  border-radius: 10px;
+  padding: var(--sp-16);
+  resize: vertical;
+}
+.editor:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--bg);
+}
+/* 버전 이력 (AI=teal · 사람=amber, DESIGN §9.15) */
+.versions {
+  margin-bottom: var(--sp-16);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.versionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  padding: var(--sp-8) var(--sp-12);
+  font-size: var(--fs-caption);
+}
+.versionRow:not(:last-child) {
+  border-bottom: 1px solid var(--line);
+}
+.versionV {
+  font-family: var(--mono);
+  color: var(--ink2);
+}
+.actorAi,
+.actorHuman {
+  font-size: var(--fs-tag);
+  font-weight: 600;
+  border-radius: var(--r-tag);
+  padding: 1px 6px;
+}
+.actorAi {
+  background: #dceded;
+  color: #0a585c;
+}
+.actorHuman {
+  background: #fbf1d8;
+  color: #9a7714;
+}
+.versionSummary {
+  color: var(--ink2);
+  flex: 1;
+}
+.versionAt {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+.empty {
+  color: var(--muted);
+  padding: var(--sp-24) 0;
+}
+/* 인용 드로어 (§9.14) */
+.citeBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(21, 41, 43, 0.12);
+  z-index: 40;
+}
+.citeDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 340px;
+  max-width: 90vw;
+  height: 100%;
+  background: var(--bg);
+  border-left: 1px solid var(--line2);
+  box-shadow: 0 12px 28px rgba(21, 41, 43, 0.13);
+  padding: var(--sp-20);
+  z-index: 41;
+  overflow-y: auto;
+}
+.citeHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-16);
+}
+.citeN {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--primary-deep);
+}
+.citeClose {
+  display: inline-flex;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+}
+.citeClose:hover {
+  color: var(--ink);
+}
+.citeText {
+  font-size: var(--fs-caption);
+  line-height: 1.7;
+  color: var(--ink2);
+  margin-bottom: var(--sp-16);
+}
+.citeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  color: var(--primary-deep);
+  background: var(--inset);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: 6px var(--sp-12);
+  margin-right: var(--sp-8);
+  text-decoration: none;
+  cursor: pointer;
+}
+.citeLink:hover {
+  border-color: var(--primary);
+}
+.emptyTitle {
+  font-size: var(--fs-h3, 16px);
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: var(--sp-8);
+}
+.emptyHint {
+  font-size: var(--fs-caption);
+  color: var(--muted);
 }
 .docH {
   font-family: var(--serif);

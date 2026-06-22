@@ -1,27 +1,31 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { STATUS_LABEL, type Workspace } from "@/data/workspaces";
+import { useEffect, useState } from "react";
 import type { ElementType } from "@/agent/contract.ts";
+import { Md } from "@/components/Md";
 import { useAgentRunCtx } from "@/agent/AgentRunContext";
 import type {
   TimelineEntry,
   ToolEntry,
+  ThinkingEntry,
+  SubagentEntry,
   ModelToast as Toast,
 } from "@/agent/useAgentRun";
 import styles from "./s3.module.css";
 
 // 대화·동작 타임라인 (시그니처 화면). realClient(WS)로 실제 백엔드 구동.
 // 이 화면과 그 안에서만 쓰는 부품(상단바·타임라인·컴포저·토스트)을 한 파일에 둔다.
-export function S3View({ ws }: { ws: Workspace }) {
+export function S3View() {
   // 런(WS 연결)은 워크스페이스 셸이 소유 — 패널 전환에도 유지된다. autostart 는 셸이 처리.
   const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRunCtx();
 
   const { entries, counts } = state;
   const started = entries.length > 0 || state.running;
+  // 답변 대기 중인 ask(되묻기) — 모달로 띄운다(타임라인엔 히스토리만).
+  const activeAsk = entries.find((e) => e.kind === "ask" && e.answer === undefined) as
+    | { question: string; options: string[] }
+    | undefined;
 
   return (
     <div className={styles.screen}>
-      <TopBar ws={ws} model={state.model} />
 
       <div className={styles.scroll}>
         {!started ? (
@@ -39,12 +43,7 @@ export function S3View({ ws }: { ws: Workspace }) {
         ) : (
           <div className={styles.feed}>
             <ElementSummary counts={counts} />
-            <Timeline
-              entries={entries}
-              onAnswerAsk={answerAsk}
-              onApprove={approveGate}
-              onReject={rejectGate}
-            />
+            <Timeline entries={entries} onApprove={approveGate} onReject={rejectGate} />
             {state.finished && !state.error && (
               <p className={styles.endNote}>런 완료 · 산출물은 작업공간에서 관리됩니다.</p>
             )}
@@ -56,6 +55,66 @@ export function S3View({ ws }: { ws: Workspace }) {
       <Composer running={state.running} onSend={(text) => start(text)} onStop={stop} />
 
       {state.toast && <ModelToast toast={state.toast} />}
+      {activeAsk && (
+        <AskModal question={activeAsk.question} options={activeAsk.options} onAnswer={answerAsk} />
+      )}
+    </div>
+  );
+}
+
+// 되묻기 모달 — 답변 대기 중인 ask를 화면 중앙 다이얼로그로(옵션 카드 / 자유입력).
+function AskModal({
+  question,
+  options,
+  onAnswer,
+}: {
+  question: string;
+  options: string[];
+  onAnswer: (choice: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const freeText = options.length === 0;
+  return (
+    <div className={styles.askModalBackdrop}>
+      <div className={styles.askModal} role="dialog" aria-modal="true" aria-label="질문">
+        <p className={styles.askModalEyebrow}>에이전트가 묻습니다</p>
+        <p className={styles.askModalQ}>{question}</p>
+        {freeText ? (
+          <form
+            className={styles.askModalForm}
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              const v = text.trim();
+              if (v) onAnswer(v);
+            }}
+          >
+            <input
+              className={styles.askModalInput}
+              value={text}
+              onChange={(ev) => setText(ev.target.value)}
+              placeholder="직접 입력…"
+              // biome-ignore lint/a11y/noAutofocus: 모달은 즉시 입력 받는 게 자연스러움
+              autoFocus
+            />
+            <button type="submit" className={styles.askModalSend} disabled={!text.trim()}>
+              보내기
+            </button>
+          </form>
+        ) : (
+          <div className={styles.askModalChips}>
+            {options.map((o) => {
+              const [label, ...rest] = o.split(" — ");
+              const desc = rest.join(" — ");
+              return (
+                <button key={o} type="button" className={styles.askModalChip} onClick={() => onAnswer(o)}>
+                  <span className={styles.chipLabel}>{label}</span>
+                  {desc && <span className={styles.chipDesc}>{desc}</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -69,38 +128,6 @@ function ElementSummary({ counts }: { counts: Record<string, number> }) {
         MCP ×{counts.MCP} · Extension ×{counts.Extension} · Skill ×{counts.Skill}
       </span>
     </p>
-  );
-}
-
-// 상단 바: 이름 + 연필 + 상태 뱃지 + 현재 모델 뱃지 + 작업공간.
-function TopBar({ ws, model }: { ws: Workspace; model: string | null }) {
-  const nav = useNavigate();
-  return (
-    <header className={styles.top}>
-      <h1 className={styles.wsName}>{ws.name}</h1>
-      <button type="button" className={styles.pencil} title="이름 수정" aria-label="이름 수정">
-        <i className="ti ti-pencil" aria-hidden />
-      </button>
-      <span className={styles.statusBadge}>
-        <span className={styles.statusDot} aria-hidden />
-        {STATUS_LABEL[ws.status]}
-      </span>
-
-      <span className={styles.spacer} />
-
-      <span className={styles.modelBadge} title="현재 모델">
-        <span className={styles.modelDot} aria-hidden />
-        {model ?? "모델 대기"}
-      </span>
-      <button
-        type="button"
-        className={styles.topAction}
-        onClick={() => nav(`/w/${ws.id}/board`)}
-        title="작업공간"
-      >
-        작업공간
-      </button>
-    </header>
   );
 }
 
@@ -189,12 +216,10 @@ function ElementTag({ element }: { element: ElementType }) {
 // 동작 타임라인 (run-of-show): 세로 척추선 + 스텝.
 function Timeline({
   entries,
-  onAnswerAsk,
   onApprove,
   onReject,
 }: {
   entries: TimelineEntry[];
-  onAnswerAsk: (choice: string) => void;
   onApprove: () => void;
   onReject: () => void;
 }) {
@@ -211,20 +236,17 @@ function Timeline({
               </div>
             )}
             {e.kind === "tool" && <ToolStep entry={e} />}
-            {/* 에이전트 대화는 본문 산세리프 (명조는 문서에만) */}
+            {e.kind === "thinking" && <ThinkingStep entry={e} />}
+            {e.kind === "subagent" && <SubagentStep entry={e} />}
+            {/* 에이전트 대화는 본문 산세리프 (명조는 문서에만) — 마크다운 렌더 */}
             {e.kind === "text" && (
-              <p className={styles.stream}>
-                {e.text}
+              <div className={styles.stream}>
+                <Md>{e.text}</Md>
                 {e.streaming && <span className={styles.caret} aria-hidden />}
-              </p>
+              </div>
             )}
             {e.kind === "ask" && (
-              <AskBlock
-                question={e.question}
-                options={e.options}
-                answer={e.answer}
-                onAnswer={onAnswerAsk}
-              />
+              <AskBlock question={e.question} answer={e.answer} />
             )}
             {e.kind === "gate" && (
               <div className={styles.gate}>
@@ -252,20 +274,8 @@ function Timeline({
   );
 }
 
-// 되묻기/선택 — 옵션이 있으면 카드 버튼(라벨 — 설명 분리), 비어 있으면 자유입력(기타).
-function AskBlock({
-  question,
-  options,
-  answer,
-  onAnswer,
-}: {
-  question: string;
-  options: string[];
-  answer?: string;
-  onAnswer: (choice: string) => void;
-}) {
-  const [text, setText] = useState("");
-  const freeText = options.length === 0;
+// 타임라인의 ask 히스토리 — 입력은 AskModal이 받고, 여기선 질문·답변(또는 대기)만 표시.
+function AskBlock({ question, answer }: { question: string; answer?: string }) {
   return (
     <div className={styles.ask}>
       <p className={styles.askQ}>{question}</p>
@@ -273,49 +283,49 @@ function AskBlock({
         <p className={styles.askDone}>
           답변: <strong>{answer}</strong>
         </p>
-      ) : freeText ? (
-        <form
-          className={styles.askForm}
-          onSubmit={(ev) => {
-            ev.preventDefault();
-            const v = text.trim();
-            if (v) onAnswer(v);
-          }}
-        >
-          <input
-            className={styles.askInput}
-            value={text}
-            onChange={(ev) => setText(ev.target.value)}
-            placeholder="직접 입력…"
-            autoFocus
-          />
-          <button type="submit" className={styles.askSend} disabled={!text.trim()}>
-            보내기
-          </button>
-        </form>
       ) : (
-        <>
-          <p className={styles.askWait}>선택해 주세요</p>
-          <div className={styles.chips}>
-            {options.map((o) => {
-              const [label, ...rest] = o.split(" — ");
-              const desc = rest.join(" — ");
-              return (
-                <button
-                  key={o}
-                  type="button"
-                  className={styles.chip}
-                  onClick={() => onAnswer(o)}
-                >
-                  <span className={styles.chipLabel}>{label}</span>
-                  {desc && <span className={styles.chipDesc}>{desc}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </>
+        <p className={styles.askWait}>답변 대기 중 — 화면 가운데 창에서 선택해 주세요.</p>
       )}
     </div>
+  );
+}
+
+// active 인 동안 1초마다 경과 시간을 갱신해 "돌아가고 있음"을 보여준다.
+function Elapsed({ startedAt, active }: { startedAt: number; active: boolean }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [active]);
+  const sec = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const txt = sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : `${sec}s`;
+  return <span className={styles.elapsed}>{txt} 진행 중</span>;
+}
+
+// 추론(thinking) — 기본 접힘 패널(흐린 색). 펼치면 전체 추론, 스트리밍 중엔 summary에 커서.
+function ThinkingStep({ entry }: { entry: ThinkingEntry }) {
+  return (
+    <details className={styles.thinking}>
+      <summary className={styles.thinkingSummary}>
+        <i className="ti ti-bulb" aria-hidden /> 추론
+        {entry.streaming && <span className={styles.caret} aria-hidden />}
+      </summary>
+      <Md className={styles.thinkingText}>{entry.text}</Md>
+    </details>
+  );
+}
+
+// 서브에이전트 내부 출력 — 기본 접힘 패널. 긴 작업(critic 등) 중 무슨 일이 도는지.
+function SubagentStep({ entry }: { entry: SubagentEntry }) {
+  return (
+    <details className={styles.thinking}>
+      <summary className={styles.thinkingSummary}>
+        <i className="ti ti-robot" aria-hidden /> 서브에이전트 작업
+        <code className={styles.subagentId}>{entry.agentId.slice(0, 6)}</code>
+      </summary>
+      <Md className={styles.thinkingText}>{entry.text}</Md>
+    </details>
   );
 }
 
@@ -323,20 +333,24 @@ function ToolStep({ entry }: { entry: ToolEntry }) {
   return (
     <>
       <div className={styles.toolHead}>
-        <span className={styles.toolLabel}>{entry.label}</span>
+        <strong className={styles.toolLabel}>{entry.label}</strong>
         <ElementTag element={entry.element} />
-        <code className={styles.toolTag}>{entry.tool}</code>
-        <time className={styles.ts}>{entry.ts}</time>
+        {entry.tool !== entry.label && <code className={styles.toolTag}>{entry.tool}</code>}
+        {entry.status === "active" ? (
+          <Elapsed startedAt={entry.startedAt} active />
+        ) : (
+          <time className={styles.ts}>{entry.ts}</time>
+        )}
       </div>
       {entry.result && (
-        <p className={styles.toolResult}>
-          {entry.result}
+        <div className={styles.toolResult}>
+          <Md>{entry.result}</Md>
           {entry.citation !== undefined && (
             <button type="button" className={styles.cite} title="출처 보기">
               #{entry.citation}
             </button>
           )}
-        </p>
+        </div>
       )}
     </>
   );
@@ -348,6 +362,8 @@ function node(e: TimelineEntry) {
   if (e.kind === "gate") return <span className={`${styles.node} ${styles.nodeGate}`} aria-hidden />;
   if (e.kind === "ask") return <span className={`${styles.node} ${styles.nodeAsk}`} aria-hidden />;
   if (e.kind === "text") return <span className={`${styles.node} ${styles.nodeText}`} aria-hidden />;
+  if (e.kind === "thinking") return <span className={`${styles.node} ${styles.nodeText}`} aria-hidden />;
+  if (e.kind === "subagent") return <span className={`${styles.node} ${styles.nodeText}`} aria-hidden />;
   const cls =
     e.status === "active"
       ? styles.nodeActive

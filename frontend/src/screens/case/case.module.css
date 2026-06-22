@@ -62,6 +62,46 @@
   overflow-y: auto;
   padding: var(--sp-24);
 }
+/* 사례 목록 표 (S6) */
+.listNote {
+  color: var(--muted);
+  padding: var(--sp-16) 0;
+}
+.caseTable {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-size: var(--fs-caption);
+}
+.caseTable th {
+  text-align: left;
+  font-size: var(--fs-eyebrow);
+  font-weight: 500;
+  color: var(--muted);
+  padding: var(--sp-8) var(--sp-12);
+  border-bottom: 1px solid var(--line2);
+}
+.caseTable td {
+  padding: var(--sp-12);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink2);
+}
+.caseTable .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.caseTitleCell {
+  font-weight: 600;
+  color: var(--ink);
+}
+.caseRow {
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.caseRow:hover {
+  background: var(--inset);
+}
 .grid {
   max-width: var(--content-max);
   margin: 0 auto;

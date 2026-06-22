@@ -56,21 +56,23 @@
   padding: var(--sp-24);
 }
 .col {
-  max-width: var(--content-max);
-  margin: 0 auto;
+  max-width: none;
 }
 
 /* 상태 스트립 (§9.7) */
 .statusStrip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--sp-12);
   padding: var(--sp-12) var(--sp-16);
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   margin-bottom: var(--sp-16);
+}
+/* 점검 + 요약칩을 한 덩어리로 우측 정렬(stepper는 좌측). 점검이 칩 왼쪽. */
+.refreshBtn {
+  margin-left: auto;
 }
 .stepper {
   display: flex;
@@ -82,6 +84,13 @@
   color: var(--muted);
   position: relative;
   padding-right: var(--sp-8);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.step:hover {
+  color: var(--primary-deep);
 }
 .step:not(:last-child)::after {
   content: "→";
@@ -207,14 +216,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px var(--sp-12);
+  padding: 5px 6px 5px var(--sp-12);
   border: 1px solid var(--line2);
   border-radius: var(--r-btn);
-  background: var(--inset);
+  background: var(--bg);
   text-align: left;
-}
-.cond:hover {
-  border-color: var(--primary);
 }
 .condLocked {
   background: var(--tag-lock-bg);
@@ -229,15 +235,73 @@
   color: var(--ink);
   font-weight: 500;
 }
+/* 편집 필드 공통: 평소엔 값처럼(보더 없음), hover 시 옅은 면으로 편집 가능 암시, focus 시 티얼 링. */
+.condValueInput,
+.numInput {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  padding: 2px 5px;
+  transition: background var(--dur-fast, 150ms) ease-out;
+}
+.condValueInput:hover,
+.numInput:hover {
+  background: var(--inset);
+}
+.condValueInput:focus,
+.numInput:focus {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+  outline: none;
+}
+.condValueInput {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  width: 12ch;
+  min-width: 7ch;
+}
+/* 예산 계획액 — 모노 tabular 우측 정렬, 숫자 스피너 제거 */
+.numInput {
+  width: 10ch;
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.numInput::-webkit-outer-spin-button,
+.numInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* 조건 잠금 토글(작은 아이콘 버튼) */
+.condLock {
+  display: inline-flex;
+  align-items: center;
+  color: var(--faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 5px;
+}
+.condLock:hover {
+  color: var(--primary);
+  background: var(--inset);
+}
+.condLocked .condLock,
 .condLocked i {
   color: var(--tag-lock-fg);
-  font-size: 12px;
 }
 
 /* 2열 */
 .twoCol {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  /* 왼쪽(예산·업체·일정)이 남는 가로를 다 먹고, 오른쪽(장소·날씨·통신·산출물)은 고정폭. */
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: var(--sp-16);
   align-items: start;
 }
@@ -390,6 +454,15 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 4px;
+  border-radius: var(--r-btn);
+}
+.miniStepper:hover {
+  background: var(--inset);
 }
 .miniDot {
   width: 8px;
@@ -509,6 +582,224 @@
 .outLink i {
   color: var(--muted);
 }
+.outEmpty {
+  font-size: var(--fs-caption);
+  color: var(--faint);
+  padding: var(--sp-8) 0;
+}
+
+/* 작업공간 점검(운영 새로고침) 버튼 — 상태 스트립 우측 */
+.refreshBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--primary-deep);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: 6px var(--sp-12);
+  cursor: pointer;
+}
+.refreshBtn:hover {
+  border-color: var(--primary);
+}
+.refreshBtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+.spin {
+  animation: refreshSpin 0.9s linear infinite;
+}
+@keyframes refreshSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+/* 통신 · 회의록 (§9.28) */
+.commsEmpty {
+  font-size: var(--fs-caption);
+  color: var(--faint);
+  padding: var(--sp-8) 0;
+}
+.commsList {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.commsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-12);
+  padding: var(--sp-12) 0;
+}
+.commsRow:not(:last-child) {
+  border-bottom: 1px solid var(--line);
+}
+.relYes,
+.relNo {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  font-size: var(--fs-tag);
+  font-weight: 600;
+  border-radius: var(--r-tag);
+  padding: 2px 7px;
+}
+.relYes {
+  background: #dceded;
+  color: #0a585c;
+}
+.relNo {
+  background: var(--inset);
+  color: var(--faint);
+}
+.commsBody {
+  flex: 1;
+  min-width: 0;
+}
+.commsSubject {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--ink);
+  display: flex;
+  gap: var(--sp-8);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.commsChannel {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  color: var(--primary-deep);
+  background: var(--tint-soft);
+  border-radius: var(--r-tag);
+  padding: 1px 6px;
+  margin-right: 6px;
+}
+.commsFrom {
+  font-size: var(--fs-eyebrow);
+  font-weight: 400;
+  color: var(--muted);
+}
+.commsInsight {
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+  margin-top: 3px;
+}
+.commsReason {
+  font-size: var(--fs-caption);
+  color: var(--faint);
+  margin-top: 3px;
+}
+.commsDate {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* 일정: 미니 달력 + D-레일/리스트 (왼쪽 달력) */
+.scheduleWrap {
+  display: flex;
+  gap: var(--sp-20);
+  align-items: flex-start;
+}
+.scheduleMain {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.gcalFrame {
+  flex: 0 0 auto;
+  width: 340px;
+  height: 300px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.miniCal {
+  flex: 0 0 auto;
+  width: 224px;
+}
+.miniCalHead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--sp-8);
+}
+.miniCalLabel {
+  min-width: 8ch;
+  text-align: center;
+}
+.miniCalNav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.miniCalNav:hover {
+  border-color: var(--primary);
+  color: var(--primary-deep);
+}
+.miniCalToday {
+  margin-left: auto;
+  font-size: var(--fs-eyebrow);
+  font-weight: 500;
+  color: var(--primary-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.miniCalToday:hover {
+  text-decoration: underline;
+}
+.miniCalGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.miniCalW {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--muted);
+  padding-bottom: 2px;
+}
+.miniCalD {
+  text-align: center;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  color: var(--ink2);
+  padding: 5px 0;
+  border-radius: 6px;
+}
+.miniCalMark {
+  background: var(--tint);
+  color: var(--ink);
+}
+.miniCalEvent {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
 
 /* D-레일 (§9.20) */
 .drail {
@@ -596,4 +887,113 @@
   font-family: var(--mono);
   font-size: 11px;
   color: var(--faint);
+}
+/* 일정 → 캘린더 등록 버튼 */
+.schedActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--sp-8);
+}
+.calRegBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--primary-deep);
+  background: var(--bg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  padding: 5px var(--sp-12);
+  cursor: pointer;
+}
+.calRegBtn:hover {
+  border-color: var(--primary);
+}
+.calRegBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* 일정 편집 — 완료 체크·인라인 입력·삭제·추가 */
+.schedCheck {
+  display: inline-flex;
+  color: var(--faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+}
+.schedCheck:hover {
+  color: var(--primary);
+}
+.schedDoneChk {
+  color: var(--success);
+}
+.schedTitleInput,
+.schedOwnerInput,
+.schedDueInput {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 2px 5px;
+}
+.schedTitleInput:hover,
+.schedOwnerInput:hover,
+.schedDueInput:hover {
+  background: var(--inset);
+}
+.schedTitleInput:focus,
+.schedOwnerInput:focus,
+.schedDueInput:focus {
+  outline: none;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+}
+.schedTitleInput {
+  flex: 1;
+  min-width: 8ch;
+  font-size: var(--fs-caption);
+}
+.schedStrike {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.schedOwnerInput {
+  width: 9ch;
+  font-size: var(--fs-eyebrow);
+  color: var(--muted);
+}
+.schedDueInput {
+  width: 14ch;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink2);
+}
+.schedDel {
+  display: inline-flex;
+  color: var(--faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+}
+.schedDel:hover {
+  color: var(--error);
+}
+.schedAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--sp-8);
+  font-size: var(--fs-caption);
+  color: var(--primary-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.schedAdd:hover {
+  text-decoration: underline;
 }

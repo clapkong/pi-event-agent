@@ -21,6 +21,7 @@ export interface ToolEntry {
   tool: string;
   element: ElementType;
   ts: string;
+  startedAt: number; // 경과 시간 표시용(에포크 ms)
   status: NodeStatus;
   result?: string;
   citation?: number;
@@ -30,6 +31,18 @@ export interface TextEntry {
   id: number;
   text: string;
   streaming: boolean;
+}
+export interface ThinkingEntry {
+  kind: "thinking";
+  id: number;
+  text: string;
+  streaming: boolean;
+}
+export interface SubagentEntry {
+  kind: "subagent";
+  id: number;
+  agentId: string;
+  text: string;
 }
 export interface AskEntry {
   kind: "ask";
@@ -49,7 +62,14 @@ export interface UserEntry {
   id: number;
   text: string;
 }
-export type TimelineEntry = ToolEntry | TextEntry | AskEntry | GateEntry | UserEntry;
+export type TimelineEntry =
+  | ToolEntry
+  | TextEntry
+  | ThinkingEntry
+  | SubagentEntry
+  | AskEntry
+  | GateEntry
+  | UserEntry;
 
 export interface ModelToast {
   from?: string;
@@ -81,12 +101,12 @@ const initialState: RunState = {
 
 const now = () => new Date().toLocaleTimeString("ko-KR", { hour12: false });
 
-// 마지막 스트리밍 텍스트의 커서를 끈다(새 스텝이 시작될 때).
+// 마지막 스트리밍(텍스트·추론)의 커서를 끈다(새 스텝이 시작될 때).
 function settle(entries: TimelineEntry[]): TimelineEntry[] {
   const last = entries[entries.length - 1];
-  if (last?.kind === "text" && last.streaming) {
+  if (last && (last.kind === "text" || last.kind === "thinking") && last.streaming) {
     return entries.map((e, i) =>
-      i === entries.length - 1 ? { ...(e as TextEntry), streaming: false } : e
+      i === entries.length - 1 ? { ...(e as TextEntry | ThinkingEntry), streaming: false } : e
     );
   }
   return entries;
@@ -152,19 +172,43 @@ export function useAgentRun(wsId = "demo") {
         case "model_current":
           return { ...s, model: e.name };
         case "text_delta": {
-          const entries = [...s.entries];
-          const last = entries[entries.length - 1];
+          const last = s.entries[s.entries.length - 1];
           if (last?.kind === "text" && last.streaming) {
+            const entries = [...s.entries];
             entries[entries.length - 1] = { ...last, text: last.text + e.delta };
-          } else {
-            entries.push({
-              kind: "text",
-              id: nextId(),
-              text: e.delta,
-              streaming: true,
-            });
+            return { ...s, entries };
           }
-          return { ...s, entries };
+          // 새 텍스트 시작 — 직전 스트리밍(추론 등)은 정리하고 시작.
+          return {
+            ...s,
+            entries: [...settle(s.entries), { kind: "text", id: nextId(), text: e.delta, streaming: true }],
+          };
+        }
+        case "thinking_delta": {
+          const last = s.entries[s.entries.length - 1];
+          if (last?.kind === "thinking" && last.streaming) {
+            const entries = [...s.entries];
+            entries[entries.length - 1] = { ...last, text: last.text + e.delta };
+            return { ...s, entries };
+          }
+          return {
+            ...s,
+            entries: [...settle(s.entries), { kind: "thinking", id: nextId(), text: e.delta, streaming: true }],
+          };
+        }
+        case "subagent_delta": {
+          // agentId 별로 한 패널에 누적(없으면 새로 만든다).
+          const idx = s.entries.findIndex((en) => en.kind === "subagent" && en.agentId === e.agentId);
+          if (idx >= 0) {
+            const entries = [...s.entries];
+            const cur = entries[idx] as SubagentEntry;
+            entries[idx] = { ...cur, text: `${cur.text}\n${e.delta}` };
+            return { ...s, entries };
+          }
+          return {
+            ...s,
+            entries: [...settle(s.entries), { kind: "subagent", id: nextId(), agentId: e.agentId, text: e.delta }],
+          };
         }
         case "tool_start":
           return {
@@ -178,6 +222,7 @@ export function useAgentRun(wsId = "demo") {
                 tool: e.tool,
                 element: e.element,
                 ts: now(),
+                startedAt: Date.now(),
                 status: "active",
               },
             ],

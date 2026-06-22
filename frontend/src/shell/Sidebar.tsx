@@ -12,22 +12,11 @@ export function Sidebar() {
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.brand}>
+      {/* 브랜드 = 홈 링크 (Pi-Event 클릭 시 홈으로) */}
+      <NavLink to="/" end className={({ isActive }) => `${styles.brand} ${isActive ? styles.brandActive : ""}`}>
         <span className={styles.brandMark} aria-hidden />
-        <span className={styles.brandName}>행사 기획</span>
-      </div>
-
-      <nav className={styles.nav}>
-        <NavLink
-          to="/"
-          end
-          className={({ isActive }) =>
-            isActive ? `${styles.item} ${styles.active}` : styles.item
-          }
-        >
-          홈
-        </NavLink>
-      </nav>
+        <span className={styles.brandName}>Pi-Event</span>
+      </NavLink>
 
       <div className={styles.sectionLabel}>행사</div>
       <nav className={styles.nav}>

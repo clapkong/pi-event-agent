@@ -2,7 +2,8 @@
 // 세 겹(입력/가정·기획 산출·실행/확정) + 두 꼬리표(잠금·신선도) + 예산 3상태 + 업체 4단계 + 재기획.
 // 데이터: 백엔드 REST(GET /api/workspaces/:id ← update_state state.json). mock seed 없음.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { API_BASE } from "@/config";
 
 export type Stage = "기획" | "진행중" | "정산·완료";
 
@@ -54,6 +55,8 @@ export interface BoardState {
   milestones: Milestone[];
   /** 입력 변화로 뜬 재기획 제안(없으면 null). */
   replan: { changedInputs: string[] } | null;
+  /** 마지막 '점검'(운영 새로고침) 시각 ISO. 페이지 열 때 1주 넘었으면 자동 점검. */
+  checkedAt?: string;
 }
 
 // 예산 3상태 합계 (DESIGN §2.6 막대: 집행 │ 확정·미집행 │ 계획 잔여).
@@ -79,8 +82,6 @@ function emptyBoard(): BoardState {
     replan: null,
   };
 }
-
-const API_BASE = "http://127.0.0.1:8787";
 
 /** 백엔드 보드 상태(update_state 가 쓴 state.json) 조회. 없거나(404)·실패 시 null. */
 export async function fetchBoard(wsId: string): Promise<BoardState | null> {
@@ -108,57 +109,154 @@ export function useBoard(wsId: string) {
     };
   }, [wsId]);
 
+  // 점검(에이전트 런)이 state.json 을 바꾼 뒤 다시 읽기 위한 재로드.
+  const reload = useCallback(() => {
+    fetchBoard(wsId).then((b) => {
+      if (b) setBoard(b);
+    });
+  }, [wsId]);
+
+  // 사람이 작업공간에서 직접 편집(잠금 등) → 낙관적 반영 + 백엔드 PATCH로 저장(state.json).
+  // (잠금·확정은 사람의 권한. 에이전트는 잠긴 항목을 못 바꾸지만 사람은 바꿀 수 있다.)
+  const persist = (patch: Partial<BoardState>) => {
+    void fetch(`${API_BASE}/api/workspaces/${encodeURIComponent(wsId)}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(patch),
+    }).catch(() => {
+      /* 저장 실패는 무시(다음 로드 때 서버값) */
+    });
+  };
+
   const toggleConditionLock = (key: string) =>
-    setBoard((s) => ({
-      ...s,
-      conditions: s.conditions.map((c) =>
-        c.key === key ? { ...c, locked: !c.locked } : c
-      ),
-    }));
-
-  const toggleBudgetLock = (id: string) =>
-    setBoard((s) => ({
-      ...s,
-      budget: s.budget.map((x) =>
-        x.id === id ? { ...x, confirmed: !x.confirmed } : x
-      ),
-    }));
-
-  // 입력(날씨) 변경 → 영향 산출물 stale + 재기획 배너 (DATA_MODEL §1.6).
-  const changeWeather = () =>
-    setBoard((s) => ({
-      ...s,
-      weather: { label: "비", temp: "16°", pop: 70, stale: true },
-      budget: s.budget.map((x) =>
-        x.confirmed ? x : { ...x, stale: true } // 확정 항목은 안 건드림
-      ),
-      replan: { changedInputs: ["날씨(강수확률 ↑50%)", "장소(우천 대비 동선)"] },
-    }));
-
-  // 재기획: 계획(미확정) 항목만 재배분, 확정·집행 유지 + stale 해제 + vN+1.
-  const doReplan = () =>
     setBoard((s) => {
-      const planPool = s.budget
-        .filter((x) => !x.confirmed)
-        .reduce((sum, x) => sum + x.planned, 0);
-      let i = 0;
-      const reweights = [0.42, 0.28, 0.3]; // 재배분 비율(데모)
-      const nonConfirmed = s.budget.filter((x) => !x.confirmed);
-      return {
-        ...s,
-        proposalVersion: s.proposalVersion + 1,
-        weather: { ...s.weather, stale: false },
-        replan: null,
-        budget: s.budget.map((x) => {
-          if (x.confirmed) return { ...x, stale: false }; // 확정 유지
-          const w = reweights[i % reweights.length] ?? 1 / nonConfirmed.length;
-          i += 1;
-          return { ...x, planned: Math.round((planPool * w) / 10000) * 10000, stale: false };
-        }),
-      };
+      const conditions = s.conditions.map((c) => (c.key === key ? { ...c, locked: !c.locked } : c));
+      persist({ conditions });
+      return { ...s, conditions };
     });
 
-  const dismissReplan = () => setBoard((s) => ({ ...s, replan: null }));
+  // ⑦ 사람이 입력(조건·예산)을 바꾸면, 무엇이 바뀌었는지 재기획 배너에 누적 → "재검토 필요" 신호.
+  // (세션 내·사용자 액션 기반 — 백그라운드 트리거 없음. 실제 재기획은 배너 버튼으로 에이전트가.)
+  const withReplan = (s: BoardState, desc: string): { changedInputs: string[] } => {
+    const prev = s.replan?.changedInputs ?? [];
+    return { changedInputs: prev.includes(desc) ? prev : [...prev, desc] };
+  };
+  const man = (n: number) => `${Math.round(n / 10000).toLocaleString("ko-KR")}만`;
 
-  return { board, toggleConditionLock, toggleBudgetLock, changeWeather, doReplan, dismissReplan };
+  const editConditionValue = (key: string, value: string) =>
+    setBoard((s) => {
+      const prev = s.conditions.find((c) => c.key === key);
+      const conditions = s.conditions.map((c) => (c.key === key ? { ...c, value } : c));
+      const replan = prev && prev.value !== value ? withReplan(s, `${prev.label} ${prev.value} → ${value}`) : s.replan;
+      persist({ conditions, replan });
+      return { ...s, conditions, replan };
+    });
+
+  const toggleBudgetLock = (id: string) =>
+    setBoard((s) => {
+      const budget = s.budget.map((x) => (x.id === id ? { ...x, confirmed: !x.confirmed } : x));
+      persist({ budget });
+      return { ...s, budget };
+    });
+
+  const editBudget = (id: string, field: "planned" | "spent", value: number) =>
+    setBoard((s) => {
+      const prev = s.budget.find((x) => x.id === id);
+      const budget = s.budget.map((x) => (x.id === id ? { ...x, [field]: value } : x));
+      const replan =
+        prev && prev[field] !== value
+          ? withReplan(s, `${prev.name} ${field === "planned" ? "계획" : "집행"} ${man(prev[field])} → ${man(value)}`)
+          : s.replan;
+      persist({ budget, replan });
+      return { ...s, budget, replan };
+    });
+
+  const editBudgetTotal = (budgetTotal: number) =>
+    setBoard((s) => {
+      const replan = s.budgetTotal !== budgetTotal ? withReplan(s, `총예산 ${man(s.budgetTotal)} → ${man(budgetTotal)}`) : s.replan;
+      persist({ budgetTotal, replan });
+      return { ...s, budgetTotal, replan };
+    });
+
+  // 업체 단계 순환(후보→견적→확정→계약→후보).
+  const cycleVendorStage = (id: string) =>
+    setBoard((s) => {
+      const vendors = s.vendors.map((v) => {
+        if (v.id !== id) return v;
+        const i = VENDOR_STAGES.indexOf(v.stage);
+        return { ...v, stage: VENDOR_STAGES[(i + 1) % VENDOR_STAGES.length] };
+      });
+      persist({ vendors });
+      return { ...s, vendors };
+    });
+
+  // ── 일정(마일스톤) 편집 — 사람이 추가·수정·완료체크. 전부 PATCH 저장. ──
+  const setMilestones = (s: BoardState, milestones: Milestone[]) => {
+    persist({ milestones });
+    return { ...s, milestones };
+  };
+  const toggleMilestoneDone = (i: number) =>
+    setBoard((s) =>
+      setMilestones(
+        s,
+        s.milestones.map((m, idx) => (idx === i ? { ...m, status: m.status === "done" ? "upcoming" : "done" } : m)),
+      ),
+    );
+  const editMilestone = (i: number, patch: Partial<Milestone>) =>
+    setBoard((s) => {
+      const eventDue = s.milestones.find((m) => m.dday === 0)?.due;
+      const milestones = s.milestones.map((m, idx) => {
+        if (idx !== i) return m;
+        const next = { ...m, ...patch };
+        // due 를 바꾸면 D-day(행사일 기준)도 다시 계산.
+        if (patch.due && eventDue) {
+          next.dday = Math.round((new Date(`${patch.due}T00:00:00`).getTime() - new Date(`${eventDue}T00:00:00`).getTime()) / 86400000);
+        }
+        return next;
+      });
+      return setMilestones(s, milestones);
+    });
+  const addMilestone = () =>
+    setBoard((s) => setMilestones(s, [...s.milestones, { dday: 0, title: "새 일정", due: "", status: "upcoming", owner: "" }]));
+  const removeMilestone = (i: number) => setBoard((s) => setMilestones(s, s.milestones.filter((_, idx) => idx !== i)));
+
+  // '점검' 시각 기록 — 주기 자동 점검(페이지 열 때 1주 경과) 판단용.
+  const markChecked = () =>
+    setBoard((s) => {
+      const checkedAt = new Date().toISOString();
+      persist({ checkedAt });
+      return { ...s, checkedAt };
+    });
+
+  // 진행 단계(기획→진행중→정산·완료)도 사람이 직접 변경.
+  const setStage = (stage: Stage) =>
+    setBoard((s) => {
+      persist({ stage });
+      return { ...s, stage };
+    });
+
+  // 재기획 배너 닫기 — 로컬 + 백엔드 반영(다시 로드해도 안 돌아오게). 실제 재기획은 AI 에이전트가 수행.
+  const dismissReplan = () =>
+    setBoard((s) => {
+      persist({ replan: null });
+      return { ...s, replan: null };
+    });
+
+  return {
+    board,
+    reload,
+    dismissReplan,
+    toggleConditionLock,
+    editConditionValue,
+    toggleBudgetLock,
+    editBudget,
+    editBudgetTotal,
+    cycleVendorStage,
+    setStage,
+    markChecked,
+    toggleMilestoneDone,
+    editMilestone,
+    addMilestone,
+    removeMilestone,
+  };
 }

@@ -15,6 +15,10 @@ export type ElementType = "MCP" | "Extension" | "Skill" | "Tool";
 export type AgentEvent =
   /** 답변 텍스트가 글자 단위로 흐른다 (Pi text_delta 매핑). */
   | { type: "text_delta"; delta: string }
+  /** 추론(thinking) 스트림 — 타임라인에 접힘 패널로. (Pi thinking_delta 매핑) */
+  | { type: "thinking_delta"; delta: string }
+  /** 서브에이전트 내부 출력 — .output 파일 tail로 흘러옴. agentId로 묶는다. */
+  | { type: "subagent_delta"; agentId: string; delta: string }
   /** 도구 실행 시작 — 타임라인 노드 생성. */
   | { type: "tool_start"; label: string; tool: string; element: ElementType }
   /** 도구 실행 끝 — 결과 + 출처 번호(#N, 인용 드로어용). */

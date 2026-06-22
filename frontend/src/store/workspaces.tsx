@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { type Workspace, type WorkspaceStatus } from "@/data/workspaces";
+import { API_BASE } from "@/config";
 
 // 워크스페이스 store (F3). 새 행사 생성/목록을 공유한다.
-// 데이터: 백엔드 REST(GET/POST /api/workspaces ← workspace/<id>/meta.json). mock seed 없음.
-
-const API_BASE = "http://127.0.0.1:8787";
+// 데이터: 백엔드 REST(GET/POST /api/workspaces ← workspace/<id>/state.json). mock seed 없음.
 
 interface NewWorkspaceInput {
   name: string;
@@ -16,6 +15,7 @@ interface WorkspaceStore {
   byStatus: (...s: WorkspaceStatus[]) => Workspace[];
   get: (id: string) => Workspace | undefined;
   add: (input: NewWorkspaceInput) => Workspace;
+  setStatus: (id: string, status: WorkspaceStatus) => void;
 }
 
 const Ctx = createContext<WorkspaceStore | null>(null);
@@ -63,6 +63,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         });
         return ws;
       },
+      // 작업공간에서 단계(stage)를 바꾸면 헤더 상태 뱃지도 즉시 따라오게.
+      setStatus: (id, status) =>
+        setWorkspaces((prev) => prev.map((w) => (w.id === id ? { ...w, status } : w))),
     }),
     [workspaces]
   );

@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useParams } from "react-router-dom";
 import { useWorkspaces } from "@/store/workspaces";
 import { useAgentRun } from "@/agent/useAgentRun";
 import { AgentRunProvider } from "@/agent/AgentRunContext";
+import { StatusBadge } from "@/components/StatusBadge";
 import styles from "./Page.module.css";
 
 // 워크스페이스 셸 — 한 행사 안의 패널(AI 에이전트 · 작업공간 · 문서)을 탭으로 전환.
@@ -35,17 +36,28 @@ function ShellInner({ id }: { id: string }) {
   return (
     <AgentRunProvider value={run}>
       <div className={styles.wsShell}>
-        <nav className={styles.wsTabs}>
-          <NavLink to={`/w/${id}`} end className={tab}>
-            <i className="ti ti-message-2" aria-hidden /> AI 에이전트
-          </NavLink>
-          <NavLink to={`/w/${id}/board`} className={tab}>
-            <i className="ti ti-layout-dashboard" aria-hidden /> 작업공간
-          </NavLink>
-          <NavLink to={`/w/${id}/doc`} className={tab}>
-            <i className="ti ti-file-text" aria-hidden /> 문서
-          </NavLink>
-        </nav>
+        {/* 한 줄 헤더: 행사명 + 상태 + 모델 + 패널 탭 */}
+        <header className={styles.wsTopbar}>
+          <h1 className={styles.wsName}>{ws?.name ?? id}</h1>
+          {ws && <StatusBadge status={ws.status} />}
+          <span className={styles.wsSpacer} />
+          {run.state.model && (
+            <span className={styles.wsModel} title="현재 모델">
+              {run.state.model}
+            </span>
+          )}
+          <nav className={styles.wsTabs}>
+            <NavLink to={`/w/${id}`} end className={tab}>
+              <i className="ti ti-message-2" aria-hidden /> AI 에이전트
+            </NavLink>
+            <NavLink to={`/w/${id}/board`} className={tab}>
+              <i className="ti ti-layout-dashboard" aria-hidden /> 작업공간
+            </NavLink>
+            <NavLink to={`/w/${id}/doc`} className={tab}>
+              <i className="ti ti-file-text" aria-hidden /> 문서
+            </NavLink>
+          </nav>
+        </header>
         <div className={styles.wsPanel}>
           {ws ? <Outlet /> : <p className={styles.lead}>행사를 찾을 수 없어요.</p>}
         </div>

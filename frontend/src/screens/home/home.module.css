@@ -205,6 +205,11 @@
 }
 
 /* 체크리스트 */
+.checkEmpty {
+  font-size: var(--fs-caption);
+  color: var(--faint);
+  padding: var(--sp-12) 0;
+}
 .checklist {
   list-style: none;
   margin: 0;

@@ -1,59 +1,149 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/store/workspaces";
 import { STATUS_DOT, type Workspace } from "@/data/workspaces";
-import { fetchBoard } from "@/data/boardState";
-import {
-  MOCK_CHECKLIST,
-  MOCK_NOTIFS,
-  NOTIF_GROUPS,
-  type NotifKind,
-} from "@/data/home";
+import { fetchBoard, type BoardState } from "@/data/boardState";
+import { API_BASE } from "@/config";
+import { NOTIF_GROUPS, type ChecklistItem, type Notif, type NotifKind } from "@/data/home";
 import { StatusBadge } from "@/components/StatusBadge";
 import styles from "./home.module.css";
 
+type WsBoard = { ws: Workspace; board: BoardState };
+
+// 모든 워크스페이스 보드(state.json) → 알림·체크리스트·달력의 실제 출처.
+function useAllBoards(workspaces: Workspace[]): WsBoard[] {
+  const [boards, setBoards] = useState<WsBoard[]>([]);
+  useEffect(() => {
+    let alive = true;
+    Promise.all(workspaces.map((w) => fetchBoard(w.id).then((board) => ({ ws: w, board })))).then((rs) => {
+      if (alive) setBoards(rs.filter((r): r is WsBoard => r.board != null));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [workspaces]);
+  return boards;
+}
+
+// 알림: 재검토(보드 replan) + 마감 임박(1주 내 미완료 마일스톤). 실데이터에서 파생.
+function deriveNotifs(boards: WsBoard[]): Notif[] {
+  const out: Notif[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (const { ws, board } of boards) {
+    if (board.replan && board.replan.changedInputs.length > 0) {
+      out.push({
+        id: `${ws.id}-replan`,
+        kind: "review",
+        wsId: ws.id,
+        wsName: ws.name,
+        message: `입력 변경 — ${board.replan.changedInputs.slice(0, 2).join(", ")}`,
+        when: "재검토",
+      });
+    }
+    for (const m of board.milestones) {
+      if (m.status === "done" || !m.due) continue;
+      const due = new Date(`${m.due}T00:00:00`);
+      if (Number.isNaN(due.getTime())) continue;
+      const days = Math.round((due.getTime() - today.getTime()) / 86400000);
+      if (days >= 0 && days <= 7) {
+        out.push({
+          id: `${ws.id}-${m.title}`,
+          kind: "deadline",
+          wsId: ws.id,
+          wsName: ws.name,
+          message: m.title,
+          when: days === 0 ? "오늘" : `D-${days}`,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// 체크리스트: 워크스페이스 마일스톤(미완료 우선·날짜순) 상위 8.
+function deriveChecklist(boards: WsBoard[]): ChecklistItem[] {
+  const items: ChecklistItem[] = [];
+  for (const { ws, board } of boards) {
+    for (const m of board.milestones) {
+      if (!m.due) continue;
+      items.push({
+        id: `${ws.id}-${m.title}`,
+        done: m.status === "done",
+        date: m.due.slice(5),
+        wsName: ws.name,
+        task: m.title,
+      });
+    }
+  }
+  return items
+    .sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || a.date.localeCompare(b.date))
+    .slice(0, 8);
+}
+
 // 홈 · 대시보드. 화면 전체와 그 안에서만 쓰는 부품(타일·알림·달력)을 한 파일에 둔다.
 export function Home() {
-  const { byStatus } = useWorkspaces();
+  const { workspaces, byStatus } = useWorkspaces();
   const navigate = useNavigate();
+  const boards = useAllBoards(workspaces);
 
   // 진행 중 = 진행중+지연 · 진행 예정 = 기획중 · 완료 = done.
-  // 각 워크스페이스는 정확히 한 버킷(중복·누락 없음).
   const inProgress = byStatus("active", "late");
   const upcoming = byStatus("planning");
   const completed = byStatus("done");
+
+  const notifs = useMemo(() => deriveNotifs(boards), [boards]);
+  const checklist = useMemo(() => deriveChecklist(boards), [boards]);
+
+  // 과거 사례(cases/*.md) 존재 여부 — 있으면 사례 목록(/cases) 버튼 노출.
+  const [hasCases, setHasCases] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${API_BASE}/api/cases`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && Array.isArray(d?.cases)) setHasCases(d.cases.length > 0);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <div className={styles.home}>
       <header className={styles.header}>
         <h1 className={styles.title}>홈</h1>
         <span className={styles.headerActions}>
-          <NotificationCenter />
+          <NotificationCenter notifs={notifs} />
           <button type="button" className={styles.newBtn} onClick={() => navigate("/new")}>
             <i className="ti ti-plus" aria-hidden /> 새 행사
           </button>
         </span>
       </header>
 
-      {inProgress.length === 0 ? (
+      {workspaces.length === 0 ? (
         <div className={styles.empty}>
-          <p className={styles.emptyTitle}>아직 진행 중인 행사가 없어요</p>
+          <p className={styles.emptyTitle}>아직 행사가 없어요</p>
           <button type="button" className={styles.newBtn} onClick={() => navigate("/new")}>
             <i className="ti ti-plus" aria-hidden /> 새 행사 만들기
           </button>
         </div>
       ) : (
         <>
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>진행 중인 워크스페이스</h2>
-            <div className={styles.tileGrid}>
-              {inProgress.map((ws) => (
-                <WorkspaceTile key={ws.id} ws={ws} />
-              ))}
-            </div>
-          </section>
+          {inProgress.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>진행 중인 워크스페이스</h2>
+              <div className={styles.tileGrid}>
+                {inProgress.map((ws) => (
+                  <WorkspaceTile key={ws.id} ws={ws} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          <CollapsibleRow title="진행 예정" count={upcoming.length}>
+          {/* 진행 중이 없으면 예정 행사를 펼쳐서 바로 보이게 */}
+          <CollapsibleRow title="진행 예정" count={upcoming.length} defaultOpen={inProgress.length === 0}>
             {upcoming.map((ws) => (
               <WorkspaceTile key={ws.id} ws={ws} />
             ))}
@@ -65,34 +155,34 @@ export function Home() {
             ))}
           </CollapsibleRow>
 
-          <button
-            type="button"
-            className={styles.caseRow}
-            onClick={() => navigate("/case/c-meetup-2024")}
-          >
-            <span className={styles.caseTitle}>과거 진행 사례 모음</span>
-            <span className={styles.caseHint}>완료된 행사를 사례로 재사용 · S6 →</span>
-          </button>
+          {hasCases && (
+            <button type="button" className={styles.caseRow} onClick={() => navigate("/cases")}>
+              <span className={styles.caseTitle}>과거 진행 사례 모음</span>
+              <span className={styles.caseHint}>완료된 행사를 사례로 재사용 · S6 →</span>
+            </button>
+          )}
 
           <div className={styles.bottomGrid}>
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>할 일 · 일정 달력</h2>
-              <MiniCalendar />
+              <MiniCalendar boards={boards} />
             </section>
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>할 일 체크리스트</h2>
-              <ul className={styles.checklist}>
-                {MOCK_CHECKLIST.map((c) => (
-                  <li key={c.id} className={styles.checkRow}>
-                    <input type="checkbox" defaultChecked={c.done} className={styles.check} />
-                    <span className={styles.checkDate}>{c.date}</span>
-                    <span className={styles.checkWs}>{c.wsName}</span>
-                    <span className={c.done ? styles.checkTaskDone : styles.checkTask}>
-                      {c.task}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {checklist.length === 0 ? (
+                <p className={styles.checkEmpty}>예정된 일정이 없어요.</p>
+              ) : (
+                <ul className={styles.checklist}>
+                  {checklist.map((c) => (
+                    <li key={c.id} className={styles.checkRow}>
+                      <input type="checkbox" defaultChecked={c.done} className={styles.check} readOnly />
+                      <span className={styles.checkDate}>{c.date}</span>
+                      <span className={styles.checkWs}>{c.wsName}</span>
+                      <span className={c.done ? styles.checkTaskDone : styles.checkTask}>{c.task}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
           </div>
         </>
@@ -101,17 +191,19 @@ export function Home() {
   );
 }
 
-// 접히는 행 (진행 예정·완료). 기본 접힘.
+// 접히는 행 (진행 예정·완료).
 function CollapsibleRow({
   title,
   count,
   children,
+  defaultOpen = false,
 }: {
   title: string;
   count: number;
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <section className={styles.collapse}>
       <button
@@ -120,14 +212,11 @@ function CollapsibleRow({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        <i
-          className={`ti ti-chevron-${open ? "down" : "right"} ${styles.collapseCaret}`}
-          aria-hidden
-        />
+        <i className={`ti ti-chevron-${open ? "down" : "right"} ${styles.collapseCaret}`} aria-hidden />
         {title}
         <span className={styles.collapseCount}>{count}</span>
       </button>
-      {open && <div className={styles.tileGrid}>{children}</div>}
+      {open && (count > 0 ? <div className={styles.tileGrid}>{children}</div> : <p className={styles.checkEmpty}>없음</p>)}
     </section>
   );
 }
@@ -153,17 +242,17 @@ function WorkspaceTile({ ws }: { ws: Workspace }) {
   );
 }
 
-// 알림 센터: 벨 + 카운트 + 그룹 패널.
+// 알림 센터: 벨 + 카운트 + 그룹 패널. (실데이터 파생 — Home에서 notifs 주입)
 const NOTIF_KIND_CLASS: Record<NotifKind, string> = {
   review: styles.kindReview,
   approval: styles.kindApproval,
   deadline: styles.kindDeadline,
 };
 
-function NotificationCenter() {
+function NotificationCenter({ notifs }: { notifs: Notif[] }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const count = MOCK_NOTIFS.length;
+  const count = notifs.length;
 
   return (
     <div className={styles.notifWrap}>
@@ -181,8 +270,9 @@ function NotificationCenter() {
         <>
           <div className={styles.notifBackdrop} onClick={() => setOpen(false)} />
           <div className={styles.notifPanel} role="dialog" aria-label="알림">
+            {count === 0 && <p className={styles.checkEmpty}>새 알림이 없어요.</p>}
             {NOTIF_GROUPS.map((g) => {
-              const items = MOCK_NOTIFS.filter((n) => n.kind === g.kind);
+              const items = notifs.filter((n) => n.kind === g.kind);
               if (items.length === 0) return null;
               return (
                 <div key={g.kind} className={styles.notifGroup}>
@@ -196,7 +286,7 @@ function NotificationCenter() {
                       className={styles.notifItem}
                       onClick={() => {
                         setOpen(false);
-                        navigate(`/w/${n.wsId}`);
+                        navigate(`/w/${n.wsId}/board`);
                       }}
                     >
                       <span className={styles.notifWs}>{n.wsName}</span>
@@ -214,7 +304,7 @@ function NotificationCenter() {
   );
 }
 
-// 미니 달력: 월 격자 + 범례. (2026년 6월 고정 mock)
+// 미니 달력: 월 격자 + 범례. 이번 달 실데이터 — 공휴일 API + 워크스페이스 보드 milestones.
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 type CalMark = "today" | "holiday" | "event";
 const DAY_MARK_CLASS: Record<CalMark, string> = {
@@ -228,15 +318,12 @@ const CAL_LEGEND: { mark: CalMark; label: string }[] = [
   { mark: "event", label: "행사 일정" },
 ];
 
-// 이번 달 달력에 한국 공휴일(Nager.Date 공개 API·키 불필요) + 행사 일정(워크스페이스 보드 milestones)을 오버레이.
-function MiniCalendar() {
-  const { workspaces } = useWorkspaces();
+function MiniCalendar({ boards }: { boards: WsBoard[] }) {
   const now = new Date();
   const [view] = useState(() => ({ year: now.getFullYear(), month: now.getMonth() })); // month: 0-based
-  const [holidays, setHolidays] = useState<Record<number, string>>({}); // 일 → 공휴일명
-  const [eventDays, setEventDays] = useState<Record<number, string>>({}); // 일 → 행사·마일스톤 라벨
+  const [holidays, setHolidays] = useState<Record<number, string>>({});
 
-  // 공휴일: 해당 연도 KR 공휴일을 받아 이번 달만 추림.
+  // 공휴일: 해당 연도 KR 공휴일을 받아 이번 달만 추림(Nager.Date 공개 API·키 불필요).
   useEffect(() => {
     let alive = true;
     fetch(`https://date.nager.at/api/v3/PublicHolidays/${view.year}/KR`)
@@ -251,32 +338,28 @@ function MiniCalendar() {
         setHolidays(m);
       })
       .catch(() => {});
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [view.year, view.month]);
 
-  // 행사 일정: 각 워크스페이스 보드의 milestones 중 이번 달 due.
-  useEffect(() => {
-    let alive = true;
-    Promise.all(workspaces.map((w) => fetchBoard(w.id))).then((boards) => {
-      if (!alive) return;
-      const m: Record<number, string> = {};
-      boards.forEach((b, i) => {
-        for (const ms of b?.milestones ?? []) {
-          const d = new Date(`${ms.due}T00:00:00`);
-          if (!Number.isNaN(d.getTime()) && d.getFullYear() === view.year && d.getMonth() === view.month) {
-            m[d.getDate()] = `${workspaces[i].name} · ${ms.title}`;
-          }
+  // 행사 일정: 전달받은 보드들의 milestones 중 이번 달 due.
+  const eventDays = useMemo(() => {
+    const m: Record<number, string> = {};
+    for (const { ws, board } of boards) {
+      for (const ms of board.milestones) {
+        const d = new Date(`${ms.due}T00:00:00`);
+        if (!Number.isNaN(d.getTime()) && d.getFullYear() === view.year && d.getMonth() === view.month) {
+          m[d.getDate()] = `${ws.name} · ${ms.title}`;
         }
-      });
-      setEventDays(m);
-    });
-    return () => { alive = false; };
-  }, [workspaces, view.year, view.month]);
+      }
+    }
+    return m;
+  }, [boards, view.year, view.month]);
 
   const firstWeekday = new Date(view.year, view.month, 1).getDay();
   const daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
-  const todayDay =
-    now.getFullYear() === view.year && now.getMonth() === view.month ? now.getDate() : -1;
+  const todayDay = now.getFullYear() === view.year && now.getMonth() === view.month ? now.getDate() : -1;
   const cells: (number | null)[] = [
     ...Array(firstWeekday).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),

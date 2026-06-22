@@ -1,12 +1,10 @@
 // agent/realClient.ts — 실제 백엔드(WS)에 붙는 AgentClient 구현 (B2).
-// contract.ts(AgentClient)만 구현. 에이전트 mock 제거됨 — useAgentRun이 항상 이걸 쓴다.
-// ⚠️ 실제 Pi(OpenRouter) 호출. 프런트 개발 기본값은 mock — 이건 검증/실사용 때만.
+// contract.ts(AgentClient)만 구현. 에이전트 mock 제거됨 — useAgentRun이 항상 이걸 쓴다(실제 Pi 호출).
 
+import { WS_URL } from "@/config";
 import type { AgentClient, AgentEvent, AgentEventHandler } from "./contract.ts";
 
-const DEFAULT_URL = "ws://127.0.0.1:8787/ws";
-
-export function createRealClient(wsId = "demo", baseUrl = DEFAULT_URL): AgentClient {
+export function createRealClient(wsId = "demo", baseUrl = WS_URL): AgentClient {
   const ws = new WebSocket(`${baseUrl}?ws=${encodeURIComponent(wsId)}`);
   const handlers = new Set<AgentEventHandler>();
   const queue: string[] = [];
