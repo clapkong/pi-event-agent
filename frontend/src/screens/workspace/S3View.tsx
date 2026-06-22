@@ -1,37 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATUS_LABEL, type Workspace } from "@/data/workspaces";
 import type { ElementType } from "@/agent/contract.ts";
-import {
-  useAgentRun,
-  type TimelineEntry,
-  type ToolEntry,
-  type ModelToast as Toast,
+import { useAgentRunCtx } from "@/agent/AgentRunContext";
+import type {
+  TimelineEntry,
+  ToolEntry,
+  ModelToast as Toast,
 } from "@/agent/useAgentRun";
 import styles from "./s3.module.css";
 
 // 대화·동작 타임라인 (시그니처 화면). realClient(WS)로 실제 백엔드 구동.
 // 이 화면과 그 안에서만 쓰는 부품(상단바·타임라인·컴포저·토스트)을 한 파일에 둔다.
-export function S3View({
-  ws,
-  autostart = false,
-  initialPrompt = "",
-}: {
-  ws: Workspace;
-  autostart?: boolean;
-  initialPrompt?: string;
-}) {
-  const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRun(ws.id);
-  const autostartedRef = useRef(false);
-
-  // 폼(S2)에서 생성돼 들어온 경우 폼 입력으로 1회 자동 시작.
-  useEffect(() => {
-    if (autostart && !autostartedRef.current) {
-      autostartedRef.current = true;
-      start(initialPrompt);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autostart]);
+export function S3View({ ws }: { ws: Workspace }) {
+  // 런(WS 연결)은 워크스페이스 셸이 소유 — 패널 전환에도 유지된다. autostart 는 셸이 처리.
+  const { state, start, answerAsk, approveGate, rejectGate, stop } = useAgentRunCtx();
 
   const { entries, counts } = state;
   const started = entries.length > 0 || state.running;

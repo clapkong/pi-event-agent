@@ -3,6 +3,7 @@ import { WorkspaceProvider } from "@/store/workspaces";
 import { AppShell } from "@/shell/AppShell";
 import { Home } from "@/screens/home/Home";
 import { NewEvent } from "@/screens/new/NewEvent";
+import { WorkspaceShell } from "@/routes/WorkspaceShell";
 import { Workspace } from "@/routes/Workspace";
 import { Board } from "@/routes/Board";
 import { Doc } from "@/routes/Doc";
@@ -16,9 +17,15 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: "new", element: <NewEvent /> },
-      { path: "w/:id", element: <Workspace /> },
-      { path: "w/:id/board", element: <Board /> },
-      { path: "w/:id/doc", element: <Doc /> },
+      {
+        path: "w/:id",
+        element: <WorkspaceShell />,
+        children: [
+          { index: true, element: <Workspace /> },
+          { path: "board", element: <Board /> },
+          { path: "doc", element: <Doc /> },
+        ],
+      },
       { path: "case/:id", element: <CaseView /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
