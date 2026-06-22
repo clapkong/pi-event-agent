@@ -7,12 +7,10 @@ import type {
   AgentEvent,
   ElementType,
 } from "./contract.ts";
-import { createMockClient } from "./mockClient.ts";
 import { createRealClient } from "./realClient.ts";
 
-// 기본은 mock(프런트 개발 규칙). 실제 백엔드는 env로만 켠다 — 검증/실사용 때:
-//   frontend/.env.local 에 VITE_USE_REAL_AGENT=1  (+ backend 실행)
-const USE_REAL = import.meta.env.VITE_USE_REAL_AGENT === "1";
+// 에이전트는 실제 백엔드(WS)에 붙는다. mock 제거됨 — backend(`backend/`) 실행 필요.
+//   ws://127.0.0.1:8787 (realClient 기본). 행사별 세션은 wsId로 분리.
 
 export type NodeStatus = "active" | "done" | "error" | "stopped";
 
@@ -104,7 +102,7 @@ export function useAgentRun(wsId = "demo") {
   // ⚠️ client(=WS 연결)는 반드시 effect 안에서 생성·정리한다. render 본문에서 만들면
   // StrictMode(개발) 이중 마운트로 WS가 2개 열려 pi 프로세스도 2배가 된다.
   useEffect(() => {
-    const client = USE_REAL ? createRealClient(wsId) : createMockClient();
+    const client = createRealClient(wsId);
     clientRef.current = client;
     const reduce = (s: RunState, e: AgentEvent): RunState => {
       switch (e.type) {

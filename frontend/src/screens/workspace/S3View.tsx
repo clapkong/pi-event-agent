@@ -10,7 +10,7 @@ import {
 } from "@/agent/useAgentRun";
 import styles from "./s3.module.css";
 
-// 대화·동작 타임라인 (시그니처 화면). mockClient 구동.
+// 대화·동작 타임라인 (시그니처 화면). realClient(WS)로 실제 백엔드 구동.
 // 이 화면과 그 안에서만 쓰는 부품(상단바·타임라인·컴포저·토스트)을 한 파일에 둔다.
 export function S3View({
   ws,
