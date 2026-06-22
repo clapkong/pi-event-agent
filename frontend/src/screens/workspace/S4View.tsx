@@ -27,7 +27,7 @@ export function S4View({ ws }: { ws: Workspace }) {
 
   const seg = budgetSegments(board.budget);
   const lockedCount = board.budget.filter((b) => b.confirmed).length;
-  const spentPct = Math.round((seg.spent / board.budgetTotal) * 100);
+  const spentPct = board.budgetTotal > 0 ? Math.round((seg.spent / board.budgetTotal) * 100) : 0;
   const nextMs = board.milestones.find((m) => m.dday >= 0);
 
   return (
@@ -148,10 +148,20 @@ export function S4View({ ws }: { ws: Workspace }) {
                 <div className={styles.mapCard}>
                   <i className={`ti ti-map-pin ${styles.mapPin}`} aria-hidden />
                   <div>
-                    <p className={styles.mapName}>{board.venue.name}</p>
+                    <p className={styles.mapName}>{board.venue.name || "장소 미정"}</p>
                     <p className={styles.mapNote}>{board.venue.note}</p>
                   </div>
                 </div>
+                {board.venue.name && (
+                  // Google Maps 임베드(키 불필요). venue 이름으로 지오코딩.
+                  <iframe
+                    title={`${board.venue.name} 지도`}
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(board.venue.name)}&output=embed`}
+                    style={{ width: "100%", height: 180, border: 0, borderRadius: 8, marginTop: 8, display: "block" }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                )}
               </Card>
 
               <Card title="날씨">
@@ -168,6 +178,7 @@ export function S4View({ ws }: { ws: Workspace }) {
                     <p className={styles.wPop}>
                       강수확률 <span className="mono">{board.weather.pop}%</span>
                     </p>
+                    {board.weather.basis && <p className={styles.wBasis}>{board.weather.basis}</p>}
                   </div>
                 </div>
                 {!board.replan && (
@@ -240,7 +251,7 @@ function Chip({ children }: { children: React.ReactNode }) {
 }
 
 function BudgetBar({ seg, total }: { seg: ReturnType<typeof budgetSegments>; total: number }) {
-  const pct = (n: number) => `${(n / total) * 100}%`;
+  const pct = (n: number) => `${total > 0 ? (n / total) * 100 : 0}%`;
   return (
     <div className={styles.bbarWrap}>
       <div className={styles.bbar}>

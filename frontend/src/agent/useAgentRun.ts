@@ -92,12 +92,55 @@ function settle(entries: TimelineEntry[]): TimelineEntry[] {
   return entries;
 }
 
-// wsId: 행사별 백엔드 세션·cwd 분리 (행사 1개 = 세션 1개 = cwd 1개). mock은 무시.
+// ── 타임라인 영속(워크스페이스별) ─────────────────────────────────
+// 백엔드 pi 세션은 --session-id 로 resume(에이전트 기억 유지)되지만, 프런트 타임라인은
+// 라이브 이벤트로만 그려서 재방문 시 빈 화면이 된다. 그래서 화면용으로 localStorage 에 캐시한다.
+// (보여주던 것을 복원하는 용도 — 끊긴 동안 백엔드에서 일어난 이벤트까지 복원하진 않음. 그건 후속.)
+const STORE_KEY = (wsId: string) => `agentRun:${wsId}`;
+
+function loadPersisted(wsId: string): RunState {
+  try {
+    const raw = localStorage.getItem(STORE_KEY(wsId));
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<Pick<RunState, "entries" | "model" | "counts">>;
+      if (Array.isArray(saved.entries) && saved.entries.length > 0) {
+        // 스트리밍 커서는 끄고, 진행/대기 상태는 새 연결 기준으로 리셋.
+        const entries = saved.entries.map((e) =>
+          e.kind === "text" && e.streaming ? { ...e, streaming: false } : e
+        );
+        return { ...initialState, entries, model: saved.model ?? null, counts: saved.counts ?? initialState.counts, finished: true };
+      }
+    }
+  } catch {
+    /* 파싱 실패 → 빈 상태 */
+  }
+  return initialState;
+}
+
+// wsId: 행사별 백엔드 세션·cwd 분리 (행사 1개 = 세션 1개 = cwd 1개).
 export function useAgentRun(wsId = "demo") {
-  const [state, setState] = useState<RunState>(initialState);
+  const [state, setState] = useState<RunState>(() => loadPersisted(wsId));
   const clientRef = useRef<AgentClient | null>(null);
+  // 복원된 타임라인의 마지막 id 부터 이어서 부여(키 충돌 방지) — 마운트당 1회 시드.
   const idRef = useRef(0);
+  const seeded = useRef(false);
+  if (!seeded.current) {
+    idRef.current = state.entries.reduce((m, e) => Math.max(m, e.id), 0);
+    seeded.current = true;
+  }
   const nextId = () => (idRef.current += 1);
+
+  // 타임라인 변화 시 localStorage 에 캐시(화면 복원용).
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORE_KEY(wsId),
+        JSON.stringify({ entries: state.entries, model: state.model, counts: state.counts })
+      );
+    } catch {
+      /* 용량 초과 등 무시 */
+    }
+  }, [wsId, state.entries, state.model, state.counts]);
 
   // ⚠️ client(=WS 연결)는 반드시 effect 안에서 생성·정리한다. render 본문에서 만들면
   // StrictMode(개발) 이중 마운트로 WS가 2개 열려 pi 프로세스도 2배가 된다.

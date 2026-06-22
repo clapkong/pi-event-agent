@@ -1,15 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspaces } from "@/store/workspaces";
 import { STATUS_DOT, type Workspace } from "@/data/workspaces";
+import { fetchBoard } from "@/data/boardState";
 import {
   MOCK_CHECKLIST,
   MOCK_NOTIFS,
   NOTIF_GROUPS,
-  CALENDAR_MARKS,
-  CALENDAR_MONTH,
   type NotifKind,
-  type DayMark,
 } from "@/data/home";
 import { StatusBadge } from "@/components/StatusBadge";
 import styles from "./home.module.css";
@@ -218,31 +216,81 @@ function NotificationCenter() {
 
 // 미니 달력: 월 격자 + 범례. (2026년 6월 고정 mock)
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const DAY_MARK_CLASS: Record<DayMark, string> = {
+type CalMark = "today" | "holiday" | "event";
+const DAY_MARK_CLASS: Record<CalMark, string> = {
   today: styles.dayToday,
+  holiday: styles.dayHoliday,
   event: styles.dayEvent,
-  milestone: styles.dayMilestone,
-  rehearsal: styles.dayRehearsal,
 };
-const CAL_LEGEND: { mark: DayMark; label: string }[] = [
+const CAL_LEGEND: { mark: CalMark; label: string }[] = [
   { mark: "today", label: "오늘" },
-  { mark: "event", label: "행사일" },
-  { mark: "milestone", label: "마일스톤" },
-  { mark: "rehearsal", label: "리허설" },
+  { mark: "holiday", label: "공휴일" },
+  { mark: "event", label: "행사 일정" },
 ];
 
+// 이번 달 달력에 한국 공휴일(Nager.Date 공개 API·키 불필요) + 행사 일정(워크스페이스 보드 milestones)을 오버레이.
 function MiniCalendar() {
-  const firstWeekday = new Date(2026, 5, 1).getDay();
-  const daysInMonth = new Date(2026, 6, 0).getDate();
+  const { workspaces } = useWorkspaces();
+  const now = new Date();
+  const [view] = useState(() => ({ year: now.getFullYear(), month: now.getMonth() })); // month: 0-based
+  const [holidays, setHolidays] = useState<Record<number, string>>({}); // 일 → 공휴일명
+  const [eventDays, setEventDays] = useState<Record<number, string>>({}); // 일 → 행사·마일스톤 라벨
+
+  // 공휴일: 해당 연도 KR 공휴일을 받아 이번 달만 추림.
+  useEffect(() => {
+    let alive = true;
+    fetch(`https://date.nager.at/api/v3/PublicHolidays/${view.year}/KR`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: { date: string; localName: string }[]) => {
+        if (!alive || !Array.isArray(list)) return;
+        const m: Record<number, string> = {};
+        for (const h of list) {
+          const d = new Date(`${h.date}T00:00:00`);
+          if (d.getFullYear() === view.year && d.getMonth() === view.month) m[d.getDate()] = h.localName;
+        }
+        setHolidays(m);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [view.year, view.month]);
+
+  // 행사 일정: 각 워크스페이스 보드의 milestones 중 이번 달 due.
+  useEffect(() => {
+    let alive = true;
+    Promise.all(workspaces.map((w) => fetchBoard(w.id))).then((boards) => {
+      if (!alive) return;
+      const m: Record<number, string> = {};
+      boards.forEach((b, i) => {
+        for (const ms of b?.milestones ?? []) {
+          const d = new Date(`${ms.due}T00:00:00`);
+          if (!Number.isNaN(d.getTime()) && d.getFullYear() === view.year && d.getMonth() === view.month) {
+            m[d.getDate()] = `${workspaces[i].name} · ${ms.title}`;
+          }
+        }
+      });
+      setEventDays(m);
+    });
+    return () => { alive = false; };
+  }, [workspaces, view.year, view.month]);
+
+  const firstWeekday = new Date(view.year, view.month, 1).getDay();
+  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
+  const todayDay =
+    now.getFullYear() === view.year && now.getMonth() === view.month ? now.getDate() : -1;
   const cells: (number | null)[] = [
     ...Array(firstWeekday).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
+  const markOf = (day: number): CalMark | null =>
+    day === todayDay ? "today" : holidays[day] ? "holiday" : eventDays[day] ? "event" : null;
+  const titleOf = (day: number) => holidays[day] ?? eventDays[day] ?? undefined;
 
   return (
     <div className={styles.calendar}>
       <div className={styles.calHead}>
-        <span className={styles.calMonth}>{CALENDAR_MONTH}</span>
+        <span className={styles.calMonth}>
+          {view.year}년 {view.month + 1}월
+        </span>
         <span className={styles.calLegend}>
           {CAL_LEGEND.map((l) => (
             <span key={l.mark} className={styles.legendItem}>
@@ -260,9 +308,13 @@ function MiniCalendar() {
         ))}
         {cells.map((day, i) => {
           if (day === null) return <span key={`e${i}`} />;
-          const mark = CALENDAR_MARKS[day];
+          const mark = markOf(day);
           return (
-            <span key={day} className={`${styles.calDay} ${mark ? DAY_MARK_CLASS[mark] : ""}`}>
+            <span
+              key={day}
+              title={titleOf(day)}
+              className={`${styles.calDay} ${mark ? DAY_MARK_CLASS[mark] : ""}`}
+            >
               {day}
             </span>
           );

@@ -325,6 +325,10 @@
   background: var(--badge-review-bg);
   color: var(--badge-review-fg);
 }
+.dayHoliday {
+  background: var(--badge-late-bg, #fdecec);
+  color: var(--badge-late-fg, #c0392b);
+}
 
 /* ── 알림 센터 (§9.26) ───────────────────────────────── */
 .notifWrap {
