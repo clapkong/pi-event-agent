@@ -49,7 +49,7 @@ export interface BoardState {
   conditions: Condition[];
   budget: BudgetItem[];
   vendors: Vendor[];
-  weather: { label: string; temp: string; pop: number; stale: boolean };
+  weather: { label: string; temp: string; pop: number; stale: boolean; source?: "forecast" | "climatology"; basis?: string };
   venue: { name: string; note: string };
   milestones: Milestone[];
   /** 입력 변화로 뜬 재기획 제안(없으면 null). */
