@@ -27,8 +27,9 @@ function extractText(entry: unknown): string {
   if (Array.isArray(c)) {
     return c
       .map((b) => {
-        const blk = b as { type?: string; text?: string; name?: string };
+        const blk = b as { type?: string; text?: string; name?: string; thinking?: string };
         if (blk.type === "text") return blk.text ?? "";
+        if (blk.type === "thinking") return blk.thinking ?? "";
         if (blk.type === "tool_use") return `→ ${blk.name ?? "tool"}`;
         return "";
       })
@@ -94,9 +95,21 @@ export function watchSubagents(
       if (filename) pump(filename.toString());
     });
   } catch {
-    /* watch 미지원 → 스트리밍 없음(무해) */
+    /* watch 미지원 → 폴링이 받쳐줌 */
   }
+
+  // ⭐ fs.watch 는 macOS 에서 파일 append 를 자주 못 잡는다(생성만 알리거나 누락).
+  //    그래서 폴링으로 보강 — offset 기반이라 중복 전송 없음. 서브에이전트 출력이 확실히 흐른다.
+  const poll = setInterval(() => {
+    try {
+      for (const f of readdirSync(dir)) pump(f);
+    } catch {
+      /* 폴더 아직 없음 등 → 다음 틱에 재시도 */
+    }
+  }, 700);
+
   return () => {
+    clearInterval(poll);
     try {
       watcher?.close();
     } catch {

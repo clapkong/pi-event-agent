@@ -532,6 +532,22 @@
   font-size: var(--fs-caption);
   color: var(--muted);
 }
+.wWhen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: var(--fs-caption);
+  color: var(--ink2);
+}
+.wWhen i {
+  margin-right: 3px;
+  color: var(--muted);
+}
+.wWhenNote {
+  color: var(--faint);
+}
 .wBasis {
   font-size: var(--fs-caption);
   color: var(--muted);

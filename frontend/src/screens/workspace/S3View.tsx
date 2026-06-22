@@ -125,7 +125,7 @@ function ElementSummary({ counts }: { counts: Record<string, number> }) {
     <p className={styles.summary}>
       <span className={styles.summaryLabel}>이번 기획에 쓰인 Pi 요소</span>
       <span className={styles.summaryItems}>
-        MCP ×{counts.MCP} · Extension ×{counts.Extension} · Skill ×{counts.Skill}
+        MCP ×{counts.MCP} · Extension ×{counts.Extension} · Skill ×{counts.Skill} · 서브에이전트 ×{counts.Agent ?? 0}
       </span>
     </p>
   );
@@ -201,16 +201,24 @@ function ModelToast({ toast }: { toast: Toast }) {
   );
 }
 
-// 요소 타입 마커 — 5요소(MCP/Extension/Skill) + 평범한 커스텀 도구(Tool).
+// 요소 타입 마커 — Pi 요소(MCP/Extension/Skill/Agent=서브에이전트) + 평범한 커스텀 도구(Tool).
 const ELEMENT_CLASS: Record<ElementType, string> = {
   MCP: styles.etMcp,
   Extension: styles.etExt,
   Skill: styles.etSkill,
+  Agent: styles.etAgent,
   Tool: styles.etTool,
+};
+const ELEMENT_LABEL: Record<ElementType, string> = {
+  MCP: "MCP",
+  Extension: "Extension",
+  Skill: "Skill",
+  Agent: "서브에이전트",
+  Tool: "Tool",
 };
 
 function ElementTag({ element }: { element: ElementType }) {
-  return <span className={`${styles.et} ${ELEMENT_CLASS[element]}`}>{element}</span>;
+  return <span className={`${styles.et} ${ELEMENT_CLASS[element]}`}>{ELEMENT_LABEL[element]}</span>;
 }
 
 // 동작 타임라인 (run-of-show): 세로 척추선 + 스텝.
@@ -330,6 +338,9 @@ function SubagentStep({ entry }: { entry: SubagentEntry }) {
 }
 
 function ToolStep({ entry }: { entry: ToolEntry }) {
+  const [expanded, setExpanded] = useState(false);
+  // 긴 결과는 접어두고 '… 더 보기'로 펼친다(서브에이전트 스폰 안내 등 길게 잘리던 것).
+  const long = !!entry.result && entry.result.length > 280;
   return (
     <>
       <div className={styles.toolHead}>
@@ -343,7 +354,7 @@ function ToolStep({ entry }: { entry: ToolEntry }) {
         )}
       </div>
       {entry.result && (
-        <div className={styles.toolResult}>
+        <div className={`${styles.toolResult} ${long && !expanded ? styles.toolResultClamp : ""}`}>
           <Md>{entry.result}</Md>
           {entry.citation !== undefined && (
             <button type="button" className={styles.cite} title="출처 보기">
@@ -351,6 +362,11 @@ function ToolStep({ entry }: { entry: ToolEntry }) {
             </button>
           )}
         </div>
+      )}
+      {long && (
+        <button type="button" className={styles.toolMore} onClick={() => setExpanded((v) => !v)}>
+          {expanded ? "접기" : "… 더 보기"}
+        </button>
       )}
     </>
   );

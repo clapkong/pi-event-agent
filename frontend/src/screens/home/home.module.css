@@ -268,13 +268,37 @@
 }
 .calHead {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: var(--sp-12);
+}
+.calNav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-4);
 }
 .calMonth {
   font-size: 13px;
   font-weight: 600;
+  color: var(--ink);
+  min-width: 76px;
+  text-align: center;
+}
+.calArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.calArrow:hover {
+  background: var(--tint);
   color: var(--ink);
 }
 .calLegend {

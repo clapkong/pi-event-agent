@@ -320,8 +320,14 @@ const CAL_LEGEND: { mark: CalMark; label: string }[] = [
 
 function MiniCalendar({ boards }: { boards: WsBoard[] }) {
   const now = new Date();
-  const [view] = useState(() => ({ year: now.getFullYear(), month: now.getMonth() })); // month: 0-based
+  const [view, setView] = useState(() => ({ year: now.getFullYear(), month: now.getMonth() })); // month: 0-based
   const [holidays, setHolidays] = useState<Record<number, string>>({});
+  // 이전/다음 달 이동(연도 넘어감 처리).
+  const shiftMonth = (delta: number) =>
+    setView((v) => {
+      const m = v.month + delta;
+      return { year: v.year + Math.floor(m / 12), month: ((m % 12) + 12) % 12 };
+    });
 
   // 공휴일: 해당 연도 KR 공휴일을 받아 이번 달만 추림(Nager.Date 공개 API·키 불필요).
   useEffect(() => {
@@ -371,8 +377,16 @@ function MiniCalendar({ boards }: { boards: WsBoard[] }) {
   return (
     <div className={styles.calendar}>
       <div className={styles.calHead}>
-        <span className={styles.calMonth}>
-          {view.year}년 {view.month + 1}월
+        <span className={styles.calNav}>
+          <button type="button" className={styles.calArrow} onClick={() => shiftMonth(-1)} aria-label="이전 달">
+            <i className="ti ti-chevron-left" aria-hidden />
+          </button>
+          <span className={styles.calMonth}>
+            {view.year}년 {view.month + 1}월
+          </span>
+          <button type="button" className={styles.calArrow} onClick={() => shiftMonth(1)} aria-label="다음 달">
+            <i className="ti ti-chevron-right" aria-hidden />
+          </button>
         </span>
         <span className={styles.calLegend}>
           {CAL_LEGEND.map((l) => (

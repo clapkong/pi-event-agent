@@ -30,23 +30,34 @@ test("rpc → contract: model_current (assistant message_start)", () => {
   assert.deepEqual(out, { type: "model_current", name: "google/gemini-2.5-flash" });
 });
 
-test("rpc → contract: tool_start + element 분류", () => {
-  assert.deepEqual(rpcToContract({ type: "tool_execution_start", toolName: "rag_query" }, noop), {
-    type: "tool_start",
-    label: "rag_query",
-    tool: "rag_query",
-    element: "Extension",
-  });
+test("rpc → contract: tool_start + element 분류 (+ callId 전달)", () => {
+  assert.deepEqual(
+    rpcToContract({ type: "tool_execution_start", toolCallId: "tc1", toolName: "rag_query" }, noop),
+    {
+      type: "tool_start",
+      callId: "tc1",
+      label: "rag_query",
+      tool: "rag_query",
+      element: "Extension",
+    },
+  );
   assert.equal(classifyElement("web_search"), "MCP");
   assert.equal(classifyElement("researcher"), "Tool");
 });
 
+test("rpc → contract: tool_end 는 callId 로 매칭되도록 전달", () => {
+  assert.deepEqual(
+    rpcToContract({ type: "tool_execution_end", toolCallId: "tc1", result: "ok" }, noop),
+    { type: "tool_end", callId: "tc1", result: "ok" },
+  );
+});
+
 test("rpc → contract: 서브에이전트 스폰(Agent)은 subagent_type 으로 라벨", () => {
   const out = rpcToContract(
-    { type: "tool_execution_start", toolName: "Agent", args: { subagent_type: "critic" } },
+    { type: "tool_execution_start", toolCallId: "tc2", toolName: "Agent", args: { subagent_type: "critic" } },
     noop
   );
-  assert.deepEqual(out, { type: "tool_start", label: "critic · 검토", tool: "Agent", element: "Tool" });
+  assert.deepEqual(out, { type: "tool_start", callId: "tc2", label: "critic · 검토", tool: "Agent", element: "Agent" });
 });
 
 test("rpc → contract: ask(select) 가 pending 설정", () => {

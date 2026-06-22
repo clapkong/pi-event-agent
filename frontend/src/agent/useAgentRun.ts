@@ -17,6 +17,7 @@ export type NodeStatus = "active" | "done" | "error" | "stopped";
 export interface ToolEntry {
   kind: "tool";
   id: number;
+  callId?: string; // pi toolCallId — tool_end 결과를 정확한 도구에 매칭(병렬 오배치 방지)
   label: string;
   tool: string;
   element: ElementType;
@@ -85,7 +86,7 @@ export interface RunState {
   pending: "ask" | "gate" | null;
   toast: ModelToast | null;
   error: string | null;
-  counts: Record<Exclude<ElementType, "Tool">, number>; // 5요소만 집계(Tool 제외)
+  counts: Record<Exclude<ElementType, "Tool">, number>; // Pi 요소만 집계(Tool 제외)
 }
 
 const initialState: RunState = {
@@ -96,7 +97,7 @@ const initialState: RunState = {
   pending: null,
   toast: null,
   error: null,
-  counts: { MCP: 0, Extension: 0, Skill: 0 },
+  counts: { MCP: 0, Extension: 0, Skill: 0, Agent: 0 },
 };
 
 const now = () => new Date().toLocaleTimeString("ko-KR", { hour12: false });
@@ -128,7 +129,7 @@ function loadPersisted(wsId: string): RunState {
         const entries = saved.entries.map((e) =>
           e.kind === "text" && e.streaming ? { ...e, streaming: false } : e
         );
-        return { ...initialState, entries, model: saved.model ?? null, counts: saved.counts ?? initialState.counts, finished: true };
+        return { ...initialState, entries, model: saved.model ?? null, counts: { ...initialState.counts, ...saved.counts }, finished: true };
       }
     }
   } catch {
@@ -218,6 +219,7 @@ export function useAgentRun(wsId = "demo") {
               {
                 kind: "tool",
                 id: nextId(),
+                callId: e.callId,
                 label: e.label,
                 tool: e.tool,
                 element: e.element,
@@ -231,15 +233,20 @@ export function useAgentRun(wsId = "demo") {
                 ? s.counts
                 : { ...s.counts, [e.element]: s.counts[e.element] + 1 },
           };
-        case "tool_end":
-          return {
-            ...s,
-            entries: s.entries.map((en) =>
-              en.kind === "tool" && en.status === "active"
-                ? { ...en, status: "done", result: e.result, citation: e.citation }
-                : en
-            ),
-          };
+        case "tool_end": {
+          // callId 로 정확히 그 도구만 done 처리(병렬 도구 결과 오배치 방지).
+          // callId 없으면(옛 경로) 가장 오래된 active 하나만(FIFO) — 전부에 적용하던 버그 제거.
+          let matched = false;
+          const entries = s.entries.map((en) => {
+            if (matched || en.kind !== "tool" || en.status !== "active") return en;
+            if (e.callId ? en.callId === e.callId : true) {
+              matched = true;
+              return { ...en, status: "done" as const, result: e.result, citation: e.citation };
+            }
+            return en;
+          });
+          return { ...s, entries };
+        }
         case "ask":
           return {
             ...s,
@@ -305,6 +312,8 @@ export function useAgentRun(wsId = "demo") {
 
   // 첫 실행이면 새로 시작, 이미 대화가 있으면 이어붙인다(이전 메시지 유지).
   const start = (text = "") => {
+    // 에이전트가 이미 처리 중이면 steer 로 주입(없으면 pi 가 "already processing" 거부).
+    const steering = state.running;
     setState((s) => {
       const fresh = s.entries.length === 0;
       if (fresh) idRef.current = 0;
@@ -314,7 +323,7 @@ export function useAgentRun(wsId = "demo") {
         : base.entries;
       return { ...base, entries, running: true, finished: false, error: null };
     });
-    clientRef.current!.prompt(text);
+    clientRef.current!.prompt(text, steering ? "steer" : undefined);
   };
 
   const answerAsk = (choice: string) => {

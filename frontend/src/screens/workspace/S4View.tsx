@@ -155,6 +155,9 @@ export function S4View({ ws }: { ws: Workspace }) {
 
   const seg = budgetSegments(board.budget);
   const lockedCount = board.budget.filter((b) => b.confirmed).length;
+  // 날씨 "언제 기준" — 행사일 조건 값에서 날짜(YYYY-MM-DD)만, 없으면 전체 값.
+  const eventDateRaw = board.conditions.find((c) => c.key === "eventDate")?.value;
+  const weatherWhen = eventDateRaw?.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? eventDateRaw;
   const spentPct = board.budgetTotal > 0 ? Math.round((seg.spent / board.budgetTotal) * 100) : 0;
   // 다음 마감 = 오늘 이후 가장 가까운 미완료 마일스톤(행사일 기준 dday가 아니라 today 기준).
   const nextDeadline = board.milestones
@@ -421,6 +424,22 @@ export function S4View({ ws }: { ws: Workspace }) {
                     <p className={styles.wPop}>
                       강수확률 <span className="mono">{board.weather.pop}%</span>
                     </p>
+                    {/* 언제·어디 기준인지 — 행사일 + 장소(일 단위 예보라 시각은 없음) */}
+                    {(weatherWhen || board.venue.name) && (
+                      <p className={styles.wWhen}>
+                        {weatherWhen && (
+                          <span>
+                            <i className="ti ti-calendar" aria-hidden /> {weatherWhen}
+                          </span>
+                        )}
+                        {board.venue.name && (
+                          <span>
+                            <i className="ti ti-map-pin" aria-hidden /> {board.venue.name}
+                          </span>
+                        )}
+                        <span className={styles.wWhenNote}>기준</span>
+                      </p>
+                    )}
                     {board.weather.basis && <p className={styles.wBasis}>{board.weather.basis}</p>}
                   </div>
                 </div>

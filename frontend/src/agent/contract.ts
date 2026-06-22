@@ -7,9 +7,9 @@
 //    ask → ExtensionUIContext `ui.select`, gate → `ui.confirm`,
 //    abort → `session.abort()`, model_switch → `session.setModel()`+modelFallbackMessage.
 
-/** 타임라인 스텝의 종류 (DESIGN §2.4 taxonomy A). MCP/Extension/Skill = Pi 5요소,
- *  Tool = 평범한 커스텀 도구(5요소 아님 — 요약 카운트 제외). */
-export type ElementType = "MCP" | "Extension" | "Skill" | "Tool";
+/** 타임라인 스텝의 종류 (DESIGN §2.4 taxonomy A). MCP/Extension/Skill/Agent = Pi 요소,
+ *  Agent = 서브에이전트 스폰(pi-subagents), Tool = 평범한 커스텀 도구(카운트 제외). */
+export type ElementType = "MCP" | "Extension" | "Skill" | "Agent" | "Tool";
 
 /** 서버→프런트로 흐르는 단일 이벤트 (type 으로 구분되는 합집합). */
 export type AgentEvent =
@@ -20,9 +20,9 @@ export type AgentEvent =
   /** 서브에이전트 내부 출력 — .output 파일 tail로 흘러옴. agentId로 묶는다. */
   | { type: "subagent_delta"; agentId: string; delta: string }
   /** 도구 실행 시작 — 타임라인 노드 생성. */
-  | { type: "tool_start"; label: string; tool: string; element: ElementType }
-  /** 도구 실행 끝 — 결과 + 출처 번호(#N, 인용 드로어용). */
-  | { type: "tool_end"; result: string; citation?: number }
+  | { type: "tool_start"; callId?: string; label: string; tool: string; element: ElementType }
+  /** 도구 실행 끝 — 결과 + 출처 번호(#N, 인용 드로어용). callId로 시작 항목과 매칭(병렬 도구 결과 오배치 방지). */
+  | { type: "tool_end"; callId?: string; result: string; citation?: number }
   /** 되묻기 — 사용자 선택 대기. Pi: ExtensionUIContext `ui.select`. */
   | { type: "ask"; question: string; options: string[] }
   /** 승인 게이트 — 통과 전 다음 스텝 차단. */
@@ -52,8 +52,8 @@ export type AgentEventHandler = (event: AgentEvent) => void;
 export interface AgentClient {
   /** 이벤트 구독. 해제 함수를 반환한다. */
   subscribe(handler: AgentEventHandler): () => void;
-  /** 새 요청 전송 → 런 시작. */
-  prompt(text: string): void;
+  /** 새 요청 전송 → 런 시작. 처리 중이면 streamingBehavior("steer"=진행 중 주입)로 보낸다. */
+  prompt(text: string, streamingBehavior?: "steer" | "followUp"): void;
   /** 대기 중인 되묻기(ask) 또는 승인 게이트(gate)에 응답. */
   answer(choice: string): void;
   /** 진행 중인 런 중지. Pi: `session.abort()`. */

@@ -457,7 +457,7 @@ const getWeatherTool = defineTool({
 				content: [
 					{
 						type: "text" as const,
-						text: `${w.basis}\n${w.label} ${w.temp} · 강수확률 ${w.pop}% (${w.source === "forecast" ? "예보" : "평년값"})`,
+						text: `${w.basis}\n${w.label} ${w.temp} · 강수확률 ${w.pop}% (${w.source === "forecast" ? "예보" : "평균값"})`,
 					},
 				],
 				details: { weather: w },

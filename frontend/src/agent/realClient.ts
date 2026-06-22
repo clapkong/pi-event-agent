@@ -57,8 +57,8 @@ export function createRealClient(wsId = "demo", baseUrl = WS_URL): AgentClient {
       handlers.add(handler);
       return () => handlers.delete(handler);
     },
-    prompt(text) {
-      sendMsg({ kind: "prompt", text });
+    prompt(text, streamingBehavior) {
+      sendMsg(streamingBehavior ? { kind: "prompt", text, streamingBehavior } : { kind: "prompt", text });
     },
     answer(choice) {
       sendMsg({ kind: "answer", choice });

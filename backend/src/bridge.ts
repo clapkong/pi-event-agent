@@ -5,6 +5,8 @@ import type { PendingUi, RpcCommand, RpcEvent } from "./rpc.ts";
 
 // ── 도구 이름 → ElementType (5요소 카운트용) ──
 export function classifyElement(tool = ""): ElementType {
+  // 서브에이전트 스폰(pi-subagents) — researcher/writer/critic… 은 "Agent" 요소로(get_subagent_result·steer 는 Tool).
+  if (tool === "Agent") return "Agent";
   // MCP: 외부 도구 — 검색·메일(gmail)·캘린더(calendar_*)·지도(maps_*). 접두사로 식별.
   if (/^(web_search|fetch_content|gmail|send_email|calendar|maps|google)/.test(tool)) return "MCP";
   // Extension: 자작 event-tools + 사례 RAG.
@@ -83,11 +85,12 @@ export function rpcToContract(ev: RpcEvent, setPending: (p: PendingUi | null) =>
       const tool = ev.toolName ?? "tool";
       // 스킬 로드(read SKILL.md)는 Skill 요소로 — "Skill ×0" 해소.
       const skill = detectSkill(tool, ev.args);
-      if (skill) return { type: "tool_start", label: `스킬: ${skill}`, tool, element: "Skill" };
+      if (skill) return { type: "tool_start", callId: ev.toolCallId, label: `스킬: ${skill}`, tool, element: "Skill" };
       // 서브에이전트 스폰(Agent 도구)은 어떤 서브인지(researcher/writer/critic…) 라벨에 드러낸다.
       const sub = tool === "Agent" ? (ev.args?.subagent_type as string | undefined) : undefined;
       return {
         type: "tool_start",
+        callId: ev.toolCallId,
         label: sub ? subagentLabel(sub) : tool,
         tool,
         element: classifyElement(tool),
@@ -95,7 +98,8 @@ export function rpcToContract(ev: RpcEvent, setPending: (p: PendingUi | null) =>
     }
 
     case "tool_execution_end":
-      return { type: "tool_end", result: short(toolResultText(ev.result)) };
+      // 프런트에서 접기/펼치기 하도록 넉넉히 보낸다(과거 400자 → 4000자). 그래도 거대한 덤프는 cap.
+      return { type: "tool_end", callId: ev.toolCallId, result: short(toolResultText(ev.result), 4000) };
 
     case "extension_ui_request":
       // 응답이 필요한 다이얼로그만 ask/gate로. setStatus·notify·setWidget 등 표시용은 무시.
@@ -121,7 +125,10 @@ export function rpcToContract(ev: RpcEvent, setPending: (p: PendingUi | null) =>
 export function contractToRpc(msg: ClientCommand, pending: PendingUi | null): RpcCommand | null {
   switch (msg.kind) {
     case "prompt":
-      return { type: "prompt", message: msg.text };
+      // 처리 중 메시지면 streamingBehavior 동반(없으면 pi 가 "already processing" 거부).
+      return msg.streamingBehavior
+        ? { type: "prompt", message: msg.text, streamingBehavior: msg.streamingBehavior }
+        : { type: "prompt", message: msg.text };
 
     case "answer":
       if (!pending) return null; // 대기 중인 ask/gate 없으면 버림

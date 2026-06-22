@@ -364,6 +364,26 @@ details[open] .thinkingSummary::before {
   font-size: var(--fs-caption);
   color: var(--ink2);
 }
+/* 긴 결과 접기 — 약 4.5줄까지만 보이고 아래로 페이드. '… 더 보기'로 펼침. */
+.toolResultClamp {
+  max-height: 6.3em;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+}
+.toolMore {
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  cursor: pointer;
+}
+.toolMore:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
 .cite {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -650,6 +670,10 @@ details[open] .thinkingSummary::before {
 .etSkill {
   background: var(--et-skill-bg);
   color: var(--et-skill-fg);
+}
+.etAgent {
+  background: var(--et-agent-bg);
+  color: var(--et-agent-fg);
 }
 .etTool {
   background: var(--et-tool-bg);

@@ -129,15 +129,17 @@ export async function getWeather(opts: WeatherOpts): Promise<WeatherResult> {
 	const avg = means.reduce((a, b) => a + b, 0) / means.length;
 	const rainYears = valid.filter((s) => s.precip >= 1).length;
 	const pop = Math.round((rainYears / valid.length) * 100);
-	const label = pop >= 50 ? "강수 잦음(평년)" : pop >= 25 ? "강수 가능(평년)" : "대체로 맑음(평년)";
+	// "과거 평균" 꼬리표는 basis 에서 한 번만 — label·temp 엔 안 붙인다(중복 방지).
+	// (기상청 '평년값'=30년 정규가 아니라, 과거 N년 같은 날짜의 단순 평균이므로 '평균값'으로 표기.)
+	const label = pop >= 50 ? "강수 잦음" : pop >= 25 ? "강수 가능" : "대체로 맑음";
 	const yrs = valid.map((s) => s.year);
 	return {
 		label,
-		temp: `평년 ${Math.round(avg)}°C`,
+		temp: `${Math.round(avg)}°C`,
 		pop,
 		stale: true,
 		source: "climatology",
-		basis: `과거 ${valid.length}년 평년값 (예측치)`,
+		basis: `과거 ${valid.length}년 같은날 평균값 (예측치)`,
 		details: {
 			...loc,
 			eventDate,
