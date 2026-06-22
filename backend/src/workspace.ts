@@ -16,6 +16,11 @@ export function workspaceCwd(id: string): string {
   return cwd;
 }
 
+/** 행사 보드 상태파일 경로 (update_state 가 쓰는 곳). 읽기용 — 폴더 생성 안 함. */
+export function stateFile(id: string): string {
+  return join(REPO_ROOT, "workspace", safeId(id), "state.json");
+}
+
 /** 워크스페이스별 고정 pi 세션 ID (resume 용 — 재접속 시 이 대화 이어감). */
 export function sessionId(id: string): string {
   return `ws-${safeId(id)}`;

@@ -1,8 +1,8 @@
 // S4 작업공간 상태 모델 (F4.1) — DATA_MODEL §1·§2.
 // 세 겹(입력/가정·기획 산출·실행/확정) + 두 꼬리표(잠금·신선도) + 예산 3상태 + 업체 4단계 + 재기획.
-// ⚠️ mock — 실제 데이터는 백엔드(B3 도구 출력)로 교체.
+// 데이터: 백엔드 REST(GET /api/workspaces/:id ← update_state state.json). mock seed 없음.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type Stage = "기획" | "진행중" | "정산·완료";
 
@@ -56,44 +56,6 @@ export interface BoardState {
   replan: { changedInputs: string[] } | null;
 }
 
-const won = (n: number) => n;
-
-function seed(): BoardState {
-  return {
-    stage: "진행중",
-    budgetTotal: won(5_000_000),
-    proposalVersion: 2,
-    conditions: [
-      { key: "type", label: "유형", value: "개발자 밋업", locked: true },
-      { key: "headcount", label: "인원", value: "200명", locked: true },
-      { key: "venue", label: "장소", value: "서울 성수 (야외 가능)", locked: false },
-      { key: "date", label: "날짜", value: "가을 (10월 중)", locked: false },
-    ],
-    budget: [
-      { id: "b1", name: "장소 대여", planned: won(1_400_000), confirmed: true, spent: won(1_400_000), stale: false },
-      { id: "b2", name: "케이터링", planned: won(1_600_000), confirmed: true, spent: 0, stale: false },
-      { id: "b3", name: "연사 사례비", planned: won(1_000_000), confirmed: false, spent: 0, stale: false },
-      { id: "b4", name: "기념품·자료", planned: won(600_000), confirmed: false, spent: 0, stale: false },
-      { id: "b5", name: "예비비", planned: won(400_000), confirmed: false, spent: 0, stale: false },
-    ],
-    vendors: [
-      { id: "v1", name: "성수 이벤트홀", category: "장소", stage: "계약" },
-      { id: "v2", name: "데일리케이터링", category: "케이터링", stage: "확정" },
-      { id: "v3", name: "프린트팜", category: "인쇄", stage: "견적" },
-      { id: "v4", name: "사운드렌탈", category: "음향", stage: "후보" },
-    ],
-    weather: { label: "맑음", temp: "21°", pop: 20, stale: false },
-    venue: { name: "서울 성수동 이벤트홀", note: "야외 마당 + 실내 홀 동시" },
-    milestones: [
-      { dday: -12, title: "장소 계약", due: "09-18", status: "done", owner: "기획팀" },
-      { dday: -3, title: "케이터링 인원 확정", due: "09-27", status: "upcoming", owner: "기획팀" },
-      { dday: 0, title: "행사 당일", due: "09-30", status: "upcoming", owner: "전체" },
-      { dday: 7, title: "정산·사례 적립", due: "10-07", status: "upcoming", owner: "에이전트" },
-    ],
-    replan: null,
-  };
-}
-
 // 예산 3상태 합계 (DESIGN §2.6 막대: 집행 │ 확정·미집행 │ 계획 잔여).
 export function budgetSegments(b: BudgetItem[]) {
   const spent = b.reduce((s, x) => s + x.spent, 0);
@@ -102,9 +64,49 @@ export function budgetSegments(b: BudgetItem[]) {
   return { spent, committed, planned, total: spent + committed + planned };
 }
 
-/** 보드 상태 + 액션 (mock 인터랙션: 잠금 토글·입력 변경·재기획). */
-export function useBoard(_wsId: string) {
-  const [board, setBoard] = useState<BoardState>(seed);
+/** 빈 보드 — 초기/로딩·부분 응답 보강 기준값. (mock seed 없음: 보드는 백엔드 state.json 만 반영) */
+function emptyBoard(): BoardState {
+  return {
+    stage: "기획",
+    budgetTotal: 0,
+    proposalVersion: 1,
+    conditions: [],
+    budget: [],
+    vendors: [],
+    weather: { label: "", temp: "", pop: 0, stale: false },
+    venue: { name: "", note: "" },
+    milestones: [],
+    replan: null,
+  };
+}
+
+const API_BASE = "http://127.0.0.1:8787";
+
+/** 백엔드 보드 상태(update_state 가 쓴 state.json) 조회. 없거나(404)·실패 시 null. */
+export async function fetchBoard(wsId: string): Promise<BoardState | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/workspaces/${encodeURIComponent(wsId)}`);
+    if (!res.ok) return null;
+    return { ...emptyBoard(), ...(await res.json()) } as BoardState;
+  } catch {
+    return null; // 백엔드 미기동·404 등 → 빈 보드 유지(폴백 없음)
+  }
+}
+
+/** 보드 상태 + 액션. 빈 보드로 시작해 백엔드 state.json 으로 채운다(없으면 빈 채로 — mock 폴백 없음). */
+export function useBoard(wsId: string) {
+  const [board, setBoard] = useState<BoardState>(emptyBoard);
+
+  // 백엔드에 실제 보드 상태가 있으면 채운다.
+  useEffect(() => {
+    let alive = true;
+    fetchBoard(wsId).then((b) => {
+      if (alive && b) setBoard(b);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [wsId]);
 
   const toggleConditionLock = (key: string) =>
     setBoard((s) => ({
