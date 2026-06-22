@@ -64,6 +64,11 @@ export class PiSession {
     return () => this.onExitCbs.delete(cb);
   }
 
+  /** 프로세스가 아직 살아있는가(재부착 가능 여부 판정용). */
+  get alive(): boolean {
+    return this.child.exitCode === null && !this.child.killed;
+  }
+
   /** 종료(자식 kill). */
   close(): void {
     this.child.kill("SIGTERM");

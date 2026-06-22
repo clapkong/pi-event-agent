@@ -280,6 +280,7 @@ export function S4View({ ws }: { ws: Workspace }) {
                         b={b}
                         onToggle={() => toggleBudgetLock(b.id)}
                         onEditPlanned={(n) => editBudget(b.id, "planned", n)}
+                        onEditSpent={(n) => editBudget(b.id, "spent", n)}
                       />
                     ))}
                   </tbody>
@@ -623,10 +624,12 @@ function BudgetRow({
   b,
   onToggle,
   onEditPlanned,
+  onEditSpent,
 }: {
   b: BudgetItem;
   onToggle: () => void;
   onEditPlanned: (n: number) => void;
+  onEditSpent: (n: number) => void;
 }) {
   return (
     <tr className={b.stale ? styles.rowStale : undefined}>
@@ -660,7 +663,19 @@ function BudgetRow({
           )}
         </button>
       </td>
-      <td className={`${styles.num} mono`}>{b.spent ? man(b.spent) : "—"}</td>
+      <td className={`${styles.num} mono`}>
+        <input
+          type="number"
+          className={styles.numInput}
+          defaultValue={b.spent || ""}
+          placeholder="—"
+          title="집행액(실제 지출)"
+          onBlur={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isNaN(n) && n !== b.spent) onEditSpent(n);
+          }}
+        />
+      </td>
     </tr>
   );
 }
