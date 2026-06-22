@@ -3,10 +3,14 @@
 > 아직 안 만든 것 / 마저 해야 할 것 (2026-06-21 기준).
 > 아키텍처는 `AGENTS_DETAILS.md`·`docs/AGENTS_DETAILS.md`, 진행 정본은 `plans/`(로컬), 작업 규칙은 `CLAUDE.md`.
 
-## 자작 Pi Extension (미구현 — `AGENTS.md`가 참조만 함)
-- [x] **사례 RAG** — 직접 안 만들고 **`pi-local-rag` 익스텐션 채택**(설치·현재 Pi 0.79.8 로드 검증 완료). 도구 `rag_query`(조회)·`rag_index`(적립). 사례 = 공통 `cases/*.md`. *(`case_search` 자작 폐기)*
-- [ ] **`update_state`** — 보드 상태 쓰기 통로. **hook으로 잠금(confirmed🔒)·집행(spent) 가드 + 발송/적립 승인 게이트** 내장. 모든 상태 변경은 이 통로로만.
-  - 프런트 상태 모델 참고: `frontend/src/data/boardState.ts`(3겹·예산 3상태·업체 4단계·stale).
+## 자작 Pi Extension (`.pi/extensions/event-tools.ts` — 다른 세션이 구현)
+- [x] **사례 RAG** — `pi-local-rag` 채택. `rag_query`·`rag_index`, 사례 `cases/*.md`. *(`case_search` 자작 폐기)*
+- [x] **event-tools** — 도구 3(`estimate_budget`+replan·`build_checklist`·`update_state`) + 훅 3(잠금·집행 가드 + 발송/적립 승인 게이트). 상태=`<cwd>/state.json`(`boardState.ts` 모양). 승인 게이트가 `ctx.ui.select` 사용 = rpc 호환 확인.
+
+## 자작 ask (rpiv 대체) — rpiv는 `ui.custom`(TUI 전용)이라 웹 비호환. 두 갈래 분담:
+- [ ] **[event-tools 세션]** `ask_user_question` 도구를 `ctx.ui.select` 기반으로 event-tools에 추가 + `.pi/settings.json`에서 `rpiv-ask-user-question` 제거(이름 충돌). 게이트에 이미 쓰는 `ctx.ui.select` 패턴 그대로.
+  - ⚠️ event-tools.ts는 그 세션이 편집 중 → **그 세션이 추가**(여기서 건드리면 충돌).
+- [ ] **[이 세션/프런트]** rich ask **다이얼로그(React)** + `contract`/`bridge` 지원 — `extension_ui_request`(select)가 오면 rpiv보다 예쁜 웹 다이얼로그로. (멀티질문·설명·"기타→직접입력" 등 `ctx.ui.select`가 실어나르는 범위 내 최대한.) 둘이 **contract의 ask 형식만 맞추면** 합쳐짐.
 
 ## Skill (`.pi/skills/` — 4종 작성됨, 카탈로그 `plans/PI_ELEMENTS.md §5`)
 - [x] **budget-policy** · **notice-writer** · **risk-assessment**(omnibus: 리스크·컴플라이언스·접근성·비상·식이) · **satisfaction-survey**(P3).

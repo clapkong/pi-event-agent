@@ -6,7 +6,6 @@
     "npm:@tintinweb/pi-subagents",
     "npm:pi-mcp-adapter",
     "npm:pi-web-access",
-    "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-local-rag"
   ]
 }

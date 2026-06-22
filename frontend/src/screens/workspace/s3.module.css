@@ -367,18 +367,63 @@
   margin-top: var(--sp-12);
 }
 .chip {
-  padding: 5px var(--sp-12);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--sp-8) var(--sp-12);
   border: 1px solid var(--line2);
   border-radius: var(--r-btn);
   background: var(--bg);
-  color: var(--ink2);
-  font-size: var(--fs-caption);
+  text-align: left;
+  cursor: pointer;
   transition: border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    background var(--dur-fast) var(--ease-out);
 }
 .chip:hover {
   border-color: var(--primary);
-  color: var(--primary-deep);
+  background: var(--tint-soft);
+}
+.chipLabel {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--ink);
+}
+.chipDesc {
+  font-size: var(--fs-caption);
+  color: var(--muted);
+}
+.askForm {
+  display: flex;
+  gap: var(--sp-8);
+  margin-top: var(--sp-12);
+}
+.askInput {
+  flex: 1;
+  padding: var(--sp-8) var(--sp-12);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-btn);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--fs-caption);
+}
+.askInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.askSend {
+  padding: var(--sp-8) var(--sp-16);
+  border: none;
+  border-radius: var(--r-btn);
+  background: var(--primary);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  cursor: pointer;
+}
+.askSend:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .askDone {
   font-size: var(--fs-caption);

@@ -236,30 +236,12 @@ function Timeline({
               </p>
             )}
             {e.kind === "ask" && (
-              <div className={styles.ask}>
-                <p className={styles.askQ}>{e.question}</p>
-                {e.answer === undefined ? (
-                  <>
-                    <p className={styles.askWait}>답변 대기 중</p>
-                    <div className={styles.chips}>
-                      {e.options.map((o) => (
-                        <button
-                          key={o}
-                          type="button"
-                          className={styles.chip}
-                          onClick={() => onAnswerAsk(o)}
-                        >
-                          {o}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <p className={styles.askDone}>
-                    답변: <strong>{e.answer}</strong>
-                  </p>
-                )}
-              </div>
+              <AskBlock
+                question={e.question}
+                options={e.options}
+                answer={e.answer}
+                onAnswer={onAnswerAsk}
+              />
             )}
             {e.kind === "gate" && (
               <div className={styles.gate}>
@@ -284,6 +266,73 @@ function Timeline({
         </li>
       ))}
     </ol>
+  );
+}
+
+// 되묻기/선택 — 옵션이 있으면 카드 버튼(라벨 — 설명 분리), 비어 있으면 자유입력(기타).
+function AskBlock({
+  question,
+  options,
+  answer,
+  onAnswer,
+}: {
+  question: string;
+  options: string[];
+  answer?: string;
+  onAnswer: (choice: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const freeText = options.length === 0;
+  return (
+    <div className={styles.ask}>
+      <p className={styles.askQ}>{question}</p>
+      {answer !== undefined ? (
+        <p className={styles.askDone}>
+          답변: <strong>{answer}</strong>
+        </p>
+      ) : freeText ? (
+        <form
+          className={styles.askForm}
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            const v = text.trim();
+            if (v) onAnswer(v);
+          }}
+        >
+          <input
+            className={styles.askInput}
+            value={text}
+            onChange={(ev) => setText(ev.target.value)}
+            placeholder="직접 입력…"
+            autoFocus
+          />
+          <button type="submit" className={styles.askSend} disabled={!text.trim()}>
+            보내기
+          </button>
+        </form>
+      ) : (
+        <>
+          <p className={styles.askWait}>선택해 주세요</p>
+          <div className={styles.chips}>
+            {options.map((o) => {
+              const [label, ...rest] = o.split(" — ");
+              const desc = rest.join(" — ");
+              return (
+                <button
+                  key={o}
+                  type="button"
+                  className={styles.chip}
+                  onClick={() => onAnswer(o)}
+                >
+                  <span className={styles.chipLabel}>{label}</span>
+                  {desc && <span className={styles.chipDesc}>{desc}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
