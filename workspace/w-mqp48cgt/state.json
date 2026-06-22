@@ -1,0 +1,216 @@
+{
+  "stage": "기획",
+  "budgetTotal": 60000000,
+  "proposalVersion": 1,
+  "conditions": [
+    {
+      "key": "eventType",
+      "label": "행사 유형",
+      "value": "야외 로컬 브랜드 마켓",
+      "locked": false
+    },
+    {
+      "key": "headcount",
+      "label": "예상 인원",
+      "value": "500명",
+      "locked": false
+    },
+    {
+      "key": "venue",
+      "label": "장소",
+      "value": "언더스탠드에비뉴 광장 (성동구 성수동)",
+      "locked": true
+    },
+    {
+      "key": "budget",
+      "label": "총예산",
+      "value": "6,000만원",
+      "locked": false
+    },
+    {
+      "key": "date",
+      "label": "행사일",
+      "value": "2026-11-07 (토) — 공휴일 없음",
+      "locked": false
+    },
+    {
+      "key": "boothPolicy",
+      "label": "부스 정산",
+      "value": "유료 (20~30개, 부스당 10~30만원)",
+      "locked": true
+    }
+  ],
+  "budget": [
+    {
+      "id": "venue",
+      "name": "장소·대관",
+      "planned": 15600000,
+      "confirmed": false,
+      "spent": 0,
+      "stale": false
+    },
+    {
+      "id": "catering",
+      "name": "케이터링·푸드트럭",
+      "planned": 12600000,
+      "confirmed": false,
+      "spent": 0,
+      "stale": false
+    },
+    {
+      "id": "av",
+      "name": "AV·무대·장비",
+      "planned": 15600000,
+      "confirmed": false,
+      "spent": 0,
+      "stale": false
+    },
+    {
+      "id": "staff",
+      "name": "인력·운영",
+      "planned": 9600000,
+      "confirmed": false,
+      "spent": 0,
+      "stale": false
+    },
+    {
+      "id": "marketing",
+      "name": "홍보·마케팅·인쇄",
+      "planned": 3600000,
+      "confirmed": false,
+      "spent": 0,
+      "stale": false
+    },
+    {
+      "id": "contingency",
+      "name": "예비비",
+      "planned": 3000000,
+      "confirmed": false,
+      "spent": 0,
+      "stale": false
+    }
+  ],
+  "vendors": [
+    {
+      "id": "venue-ua",
+      "name": "언더스탠드에비뉴",
+      "category": "장소·대관",
+      "stage": "후보"
+    }
+  ],
+  "weather": {
+    "label": "대체로 말음",
+    "temp": "11°C",
+    "pop": 20,
+    "stale": false
+  },
+  "venue": {
+    "name": "언더스탠드에비뉴 광장",
+    "note": "서울 성동구 아차산로 110, 서울숲역 도보 5분"
+  },
+  "milestones": [
+    {
+      "dday": -107,
+      "title": "도로점용 허가 신청 (성동구청 도로과)",
+      "due": "2026-07-23",
+      "status": "upcoming",
+      "owner": "운영진"
+    },
+    {
+      "dday": -97,
+      "title": "조기모집 인센티브 론칭 (50개+ 브랜드 초기접촉)",
+      "due": "2026-08-02",
+      "status": "upcoming",
+      "owner": "기획팀"
+    },
+    {
+      "dday": -90,
+      "title": "현장 점검 + 브랜드 모집 + 업체 계약",
+      "due": "2026-08-08",
+      "status": "upcoming",
+      "owner": "PM"
+    },
+    {
+      "dday": -60,
+      "title": "부스 확정·계약 + 스태프 모집",
+      "due": "2026-09-08",
+      "status": "upcoming",
+      "owner": "PM/HR"
+    },
+    {
+      "dday": -45,
+      "title": "부스 레이아웃 확정",
+      "due": "2026-09-23",
+      "status": "upcoming",
+      "owner": "디자인팀"
+    },
+    {
+      "dday": -30,
+      "title": "장소·업체 계약 + 방문객 사전 공지",
+      "due": "2026-10-08",
+      "status": "upcoming",
+      "owner": "계약팀/마케팅"
+    },
+    {
+      "dday": -21,
+      "title": "SNS 광고 론칭 + 예보 모니터링 시작",
+      "due": "2026-10-17",
+      "status": "upcoming",
+      "owner": "마케팅"
+    },
+    {
+      "dday": -14,
+      "title": "케이터링·메뉴 확정",
+      "due": "2026-10-23",
+      "status": "upcoming",
+      "owner": "운영진"
+    },
+    {
+      "dday": -7,
+      "title": "공지·보험·신고 확인 / 우천 30%+ 시 백업 명령",
+      "due": "2026-10-31",
+      "status": "upcoming",
+      "owner": "전체"
+    },
+    {
+      "dday": -3,
+      "title": "최종 우천 판단 + 현장 설치 확인",
+      "due": "2026-11-04",
+      "status": "upcoming",
+      "owner": "조립팀"
+    },
+    {
+      "dday": -1,
+      "title": "현장 세팅·리허설",
+      "due": "2026-11-06",
+      "status": "upcoming",
+      "owner": "전체"
+    },
+    {
+      "dday": 0,
+      "title": "행사 당일 (10:00~17:00)",
+      "due": "2026-11-07",
+      "status": "upcoming",
+      "owner": "전체"
+    },
+    {
+      "dday": 7,
+      "title": "정산·만족도 조사·사례 적립",
+      "due": "2026-11-14",
+      "status": "upcoming",
+      "owner": "운영진"
+    }
+  ],
+  "replan": null,
+  "name": "성수동 로컬 브랜드 마켓",
+  "summary": "인원: 500명 · 장소: 성수동 연무장길 일대 · 예산: 6000만원 · 날짜: 11월 첫째 주 토요일",
+  "createdAt": 1782126713121,
+  "versions": [
+    {
+      "v": 1,
+      "author": "ai",
+      "at": "2026-06-22T11:28:57.263Z",
+      "summary": "AI 제안서 저장"
+    }
+  ]
+}
