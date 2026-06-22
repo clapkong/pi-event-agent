@@ -16,6 +16,38 @@ export function stateFile(id: string): string {
   return join(WORKSPACES_ROOT, safeId(id), "state.json");
 }
 
+/** 행사 제안서(결과 리포트) 파일 (save_report 가 씀). */
+export function proposalFile(id: string): string {
+  return join(WORKSPACES_ROOT, safeId(id), "proposal.md");
+}
+
+/** 행사 통신(메일 분류·회의록) 파일 (save_comms 가 씀). */
+export function commsFile(id: string): string {
+  return join(WORKSPACES_ROOT, safeId(id), "comms.json");
+}
+
+/** 워크스페이스 폴더의 문서(.md) 산출물 목록 (proposal·체크리스트·가이드 등). */
+export function listArtifacts(id: string): string[] {
+  try {
+    return readdirSync(join(WORKSPACES_ROOT, safeId(id)))
+      .filter((f) => f.endsWith(".md"))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/** 파일명 안전화(경로 탈출 차단) — 한글 파일명 허용. */
+function safeName(name: string): string {
+  const base = (name || "").replace(/[/\\]/g, "").replace(/\.\./g, "");
+  return base.endsWith(".md") ? base : `${base}.md`;
+}
+
+/** 워크스페이스 내 특정 산출물 파일 경로. */
+export function workspaceFile(id: string, name: string): string {
+  return join(WORKSPACES_ROOT, safeId(id), safeName(name));
+}
+
 /** 행사 작업폴더 (pi 의 cwd 후보). 없으면 생성. */
 export function workspaceCwd(id: string): string {
   const cwd = join(WORKSPACES_ROOT, safeId(id));

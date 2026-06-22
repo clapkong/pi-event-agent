@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { StringEnum } from "@earendil-works/pi-ai";
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { getWeather } from "../../backend/src/weather.ts"; // 날씨 로직 재사용(중복 없음)
 // ── 상태 타입 (boardState.ts 미러) ───────────────────────────────
 interface Condition {
 	key: string;
@@ -36,6 +37,12 @@ interface Vendor {
 	name: string;
 	category: string;
 	stage: string;
+}
+interface VersionEntry {
+	v: number;
+	author: "ai" | "human";
+	at: string;
+	summary: string;
 }
 interface BoardState {
 	stage: "기획" | "진행중" | "정산·완료";
@@ -137,6 +144,19 @@ const STATE_FILE = (cwd: string) => {
 	const wsId = sessionWsId();
 	return wsId ? join(cwd, "workspace", wsId, "state.json") : join(cwd, "state.json");
 };
+// 제안서(결과 리포트)도 같은 방식으로 행사 폴더에 — backend 가 workspace/<wsId>/proposal.md 를 서빙.
+const REPORT_FILE = (cwd: string) => {
+	const wsId = sessionWsId();
+	return wsId ? join(cwd, "workspace", wsId, "proposal.md") : join(cwd, "proposal.md");
+};
+// 통신(메일 분류·회의록)도 행사 폴더에 — backend 가 workspace/<wsId>/comms.json 을 서빙.
+const COMMS_FILE = (cwd: string) => {
+	const wsId = sessionWsId();
+	return wsId ? join(cwd, "workspace", wsId, "comms.json") : join(cwd, "comms.json");
+};
+// 사례(case)는 워크스페이스가 아니라 공용 사례 라이브러리(cwd/cases/<slug>.md)에 — pi-local-rag 가 인덱싱.
+const CASE_FILE = (cwd: string, id: string) =>
+	join(cwd, "cases", `${(id || "case").replace(/[^a-zA-Z0-9_-]/g, "") || "case"}.md`);
 
 function emptyBoard(): BoardState {
 	return {
@@ -277,7 +297,10 @@ const estimateBudget = defineTool({
 });
 
 // ── 도구 2: build_checklist (결정론적 날짜 계산) ──────────────────
-const CHECKLIST = [
+// 마감 템플릿의 단일 소스: assets/checklist.json (ratios.json과 동일 원칙 — 도메인 상수는 코드 밖).
+// 못 읽으면 아래 폴백. dday: 양수=행사 전(D-N).
+const CHECKLIST_PATH = join(dirname(fileURLToPath(import.meta.url)), "assets", "checklist.json");
+const FALLBACK_CHECKLIST: { dday: number; title: string }[] = [
 	{ dday: 30, title: "장소·예산 확정, 업체 견적 요청" },
 	{ dday: 14, title: "업체 계약, 케이터링 메뉴 확정" },
 	{ dday: 7, title: "인원 확정, 공지·초청 발송, 보험·신고 확인" },
@@ -285,6 +308,15 @@ const CHECKLIST = [
 	{ dday: 0, title: "행사 당일" },
 	{ dday: -7, title: "정산·만족도 조사·사례 적립" },
 ];
+async function loadChecklist(): Promise<{ dday: number; title: string }[]> {
+	try {
+		const parsed = JSON.parse(await fs.readFile(CHECKLIST_PATH, "utf-8")) as { milestones?: { dday: number; title: string }[] };
+		if (Array.isArray(parsed?.milestones) && parsed.milestones.length > 0) return parsed.milestones;
+	} catch {
+		/* 파일 없거나 깨짐 → 폴백 */
+	}
+	return FALLBACK_CHECKLIST;
+}
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 
 const buildChecklist = defineTool({
@@ -303,7 +335,8 @@ const buildChecklist = defineTool({
 			`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 		const today = new Date();
 		today.setHours(0, 0, 0, 0); // 로컬 자정 기준으로 지남/예정 판정
-		const items = CHECKLIST.map((c) => {
+		const checklist = await loadChecklist();
+		const items = checklist.map((c) => {
 			const d = new Date(base);
 			d.setDate(d.getDate() - c.dday);
 			const iso = fmt(d); // 로컬 기준 (toISOString은 UTC라 KST에서 하루 밀림)
@@ -376,6 +409,127 @@ const updateState = defineTool({
 	},
 });
 
+// ── 도구: save_report (최종 제안서를 행사 폴더에 저장) ────────────
+const saveReport = defineTool({
+	name: "save_report",
+	label: "리포트 저장",
+	description:
+		"최종 제안서(마크다운)를 이 행사의 결과 리포트로 저장한다(행사당 1개, 재기획 시 덮어씀). 채팅 출력만으로 끝내지 말고 완성/갱신 시 반드시 호출. 문서 화면이 이 파일을 보여준다.",
+	parameters: Type.Object({
+		markdown: Type.String({ description: "제안서 전체 마크다운 본문" }),
+	}),
+	async execute(_id, params, _signal, _onUpdate, ctx) {
+		const file = REPORT_FILE(ctx.cwd);
+		await fs.mkdir(dirname(file), { recursive: true });
+		await fs.writeFile(file, params.markdown, "utf-8");
+		// 버전 로그 적립(state.json) — 문서 화면 버전 이력용. AI 작성 1건.
+		const cur = (await readState(ctx.cwd)) as BoardState & { versions?: VersionEntry[] };
+		const versions = [...(cur.versions ?? []), { v: (cur.versions?.length ?? 0) + 1, author: "ai" as const, at: new Date().toISOString(), summary: "AI 제안서 저장" }];
+		await writeState(ctx.cwd, { ...cur, versions, proposalVersion: versions.length });
+		return {
+			content: [{ type: "text" as const, text: `제안서 저장됨 (${params.markdown.length}자, v${versions.length})` }],
+			details: { file, bytes: params.markdown.length, version: versions.length },
+		};
+	},
+});
+
+// ── 도구: get_weather (Open-Meteo, weather.ts 재사용) ────────────
+const getWeatherTool = defineTool({
+	name: "get_weather",
+	label: "날씨 조회",
+	description:
+		"행사일의 날씨를 조회한다. 행사일까지 ≤16일이면 실제 예보, 그 이상·과거면 평년값(잠정). 옥외 행사의 우천 리스크·예비비 판단에 쓴다. **한글 장소명은 지오코딩이 안 되니 maps MCP로 좌표(lat/lon)를 먼저 구해 넘기고**, 영문 도시명이면 place 로도 가능. 결과를 `update_state({ weather })` 로 보드에 반영할 것.",
+	parameters: Type.Object({
+		eventDate: Type.String({ description: "행사일 YYYY-MM-DD" }),
+		latitude: Type.Optional(Type.Number({ description: "위도(권장 — maps MCP 좌표)" })),
+		longitude: Type.Optional(Type.Number({ description: "경도" })),
+		place: Type.Optional(Type.String({ description: "영문 도시명(좌표 없을 때만; 한글 불가)" })),
+	}),
+	async execute(_id, params) {
+		try {
+			const w = await getWeather({
+				eventDate: params.eventDate,
+				latitude: params.latitude,
+				longitude: params.longitude,
+				place: params.place,
+			});
+			return {
+				content: [
+					{
+						type: "text" as const,
+						text: `${w.basis}\n${w.label} ${w.temp} · 강수확률 ${w.pop}% (${w.source === "forecast" ? "예보" : "평년값"})`,
+					},
+				],
+				details: { weather: w },
+			};
+		} catch (e) {
+			return {
+				content: [{ type: "text" as const, text: `날씨 조회 실패: ${(e as Error).message}` }],
+				details: { error: true },
+			};
+		}
+	},
+});
+
+// ── 도구: save_comms (secretary의 메일 분류·회의록을 작업공간에 저장) ──
+const saveComms = defineTool({
+	name: "save_comms",
+	label: "통신 분류 저장",
+	description:
+		"이 행사와 관련된 메일을 분류·정리해 작업공간 '통신' 카드에 저장한다. secretary가 받은 편지함을 읽고 '이 행사와 관련 있는가'를 판단한 결과(관련 여부 + 근거 + 핵심 추출)를 통째로 넘긴다. 호출할 때마다 최신 목록으로 덮어쓴다.",
+	parameters: Type.Object({
+		comms: Type.Array(
+			Type.Object({
+				from: Type.String({ description: "보낸 사람" }),
+				subject: Type.String({ description: "제목" }),
+				date: Type.Optional(Type.String({ description: "받은 날짜" })),
+				relevant: Type.Boolean({ description: "이 행사와 관련 있는가" }),
+				reason: Type.Optional(Type.String({ description: "관련/무관 판단 근거 한 줄" })),
+				insight: Type.Optional(Type.String({ description: "관련 메일에서 뽑은 핵심(회의록/요청사항)" })),
+				channel: Type.Optional(Type.String({ description: "출처 채널 — Gmail이면 \"메일\"(기본). Slack 등 추가 시 그 이름." })),
+			}),
+		),
+	}),
+	async execute(_id, params, _signal, _onUpdate, ctx) {
+		const file = COMMS_FILE(ctx.cwd);
+		await fs.mkdir(dirname(file), { recursive: true });
+		await fs.writeFile(file, `${JSON.stringify({ comms: params.comms, at: new Date().toISOString() }, null, 2)}\n`, "utf-8");
+		const rel = params.comms.filter((c) => c.relevant).length;
+		return {
+			content: [{ type: "text" as const, text: `통신 ${params.comms.length}건 분류 저장 (관련 ${rel}건)` }],
+			details: { count: params.comms.length, relevant: rel },
+		};
+	},
+});
+
+// ── 도구: save_case (완료 행사를 공용 사례 라이브러리에 적립) ──────
+const saveCase = defineTool({
+	name: "save_case",
+	label: "사례 적립",
+	description:
+		"완료된 행사를 재사용 가능한 사례로 cases/<id>.md 에 저장한다(공용 사례 라이브러리). frontmatter(id·title·type·date)와 본문(조건·결정·예산 실집행·교훈)을 마크다운으로 넘긴다. 저장 후 반환된 file 경로를 `rag_index` 로 적립할 것.",
+	parameters: Type.Object({
+		id: Type.String({ description: "사례 slug (예: c-musicfest-2026)" }),
+		markdown: Type.String({ description: "frontmatter 포함 사례 전체 마크다운" }),
+	}),
+	async execute(_id, params, _signal, _onUpdate, ctx) {
+		const file = CASE_FILE(ctx.cwd, params.id);
+		await fs.mkdir(dirname(file), { recursive: true });
+		await fs.writeFile(file, params.markdown, "utf-8");
+		// 이 행사 보드에 caseId 기록 → 작업공간 산출물에 '사례 적립' 표시.
+		try {
+			const cur = (await readState(ctx.cwd)) as BoardState & { caseId?: string };
+			await writeState(ctx.cwd, { ...cur, caseId: params.id });
+		} catch {
+			/* state 없으면 건너뜀 */
+		}
+		return {
+			content: [{ type: "text" as const, text: `사례 저장됨: ${file} — 이제 rag_index({ path: "${file}" }) 로 적립하세요.` }],
+			details: { file, caseId: params.id },
+		};
+	},
+});
+
 // ── 도구 4: ask_user_question (rpc 호환 — rpiv 대체) ──────────────
 // rpiv-ask-user-question 은 ui.custom(TUI 전용)이라 웹/rpc 에선 안 됨.
 // ctx.ui.select(rpc 호환)로 질문마다 단일 선택 + "기타→직접 입력" 폴백.
@@ -431,6 +585,10 @@ export default function (pi: ExtensionAPI) {
 	pi.registerTool(estimateBudget);
 	pi.registerTool(buildChecklist);
 	pi.registerTool(updateState);
+	pi.registerTool(saveReport);
+	pi.registerTool(getWeatherTool);
+	pi.registerTool(saveComms);
+	pi.registerTool(saveCase);
 	pi.registerTool(askUserQuestion);
 
 	// 훅 ①② 잠금·집행 가드 — update_state 쓰기를 가로채 강제 검사

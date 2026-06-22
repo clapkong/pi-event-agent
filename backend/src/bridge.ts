@@ -5,10 +5,25 @@ import type { PendingUi, RpcCommand, RpcEvent } from "./rpc.ts";
 
 // ── 도구 이름 → ElementType (5요소 카운트용) ──
 export function classifyElement(tool = ""): ElementType {
-  if (/^(web_search|fetch_content|gmail|send_email)/.test(tool)) return "MCP";
-  if (/^(rag_query|rag_index|estimate_budget|build_checklist|update_state|simulate_budget)/.test(tool))
+  // MCP: 외부 도구 — 검색·메일(gmail)·캘린더(calendar_*)·지도(maps_*). 접두사로 식별.
+  if (/^(web_search|fetch_content|gmail|send_email|calendar|maps|google)/.test(tool)) return "MCP";
+  // Extension: 자작 event-tools + 사례 RAG.
+  if (
+    /^(rag_query|rag_index|estimate_budget|build_checklist|update_state|save_report|get_weather|save_comms|save_case|simulate_budget|ask_user_question)/.test(
+      tool,
+    )
+  )
     return "Extension";
   return "Tool";
+}
+
+// 스킬 사용 신호: 에이전트는 task가 매칭되면 `read` 로 SKILL.md 를 로드한다(progressive disclosure,
+// 공식 문서). 그래서 read 의 경로가 `.pi/skills/<name>/SKILL.md` 면 그 스킬을 쓴 것으로 본다.
+export function detectSkill(tool = "", args: unknown): string | null {
+  if (!/^read$/i.test(tool)) return null;
+  const s = typeof args === "string" ? args : JSON.stringify(args ?? "");
+  const m = s.match(/skills[/\\]([^/\\"]+)[/\\]SKILL\.md/i) ?? s.match(/[.]pi[/\\]skills[/\\]([^/\\"]+)/i);
+  return m ? m[1] : null;
 }
 
 // 서브에이전트 스폰을 사람이 알아볼 라벨로 (Agent 도구의 subagent_type → 역할).
@@ -66,6 +81,9 @@ export function rpcToContract(ev: RpcEvent, setPending: (p: PendingUi | null) =>
 
     case "tool_execution_start": {
       const tool = ev.toolName ?? "tool";
+      // 스킬 로드(read SKILL.md)는 Skill 요소로 — "Skill ×0" 해소.
+      const skill = detectSkill(tool, ev.args);
+      if (skill) return { type: "tool_start", label: `스킬: ${skill}`, tool, element: "Skill" };
       // 서브에이전트 스폰(Agent 도구)은 어떤 서브인지(researcher/writer/critic…) 라벨에 드러낸다.
       const sub = tool === "Agent" ? (ev.args?.subagent_type as string | undefined) : undefined;
       return {

@@ -100,7 +100,7 @@ export async function getWeather(opts: WeatherOpts): Promise<WeatherResult> {
 			pop,
 			stale: false,
 			source: "forecast",
-			basis: `${eventDate} 예보 · 오늘(${todayStr}) 기준 D-${daysUntil}`,
+			basis: `${eventDate} 기상예보`,
 			details: { ...loc, eventDate, today: todayStr, daysUntil, weatherCode: code, tempMax: Math.round(tmax), tempMin: Math.round(tmin), pop },
 		};
 	}
@@ -131,14 +131,13 @@ export async function getWeather(opts: WeatherOpts): Promise<WeatherResult> {
 	const pop = Math.round((rainYears / valid.length) * 100);
 	const label = pop >= 50 ? "강수 잦음(평년)" : pop >= 25 ? "강수 가능(평년)" : "대체로 맑음(평년)";
 	const yrs = valid.map((s) => s.year);
-	const whenNote = daysUntil < 0 ? "지난 날짜라 예보 불가" : `행사일까지 ${daysUntil}일 = 예보 범위(${FORECAST_HORIZON_DAYS}일) 밖`;
 	return {
 		label,
 		temp: `평년 ${Math.round(avg)}°C`,
 		pop,
 		stale: true,
 		source: "climatology",
-		basis: `평년값 · ${MM}-${DD}의 과거 ${valid.length}년(${Math.min(...yrs)}–${Math.max(...yrs)}) 평균 · 오늘(${todayStr}), ${whenNote}`,
+		basis: `과거 ${valid.length}년 평년값 (예측치)`,
 		details: {
 			...loc,
 			eventDate,

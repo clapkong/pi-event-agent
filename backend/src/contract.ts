@@ -9,7 +9,8 @@ export type ElementType = "MCP" | "Extension" | "Skill" | "Tool";
 /** 백엔드 → 브라우저 이벤트 (type 합집합). */
 export type AgentEvent =
   | { type: "text_delta"; delta: string }
-  | { type: "thinking_delta"; delta: string } // 추론 스트림. S3 접힘 패널은 나중(TODO).
+  | { type: "thinking_delta"; delta: string } // 추론 스트림(접힘 패널).
+  | { type: "subagent_delta"; agentId: string; delta: string } // 서브에이전트 내부 출력(파일 tail).
   | { type: "tool_start"; label: string; tool: string; element: ElementType }
   | { type: "tool_end"; result: string; citation?: number }
   | { type: "ask"; question: string; options: string[] }

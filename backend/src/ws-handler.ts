@@ -6,6 +6,7 @@ import type { ClientCommand } from "./contract.ts";
 import { contractToRpc, rpcToContract } from "./bridge.ts";
 import { PiSession } from "./pi-session.ts";
 import type { PendingUi } from "./rpc.ts";
+import { watchSubagents } from "./subagent-tail.ts";
 import { sessionId } from "./workspace.ts";
 
 /** 연결 하나를 처리: 워크스페이스용 pi 세션을 열고 socket ↔ bridge ↔ session 연결. */
@@ -27,6 +28,12 @@ export function handleConnection(socket: WebSocket, wsId: string): void {
     if (socket.readyState === socket.OPEN) socket.close();
   });
 
+  // 서브에이전트 내부 출력(.output 파일) tail → 브라우저로 흘림(부모 rpc 엔 안 오는 정보).
+  const stopTail = watchSubagents(REPO_ROOT, sessionId(wsId), (agentId, delta) => {
+    if (socket.readyState === socket.OPEN)
+      socket.send(JSON.stringify({ type: "subagent_delta", agentId, delta }));
+  });
+
   // 브라우저 → (통역) → pi
   socket.on("message", (raw: { toString(): string }) => {
     let msg: ClientCommand;
@@ -41,6 +48,7 @@ export function handleConnection(socket: WebSocket, wsId: string): void {
 
   socket.on("close", () => {
     console.log(`[ws] closed ws=${wsId}`);
+    stopTail();
     session.close();
   });
 }
