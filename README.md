@@ -1,166 +1,264 @@
-# pi-event-agent
+# pi-event-agent — 행사 기획 AI 에이전트
 
-**Pi 기반 행사 기획 AI 에이전트 웹 서비스.**
-사용자가 행사 조건(유형·인원·예산·날짜·장소)을 입력하면, 실제 도구를 쓰는 Pi 에이전트가 기획 전 과정
-(조건→리서치→예산→업체→제안서→발송→정산→적립)을 **사람 체크포인트를 끼고** 한 번에 처리하고,
-**과거 행사의 업체·스펙·교훈을 재사용**해 매번 처음부터 다시 하지 않게 한다.
+**행사 준비를 처음부터 끝까지 대신 해 주는 AI 에이전트 웹 서비스입니다.**
 
-> 오픈소스 SW 수업 기말 프로젝트. 설계 정본은 [`docs/`](docs/) — 시스템 구조([`ARCHITECTURE`](docs/ARCHITECTURE.md))·상태 모델([`STATE_MODEL`](docs/STATE_MODEL.md))·Pi 요소([`PI_ELEMENTS`](docs/PI_ELEMENTS.md))·에이전트([`AGENTS_DETAILS`](docs/AGENTS_DETAILS.md))·MCP([`MCP_DETAILS`](docs/MCP_DETAILS.md))·디자인([`DESIGN`](docs/DESIGN.md)).
+사용자가 행사 조건(예: *"사내 워크숍, 200명, 예산 500만 원, 9월 셋째 주, 야외 선호"*)을 입력하면,
+AI 에이전트가 **실제 도구를 직접 사용해서** 비슷한 과거 행사 검색 → 장소·업체 조사 → 예산 배분 →
+제안서 작성 → 업체 메일 발송 → 정산까지 한 흐름으로 처리합니다.
+끝난 행사는 사례로 저장해 두었다가, **다음 행사를 기획할 때 과거의 업체·예산·교훈을 다시 꺼내 씁니다.**
 
----
-
-## 프로젝트 소개
-
-- **문제** — 행사 기획은 리서치·계산·문서화·진행 관리가 뒤섞인 반복 노동인데, 매번 처음부터 다시 하고 **과거 경험이 다음 행사로 이어지지 않는다.**
-- **대상 사용자** — 소규모 행사를 직접 기획·운영하는 담당자(사내 워크숍·채용설명회·밋업·세미나·동아리). AI에게 초안은 맡기되 **예산·업체 같은 확정 사항은 직접 통제**하고 싶은 사람.
-- **차별점(ChatGPT 대비)** — 한 방·말로만·내 과거를 모름 ❌ → **end-to-end · 실제 도구로 실행(검색·지도·메일·캘린더) · 내 과거 행사 재사용** ✅.
-- **불변 원칙** — 행사 1개 = 워크스페이스 1개 = 작업폴더(`cwd`) 1개 = Pi 세션 1개 = 결과 리포트 1개.
+단순히 "이렇게 하세요"라고 알려주는 챗봇이 아니라, **검색·지도·메일·캘린더를 실제로 실행해서 일을 대신**합니다.
+대신 돈이 들거나 외부로 나가는 결정(예산 확정·업체 계약·메일 발송)은 **반드시 사람이 확인**하고 넘어갑니다.
 
 ---
 
-## 주요 기능
+## 목차
 
-- **동작 타임라인** — 에이전트의 리서치·도구 실행을 실시간 스트리밍으로 보여주고, 각 스텝에 **Pi 요소 마커(MCP/Extension/Skill)** 를 단다.
-- **Human-in-the-loop 3종** — 실행 중 **중지**, 선택지 **되묻기**, 발송·적립 직전 **승인 게이트**.
-- **상태 모델** — 입력/산출/확정 3겹 + 잠금(확정🔒)·신선도(stale) 꼬리표. **예산 3상태**(계획·확정·집행) · **업체 4단계**(후보→견적→확정→계약).
-- **재기획** — 입력(날씨·장소 등)이 바뀌면 영향 산출물을 stale로 표시하고, **잠금 항목은 보존**한 채 잔여 예산 범위에서 계획만 재배분.
-- **제안서 + 버전 이력** — 에이전트가 작성한 제안서를 사람이 직접 편집·확정, AI/사람 버전 이력과 **출처 인용(`#N`) 드로어** 제공.
-- **과거 사례 재사용(RAG)** — 완료된 행사를 사례 `.md`로 적립하고, 새 기획에서 하이브리드 검색으로 인용 → **사례 역추적**으로 순환을 닫는다.
-- **실제 도구 연결** — Gmail 발송(승인 게이트 뒤)·Google Calendar 일정 등록·Google Maps 장소/접근성·날씨(Open-Meteo).
-
----
-
-## 시스템 구조
-
-```
-[React + Vite 프런트]  홈 · 기획 폼 · 동작 타임라인 · 작업공간 · 문서/사례
-   │  WebSocket(에이전트 스트림)  +  REST(보드·제안서·사례·통신·날씨)
-[얇은 Node 백엔드 (Fastify)]  워크스페이스별 Pi 세션 소유 + rpc↔계약 변환
-   │  stdin/stdout JSONL
-[pi --mode rpc (자식 프로세스)]  Skill / Extension / MCP / 서브에이전트 실행
-   │
-[LLM: OpenRouter · claude-sonnet-4.6]      [데이터: workspace/<id>/*.json·md + cases/*.md(pi-local-rag)]
-```
-
-SDK 임베드가 아니라 **`pi --mode rpc` CLI를 자식 프로세스로 띄워** 통신한다. 상세는 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+1. [프로젝트 소개](#1-프로젝트-소개)
+2. [주요 기능](#2-주요-기능)
+3. [Pi · Skill · MCP · Pi Extension 활용](#3-pi--skill--mcp--pi-extension-활용)
+4. [사용한 기술 스택](#4-사용한-기술-스택)
+5. [실행 화면](#5-실행-화면)
+6. [설치 방법](#6-설치-방법)
+7. [실행 방법](#7-실행-방법)
 
 ---
 
-## Pi · Skill · MCP · Pi Extension 활용
+## 1. 프로젝트 소개
 
-> 필수 5요소를 무엇으로 충족하는지. 카탈로그 전체는 [`docs/PI_ELEMENTS.md`](docs/PI_ELEMENTS.md).
+### 어떤 문제를 푸나요
+- **반복되는 잡일** — 행사 준비는 장소 조사·예산 계산·업체 비교·문서 작성·일정 관리가 뒤섞인 노동인데, 매번 비슷한 일을 처음부터 다시 합니다.
+- **이어지지 않는 경험** — 지난번에 좋았던 업체나 예산 배분을 다음 행사에서 다시 활용하지 못하고 기억에 의존합니다.
 
-| 요소 | 우리 구현 |
+### 누구를 위한 건가요
+사내 워크숍·채용설명회·밋업·세미나·동아리 행사처럼 **소규모 행사를 직접 챙기는 담당자**입니다.
+초안과 조사는 AI에게 맡기되, **예산·업체 같은 중요한 결정은 본인이 직접 통제**하고 싶은 사람을 위해 만들었습니다.
+
+### 기존 챗봇과 무엇이 다른가요
+| | 일반 챗봇(ChatGPT 등) | pi-event-agent |
+|---|---|---|
+| 일하는 방식 | 말로 설명해 줌 | **도구를 실제로 실행**(검색·지도·메일·캘린더) |
+| 범위 | 한 번의 답변 | 조사→예산→제안서→발송까지 **한 흐름(end-to-end)** |
+| 과거 활용 | 내 지난 행사를 모름 | **과거 사례를 검색·인용**해 재사용 |
+| 통제 | 전부 AI가 | 확정·발송은 **사람 승인**을 거침 |
+
+**핵심 원칙:** 행사 한 건 = 하나의 작업 공간 = 하나의 AI 세션 = 하나의 결과 제안서.
+작업 공간 하나가 곧 하나의 AI 세션이고, 그 안에서 조건 입력부터 최종 제안서까지 모든 것이 한 흐름으로 진행됩니다.
+
+---
+
+## 2. 주요 기능
+
+- **에이전트 작업을 실시간으로 보여주는 작업 로그** — AI가 지금 무엇을 조사하고 어떤 도구를 쓰는지 화면에 한 줄씩 흘러나오고, 각 단계에 어떤 종류의 기능(🔵 외부 도구 MCP · 🟢 자체 도구 Extension · 🟣 매뉴얼 Skill)을 썼는지 표시됩니다.
+- **사람이 끼어드는 세 지점** — ① 실행 중 **중지**, ② AI가 선택지를 물어보는 **되묻기**, ③ 메일 발송·기록처럼 중요한 작업 직전의 **승인 요청**.
+- **예산·업체 상태 관리** — 예산은 *계획 → 확정🔒 → 집행* 3단계, 업체는 *후보 → 견적 → 확정🔒 → 계약* 4단계로 관리합니다. 사람이 "확정🔒"으로 잠근 값은 AI가 함부로 바꾸지 못합니다.
+- **조건이 바뀌면 자동으로 다시 기획 제안** — 예를 들어 날씨 예보나 장소가 바뀌면 영향받는 부분에 "다시 검토 필요" 표시가 뜨고, 사람이 잠가 둔 값은 그대로 둔 채 **남은 예산 안에서 계획만** 다시 짭니다.
+- **제안서 작성 + 수정 이력 + 출처** — AI가 쓴 제안서를 사람이 직접 고칠 수 있고, AI 작성본과 사람 수정본의 버전이 남습니다. 본문 근거에는 출처 번호(`[1]`)가 달려, 클릭하면 어떤 과거 사례·자료에서 가져왔는지 확인할 수 있습니다.
+- **과거 사례 재사용** — 끝난 행사는 사례 파일로 저장해 두었다가, 새 기획에서 검색해 인용합니다. "이 사례가 어떤 행사들에 쓰였는지" 거꾸로 추적할 수도 있습니다.
+- **실제 외부 도구 연동** — Gmail로 실제 메일 발송(사람 승인 후), Google Calendar 일정 등록, Google Maps로 장소·거리·접근성 확인, 행사일 날씨 조회.
+
+### 실제로 어떻게 흘러가나 (구체적 예시)
+
+사용자가 *"사내 워크숍, 200명, 예산 500만 원, 9월 셋째 주, 야외 선호"* 라고 입력하면, 메인 에이전트는 다음을 **스스로 판단해 순서대로** 실행합니다.
+
+1. **과거 사례 검색** — `rag_query("야외 200명 워크숍")` 으로 비슷한 지난 행사를 찾습니다. (있으면 참고, 없으면 그냥 진행)
+2. **조사 (여러 갈래 동시에)** — 조사 담당 보조 에이전트(`researcher`)를 **병렬로 여러 명** 띄워 ① 장소 후보 ② 케이터링·AV 업체와 시세 ③ 벤치마크 사례를 동시에 조사합니다.
+3. **날씨·일정 확인** — 야외 행사이므로 `get_weather` 로 9월 셋째 주 날씨(우천 확률)를 확인하고, Google Calendar로 그 주의 요일·공휴일(추석 연휴 등)을 확인합니다.
+4. **사용자에게 선택 요청** — 조사한 장소 후보를 `ask_user_question` 으로 보여주고 사용자가 직접 고릅니다. 고른 장소는 **확정🔒**으로 잠깁니다.
+5. **예산 배분** — `estimate_budget` 으로 500만 원을 장소·케이터링·장비·운영·예비비로 나눕니다(정확한 산수는 AI가 아니라 도구가 계산).
+6. **제안서 작성·검토** — 작성 담당(`writer`)이 초안을 쓰고, 검토 담당(`critic`)이 리스크·예산 초과·누락을 점검합니다. 통과할 때까지 고쳐 씁니다.
+7. **저장** — 완성된 제안서를 `save_report` 로 저장합니다(이 행사의 결과물).
+8. **업체 메일 발송** — *"케이터링 업체에 견적 요청 메일 보낼까요?"* 라고 묻고, **사용자가 승인하면** 메일 문안을 작성해 **Gmail로 실제 발송**합니다.
+9. **행사 후 적립** — 행사가 끝나 사용자가 "완료"로 표시하면, 이 행사를 사례 파일로 정리해 저장하고 검색 색인에 추가합니다. → 다음 행사에서 1번 단계로 다시 검색됩니다.
+
+---
+
+## 3. Pi · Skill · MCP · Pi Extension 활용
+
+> 이 과제의 핵심인 네 가지 구성요소를 각각 **무엇을, 어떻게, 왜** 썼는지 구체적으로 설명합니다.
+> (규모: 에이전트 6종 · Skill 4개 · MCP 3개 · 직접 만든 Extension 1개[도구 8개+안전장치] + 채택한 Extension 1개)
+
+### 3.1 Pi — AI 에이전트 프레임워크
+
+Pi는 사용자의 요청을 받아 **스스로 어떤 도구를 쓸지 판단하고 실행하는** 에이전트 프레임워크입니다. 이 서비스의 두뇌입니다.
+
+- **실행 방식** — Pi를 `pi --mode rpc` 모드(외부 프로그램과 표준입출력으로 통신하는 모드)로 백그라운드에서 실행합니다. 중계 서버가 행사마다 Pi를 하나씩 띄우고, Pi가 답을 만들고 도구를 쓰는 과정을 **한 글자씩 실시간으로** 웹 화면에 흘려보냅니다(작업 로그).
+- **사람 개입(human-in-the-loop)** — Pi의 기능으로 ① 실행 도중 **중지**, ② 선택지 **되묻기**, ③ 작업 직전 **승인 게이트**를 구현했습니다.
+- **역할이 다른 보조 에이전트 6종** — 메인 에이전트가 일을 나눠 맡깁니다.
+
+| 에이전트 | 하는 일 |
 |---|---|
-| **Pi** | `pi --mode rpc` 세션 + subscribe 스트리밍(타임라인) + 중지·되묻기·승인 + **서브에이전트 6종**(메인 Planner + researcher·writer·critic·secretary·monitor) |
-| **Skill** | `.pi/skills/<name>/SKILL.md` **4종** — `budget-policy`·`notice-writer`·`risk-assessment`·`satisfaction-survey` |
-| **MCP** | `.pi/mcp.json` **3종** — 메일(Gmail)·캘린더(Google Calendar)·지도(Google Maps), 커뮤니티 npx 서버를 `pi-mcp-adapter`로 연결 |
-| **Pi Extension** | 자작 [`event-tools`](.pi/extensions/event-tools.ts) — `export default (pi)=>{}` 팩토리에 **도구 8개 + 잠금/집행/승인 가드 훅**(`estimate_budget`·`build_checklist`·`update_state`·`save_report`·`get_weather`·`save_comms`·`save_case`·`ask_user_question`). + 채택 `pi-local-rag`(사례 RAG) |
-| **Web UI** | React + Vite (CLI 아님). 홈 + 워크스페이스(타임라인·작업공간·문서·사례), 화면 요소 마커로 5요소 시각 증명 |
+| **메인(Planner)** | 사용자와 대화하는 본체. 조사·작성·검토를 위임하고 종합해 제안서까지 완성, 재기획 담당 |
+| `researcher` | 장소·업체·시세·날씨 등 **바깥세상 조사**. 여러 명을 동시에 띄워 병렬 조사 |
+| `writer` | 조사 결과로 **제안서 초안** 작성 |
+| `critic` | 초안을 다각도로 **검토**(리스크·예산 초과·누락·잠금 위반)하고 통과 여부 판정 |
+| `secretary` | 도착한 메일을 읽어 **회의록(사실 요약)**으로 정리 |
+| `monitor` | 상황 변화를 감지해 **다시 기획이 필요한지 판단** |
+
+> 메인은 `researcher`·`writer`·`critic`을 직접 호출하고, `writer ⇄ critic`은 "초안 작성 → 검토 → 수정"을 통과할 때까지(최대 2회) 반복합니다.
+
+### 3.2 Skill — 에이전트의 업무 매뉴얼
+
+Skill은 에이전트가 특정 작업을 **일관되게 수행하도록 적어 둔 절차 문서**입니다(`.pi/skills/<이름>/SKILL.md`). 직접 4개를 작성했습니다.
+
+| Skill | 내용 |
+|---|---|
+| `budget-policy` | 행사 유형별 예산 배분 원칙 (예: 워크숍은 케이터링 비중↑) |
+| `notice-writer` | 초청장·공지·업체 견적 요청 메일의 **상황별 문안 작성법** (템플릿 포함) |
+| `risk-assessment` | 사전 점검 종합 — 안전·인허가·보험·소방·**접근성**(휠체어·자막)·비상 대응·**식이 알레르기** |
+| `satisfaction-survey` | 행사 후 만족도 설문 설계와 결과 분석 |
+
+> 에이전트는 관련 작업을 만나면 해당 `SKILL.md`를 읽어 그 절차대로 수행합니다(필요할 때만 불러오는 방식).
+
+### 3.3 MCP — 외부 서비스 연결
+
+MCP(Model Context Protocol)는 외부 서비스를 에이전트에 연결하는 표준 규격입니다. **3개**를 연결했습니다(`.pi/mcp.json`).
+
+| 도구 | 서버 | 에이전트가 하는 일 (예) |
+|---|---|---|
+| **Gmail** | `@gongrzhe/server-gmail-autoauth-mcp` | 업체에 견적 요청 메일 발송(승인 후), 회신 확인 |
+| **Google Calendar** | `@cocal/google-calendar-mcp` | *"9월 15일이 무슨 요일? 추석 연휴와 겹치나?"* 확인, 마일스톤을 캘린더에 등록 |
+| **Google Maps** | `@modelcontextprotocol/server-google-maps` | *"성수동 이벤트홀 주변 주차장·카페"* 검색, 역→장소 이동 거리·접근성 확인 |
+
+- **왜 커뮤니티 서버를 쓰나** — 공식 Google Workspace MCP는 기업용 미리보기 프로그램에 승인된 계정만 쓸 수 있어 일반/학생 계정으로는 작동하지 않습니다. 그래서 **표준 Google API를 쓰는 공개 커뮤니티 서버**를 채택해 개인 계정으로 바로 쓰도록 했습니다.
+- 연결은 `pi-mcp-adapter` 패키지가 담당하며, MCP는 필요할 때만 연결되므로 **이 설정 없이도 앱은 실행**됩니다(외부 도구만 비활성). 설치 방법은 [6. 설치 방법](#6-설치-방법) 참고.
+
+### 3.4 Pi Extension — 직접 만든 기능 확장
+
+Extension은 Pi에 **새 도구를 코드로 추가**하는 방법입니다. `event-tools`라는 Extension을 직접 만들어 **도구 8개 + 안전장치**를 넣었습니다(`.pi/extensions/event-tools.ts`).
+
+| 도구 | 하는 일 |
+|---|---|
+| `estimate_budget` | 유형·인원·총예산을 받아 **항목별로 정확히 배분**(AI가 어림하지 않고 코드가 계산) |
+| `build_checklist` | 행사일 기준 준비 일정(D-30/14/7/1/당일) **날짜 계산** |
+| `update_state` | 화면(보드)의 예산·업체·일정 상태를 **저장하는 유일한 통로** |
+| `save_report` | 완성된 제안서를 파일로 저장 (이 행사의 결과물) |
+| `get_weather` | 행사일 날씨 조회 (Open-Meteo) |
+| `save_comms` | 정리된 통신(회의록)을 저장 |
+| `save_case` | 끝난 행사를 사례 파일로 적립 |
+| `ask_user_question` | 사용자에게 선택지를 구조화해서 되묻기 |
+
+**안전장치(가드)도 코드로 강제**했습니다 — 사람이 확정🔒한 값이나 이미 집행된 예산은 AI가 바꾸려 하면 **차단**되고, 메일 발송·사례 적립 같은 작업은 **반드시 사람 승인을 거치게** 했습니다. (값을 지어내거나 함부로 발송하는 것을 코드 단에서 막는 것이 핵심입니다.)
+
+**과거 사례 검색**은 직접 만들지 않고 공개 Extension **`pi-local-rag`**을 채택했습니다 — 사례 `.md` 파일들을 색인해 의미+키워드 **하이브리드 검색**으로 찾아 줍니다(별도 DB·서버 없이 로컬에서 동작).
+
+### 3.5 Web UI
+
+명령줄(CLI)이 아니라 누구나 쓸 수 있는 **React 웹 화면**을 제공합니다 — 홈(전체 행사 현황), 새 행사 만들기, 에이전트 작업 로그, 작업 공간(예산·업체·일정 관리), 제안서 문서, 과거 사례. 작업 로그의 각 단계에 어떤 Pi 요소(MCP/Extension/Skill)를 썼는지 색으로 표시해, 화면에서 5요소가 실제로 동작함을 보여 줍니다.
+
+> 시스템이 어떻게 연결되는지: **[웹 화면(React)] ↔ [중계 서버(Node·Fastify)] ↔ [Pi 에이전트]**. 웹 화면은 브라우저에서, Pi는 컴퓨터에서 돌기 때문에, 가운데 가벼운 Node 서버가 행사마다 Pi를 띄우고 진행 상황을 실시간(WebSocket)으로 화면에 전달합니다. 데이터(예산·제안서·사례)는 별도 DB 없이 **파일(.json·.md)** 로 저장합니다.
 
 ---
 
-## 실행 화면
+## 4. 사용한 기술 스택
 
-> ⚠️ 실제 앱 스크린샷은 **추후 추가 예정**(placeholder). 아래는 채워질 자리.
+전부 **TypeScript · Node.js** 기반입니다.
 
-| 화면 | 스크린샷 |
+| 구분 | 사용 기술 |
 |---|---|
-| 홈 대시보드 | _(스크린샷 추가 예정)_ |
-| 기획 폼 (새 행사) | _(스크린샷 추가 예정)_ |
-| 동작 타임라인 (에이전트) | _(스크린샷 추가 예정)_ |
-| 작업공간 (상태 모델) | _(스크린샷 추가 예정)_ |
-| 결과 문서 · 인용 드로어 | _(스크린샷 추가 예정)_ |
-
----
-
-## 기술 스택
-
-전부 **TypeScript · Node.js · ESM**.
-
-| 레이어 | 기술 |
-|---|---|
-| 프런트 | React 18 · Vite · react-router · react-markdown |
-| 통신 | WebSocket(에이전트 스트림) + REST(데이터) |
-| 백엔드 | Fastify · `@fastify/websocket` · tsx |
-| 에이전트 | `pi`(`@earendil-works/pi-coding-agent`) `--mode rpc` 자식 프로세스 |
-| Pi 패키지 | `@tintinweb/pi-subagents` · `pi-mcp-adapter` · `pi-web-access` · `pi-local-rag` |
-| LLM | OpenRouter · `anthropic/claude-sonnet-4.6` |
-| 데이터/RAG | `.md`/`.json` 파일 + `pi-local-rag`(내부 SQLite FTS5 + sqlite-vec 하이브리드, 오프라인 임베딩) |
+| 웹 화면 | React 18 · Vite · React Router · react-markdown |
+| 통신 | WebSocket(에이전트 진행 실시간 전달) · REST(데이터 조회·편집) |
+| 중계 서버 | Node.js · Fastify · @fastify/websocket |
+| AI 에이전트 | **Pi** (`@earendil-works/pi-coding-agent`), `pi --mode rpc` 모드 |
+| Pi 확장 패키지 | `@tintinweb/pi-subagents`(보조 에이전트) · `pi-mcp-adapter`(MCP 연결) · `pi-web-access`(웹 검색) · `pi-local-rag`(사례 검색) |
+| 언어 모델(LLM) | OpenRouter 경유 · `anthropic/claude-sonnet-4.6` |
+| 데이터 저장 | 파일 기반(.json · .md) + `pi-local-rag` 내부 검색 색인(SQLite, 오프라인) |
 | 외부 도구 | Gmail · Google Calendar · Google Maps (MCP) · Open-Meteo(날씨) |
 
 ---
 
-## 설치
+## 5. 실행 화면
 
-**사전 요구**: Node.js LTS, 전역 `pi` 설치, `OPENROUTER_API_KEY`(LLM 필수).
+> ⚠️ 실제 동작 화면 스크린샷은 **추후 추가 예정입니다.** 아래는 채워 넣을 자리입니다.
+
+| 화면 | 설명 | 스크린샷 |
+|---|---|---|
+| 홈 | 진행 중인 행사 타일·알림·일정 한눈에 | _(추가 예정)_ |
+| 새 행사 만들기 | 조건(장소·인원·예산·날짜) 입력 | _(추가 예정)_ |
+| 에이전트 작업 로그 | 조사·도구 실행이 실시간으로 흐르고 요소 마커 표시 | _(추가 예정)_ |
+| 작업 공간 | 예산 3단계·업체 4단계·일정·날씨 관리 | _(추가 예정)_ |
+| 제안서 문서 | 본문 편집·버전 이력·출처 보기 | _(추가 예정)_ |
+
+---
+
+## 6. 설치 방법
+
+**준비물**: Node.js(LTS 버전), Pi 설치(`npm install -g @earendil-works/pi-coding-agent`), 언어 모델용 OpenRouter API 키.
 
 ```bash
-git clone <repo-url> && cd pi-event-agent
+# 1) 코드 내려받기
+git clone <저장소 주소>
+cd pi-event-agent
 
-# 1) 프런트 · 백엔드 의존성
+# 2) 웹 화면 / 중계 서버 의존성 설치
 cd frontend && npm install && cd ..
 cd backend  && npm install && cd ..
 
-# 2) Pi 확장 복원 (설치본 .pi/npm/ 은 gitignore — 매니페스트 .pi/settings.json 기준 1회)
+# 3) Pi 확장 패키지 복원 (이 프로젝트가 쓰는 확장을 한 번만 설치)
 pi install npm:@tintinweb/pi-subagents -l
 pi install npm:pi-mcp-adapter -l
 pi install npm:pi-web-access -l
-pi install npm:pi-local-rag -l        # 사례 RAG (하이브리드 검색)
+pi install npm:pi-local-rag -l
 
-# 3) 키 (.env, gitignore)
-echo 'OPENROUTER_API_KEY=<발급 키>' >> .env
+# 4) 언어 모델 키 등록 (.env 파일 — 공개되지 않음)
+echo 'OPENROUTER_API_KEY=<발급받은 키>' >> .env
 ```
 
-### MCP 셋업 (메일·캘린더·지도 — 선택, 외부 도구 쓸 때만)
+### (선택) 외부 도구 연결 — 메일·캘린더·지도
 
-외부 도구는 **커뮤니티 MCP 서버**(npx)를 [`.pi/mcp.json`](.pi/mcp.json)(커밋됨, 비밀은 `${VAR}` 자리표시자)에 등록한다.
-표준 Google API라 개인 계정으로 바로 작동한다(공식 Workspace 원격 MCP는 프리뷰 게이팅이라 일반 계정 불가 → 커뮤니티 서버 채택).
+메일 발송, 캘린더 등록, 지도 조회를 쓰려면 추가 설정이 필요합니다.
+**이 설정 없이도 앱은 정상 실행**되며(검색·기획·예산·제안서는 동작), 외부 도구만 비활성화됩니다.
 
-| 도구 | 서버 | 인증 |
+표준 Google API를 쓰는 커뮤니티 서버를 [`.pi/mcp.json`](.pi/mcp.json)에 등록해 사용합니다(개인 Google 계정으로 작동).
+
+| 도구 | 서버 | 인증 방법 |
 |---|---|---|
-| 메일 | `@gongrzhe/server-gmail-autoauth-mcp` | `npx -y @gongrzhe/server-gmail-autoauth-mcp auth` (브라우저 1회) |
+| 메일 | `@gongrzhe/server-gmail-autoauth-mcp` | `npx -y @gongrzhe/server-gmail-autoauth-mcp auth` (브라우저에서 1회 로그인) |
 | 캘린더 | `@cocal/google-calendar-mcp` | `GOOGLE_OAUTH_CREDENTIALS=<oauth.json> npx -y @cocal/google-calendar-mcp auth` |
-| 지도 | `@modelcontextprotocol/server-google-maps` | env `GOOGLE_MAPS_API_KEY` (Maps는 결제 사용 설정 필요) |
+| 지도 | `@modelcontextprotocol/server-google-maps` | 환경변수 `GOOGLE_MAPS_API_KEY` (Maps는 결제 설정 필요) |
 
-- 사전: Google Cloud 개인 프로젝트에서 Gmail·Calendar API 사용 설정 + **데스크톱 OAuth 클라이언트** 발급, Maps는 결제 + API 키.
-- 비밀은 repo 밖: OAuth 토큰은 `~/.gmail-mcp/`·`~/.config/google-calendar-mcp/`, **Maps 키는 `.env`**(gitignore). 어댑터가 실행 시 셸 env의 `${GOOGLE_MAPS_API_KEY}`를 주입.
-  ```bash
-  echo 'GOOGLE_MAPS_API_KEY=<발급 Maps 키>' >> .env
-  ```
-- MCP는 lazy라 **이 셋업 없이도 앱은 실행**된다(검색·기획 동작, 외부 도구만 비활성).
-- 처음부터 재현·트러블슈팅: [`docs/MCP_DETAILS.md`](docs/MCP_DETAILS.md).
+**사전 준비 (Google Cloud, 개인 계정)** — 메일·캘린더는 개인 Google Cloud 프로젝트에서 Gmail·Calendar API를 켜고
+**데스크톱용 OAuth 클라이언트**(`gcp-oauth.json`)를 발급받습니다. 지도(Maps)는 결제(카드)를 연결하고 API 키를 발급받습니다.
+
+```bash
+echo 'GOOGLE_MAPS_API_KEY=<발급받은 Maps 키>' >> .env
+```
+
+- **비밀 정보는 저장소에 들어가지 않습니다.** 커밋되는 [`.pi/mcp.json`](.pi/mcp.json)에는 `${VAR}` 자리표시자만 있고, 실제 값은 `.env`와 홈 디렉터리(`~/.gmail-mcp/`, `~/.config/google-calendar-mcp/`)에만 보관됩니다.
+- **자주 만나는 문제**: "확인되지 않은 앱" 경고 → 테스트 모드라 정상(고급 → 계속) · 일부 도구만 연결됨 → MCP는 필요할 때만 연결되므로 정상 · 지도만 안 됨 → 실행 전 `.env`를 불러왔는지 확인 · 학교(Workspace) 계정은 외부 앱·결제가 막힐 수 있으니 **개인 계정** 권장.
 
 ---
 
-## 실행
+## 7. 실행 방법
+
+터미널 두 개에서 중계 서버와 웹 화면을 각각 실행합니다.
 
 ```bash
-# 1) 백엔드 (에이전트 — pi --mode rpc ↔ WebSocket/REST 브리지)
-#    데이터 화면(작업공간·문서·사례)과 "AI 에이전트" 화면 모두 이 백엔드가 떠 있어야 동작.
+# 1) 중계 서버 (에이전트 동작에 필요 — 먼저 실행)
 cd backend
-set -a; source ../.env; set +a    # .env의 키(OpenRouter·Maps)를 셸에 로드
-npm run dev                       # http://127.0.0.1:8787  (ws /ws?ws=<id>)
+set -a; source ../.env; set +a      # .env에 넣은 키를 현재 터미널에 불러오기
+npm run dev                         # http://127.0.0.1:8787
 
-# 2) 프런트 (UI)
-cd frontend && npm run dev        # http://localhost:5173
+# 2) 웹 화면 (새 터미널에서)
+cd frontend && npm run dev          # http://localhost:5173
 ```
 
-### (선택) 캘린더 임베드 — 작업공간 일정 카드에 본인 Google Calendar 표시
+브라우저에서 **http://localhost:5173** 으로 접속하면 됩니다.
+
+### (선택) 작업 공간에 본인 구글 캘린더 표시
 
 ```bash
-echo 'VITE_GCAL_ID=you@gmail.com' >> frontend/.env.local   # 본인 캘린더 ID(보통 Gmail 주소)
+echo 'VITE_GCAL_ID=본인주소@gmail.com' >> frontend/.env.local
 ```
 
-- 미설정 시 **마일스톤 미니 달력**으로 폴백. 설정 후 **dev 서버 재시작**. 브라우저가 해당 Google 계정에 로그인돼 있어야 비공개 캘린더가 렌더된다.
+설정하면 작업 공간 일정 카드에 본인 Google Calendar가 표시됩니다(브라우저가 해당 계정에 로그인되어 있어야 함). 설정하지 않으면 준비 일정 미니 달력으로 대체됩니다. 설정 후 웹 화면을 다시 실행해 주세요.
 
 ---
 
-## 현재 상태
+### 참고 — 더 자세한 설계 문서
 
-- **에이전트 실연결**: 동작 타임라인·되묻기·승인·스트리밍이 실제로 돈다. Extension(`event-tools`)·Skill·MCP(메일·캘린더·지도)·사례 RAG(`pi-local-rag`) 연동. 작업공간 사람 편집·점검·완료(→사례 적립)·캘린더 등록 포함.
-- **일부 mock 잔존**: 홈 대시보드 일부 위젯(알림 등)은 REST 미연결(전환 진행 중). 프런트는 계약([`contract.ts`](frontend/src/agent/contract.ts))에만 의존해 교체가 무수정.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — 시스템 구조·상태 모델·검증된 Pi 연동 사양
+- [`docs/PI_ELEMENTS.md`](docs/PI_ELEMENTS.md) — 에이전트·Skill·MCP·Extension 상세 카탈로그
+- [`docs/DESIGN.md`](docs/DESIGN.md) — 화면 디자인 시스템
 
-## 라이선스
-
-(예정)
+> 현재 상태: 에이전트 대화·작업 공간·제안서·사례 적립·외부 도구(메일·캘린더·지도) 연동이 모두 실제로 동작합니다. 홈·작업공간·문서·사례 등 데이터 화면도 백엔드 REST로 연결되어 있습니다(예시 데이터 아님).

@@ -1,7 +1,7 @@
 # TODO
 
 > 아직 안 만든 것 / 마저 해야 할 것 (2026-06-21 기준).
-> 아키텍처는 `docs/ARCHITECTURE.md`·`docs/AGENTS_DETAILS.md`, 설계 정본은 `docs/`, 작업 규칙은 `CLAUDE.md`.
+> 아키텍처는 `docs/ARCHITECTURE.md`, Pi 구성요소·에이전트는 `docs/PI_ELEMENTS.md`, 작업 규칙은 `CLAUDE.md`.
 
 ## 자작 ask
 - [x] `ask_user_question` 도구(event-tools, `ctx.ui.select`) + rpiv 미사용(settings.json에 없음). 게이트·되묻기 라이브 검증됨.
@@ -12,7 +12,7 @@
 - [x] skill 자동 발견·로드 검증 — pi 0.79.8 로더 소스(`core/skills.js`) 대조: 스캔 경로 `.pi/skills`·`SKILL.md` 루트·`description` 규칙(≤1024자) 전부 충족, 헤드리스 startup 무에러(모델 401까지 도달=로드 OK). 남은 건 실제 모델이 task 매칭 시 *호출*하는지(라이브, 크레딧 소요 — 검증 타이밍 사용자 결정).
 
 ## MCP (`.pi/mcp.json` — 커뮤니티 3종 + 검색, 커밋됨)
-- **→ gmail·캘린더·지도·검색 완료(라이브 검증). 새로 붙일 MCP 없음.** 상세 `docs/MCP_DETAILS.md`. 남은 외부데이터 = 날씨(아래, MCP 아닌 도구).
+- **→ gmail·캘린더·지도·검색 완료(라이브 검증). 새로 붙일 MCP 없음.** 요소 상세 `docs/PI_ELEMENTS.md §5`, 설치 `README.md`. 남은 외부데이터 = 날씨(아래, MCP 아닌 도구).
 - [ ] **서비스 연결하기** (실제 서비스 백엔드에도 연결. 작업 공간에서 캘린더, 지도, mail 접근 가능)
 - [ ] mail/slack(예정)이 n개 이상 쌓이면 secretary, workspace가 바뀌면 monitor 호출해서 배너 띄워주기
 

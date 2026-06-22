@@ -1,8 +1,8 @@
-# ARCHITECTURE — 시스템 구조 · Pi 연동 사양
+# ARCHITECTURE — 시스템 구조 · 상태 모델 · Pi 연동 사양
 
-> 실제 구현 기준(코드 대조 완료). 상태 모델은 `STATE_MODEL.md`, Pi 요소 카탈로그는 `PI_ELEMENTS.md`,
-> 에이전트 구성은 `AGENTS_DETAILS.md`, MCP 셋업은 `MCP_DETAILS.md`, 제품 정의는 `README.md`.
-> **Pi는 학습 컷오프 이후 도구라 API 추측은 거의 틀린다 — 이 문서의 검증된 사양만 따르고, 없는 함수는 멈추고 물어본다.**
+> 실제 구현 기준(코드 대조 완료). Pi 구성요소(Skill/MCP/Extension/Agent) 카탈로그는 `PI_ELEMENTS.md`,
+> 화면 디자인은 `DESIGN.md`, 제품 정의·설치는 `README.md`.
+> **Pi는 학습 컷오프 이후 도구라 API 추측은 거의 틀린다 — 이 문서의 검증된 사양(§9)만 따르고, 없는 함수는 멈추고 물어본다.**
 
 ---
 
@@ -72,9 +72,9 @@
 ### 4.1 WebSocket — 에이전트 스트림 (`contract.ts`, 정본)
 
 **백엔드 → 프런트 이벤트(`AgentEvent`)**
-`text_delta` · `thinking_delta`(추론, 접힘) · `subagent_delta{agentId}` · `tool_start{label,tool,element}` ·
-`tool_end{result,citation?}` · `ask{question,options}` · `gate{question}` · `model_switch{from?,to,reason}` ·
-`model_current{name}` · `done` · `error{message,retry?}`.
+`text_delta` · `thinking_delta`(추론, 접힘) · `subagent_delta{agentId}` · `tool_start{callId?,label,tool,element}` ·
+`tool_end{callId?,result,citation?}`(callId로 start↔end 매칭 — 병렬 도구 결과 오배치 방지) · `ask{question,options}` ·
+`gate{question}` · `model_switch{from?,to,reason}` · `model_current{name}` · `done` · `error{message,retry?}`.
 
 **프런트 → 백엔드 명령(`ClientCommand`)**: `prompt{text}` · `answer{choice}`(되묻기 응답/게이트 승인=`"승인"`) · `abort`.
 
@@ -104,7 +104,7 @@
 
 ---
 
-## 6. 데이터 흐름 · 사례 순환
+## 6. 데이터 흐름 · 사례 순환 · HITL
 
 - **산출물은 파일.** 보드(`state.json`)는 에이전트의 `update_state` **유일 통로**로 쓰고, 제안서는 `save_report`(→`proposal.md`),
   통신은 `save_comms`(→`comms.json`). 사람은 작업공간/문서에서 직접 편집(REST PATCH/PUT) → 다음 요청 때 에이전트가 읽음.
@@ -113,16 +113,59 @@
   새 기획 ──rag_query(하이브리드 벡터+BM25)──▶ cases/*.md + .pi/rag/ 인덱스
   행사 완료·승인 ──save_case(cases/<id>.md)─▶ rag_index ─▶ 다음 기획에서 재검색·인용
   ```
-  역추적(`citedBy`): 에이전트가 사례를 인용하면 해당 `cases/<id>.md` frontmatter에 workspaceId를 추가(파일 edit)해 순환을 가시화.
+  사례 = `cases/<id>.md`(frontmatter 메타 + 본문 전문). 임베딩·색인은 `pi-local-rag`가 내부 처리(소스 `.md`만 커밋).
+  역추적(`citedBy`): 에이전트가 사례를 인용하면 그 frontmatter에 workspaceId를 추가해 "이 사례를 인용한 행사들" 순환을 가시화.
+  ⚠️ 사례 RAG는 **보조 자료지 필수 단계가 아니다** — 인덱스가 비면 외부 조사만으로 진행(반복·중단 금지).
 
-### HITL 3종
+### HITL 3종 (사람 개입)
 - **중지**: `abort` → pi `abort`(메서드, AbortSignal 아님).
 - **되묻기**: 도구가 `ctx.ui.select/input/editor` → rpc `extension_ui_request` → 계약 `ask` → 사용자 응답 → `extension_ui_response`.
 - **승인 게이트**: `ctx.ui.confirm` → 계약 `gate`(메일 발송·사례 적립 등 직전).
 
 ---
 
-## 7. 레포 구조
+## 7. 상태 모델 (데이터 모델 · 작업공간 화면의 심장)
+
+워크스페이스 한 곳에 **세 겹**이 섞이고, 각 항목에 **두 꼬리표**가 붙는다. "진행중이 애매"·"확정값 못 바꿈"·"입력 바뀌면 재기획"을 한 번에 푼다. 보드(`state.json`)가 이를 담고, 에이전트는 `update_state`로만 쓴다.
+
+### 7.1 세 겹 + 두 꼬리표
+- **세 겹**: 입력/가정(날씨·장소·인원, 바뀔 수 있음) · 기획 산출(제안서·예산 배분·체크리스트, 입력에서 파생) · 실행/확정(확정 항목·계약 업체·집행 예산, 현실에 못 박힘).
+- **두 꼬리표**: **잠금** `계획`(자유, 재기획 대상) ↔ `확정🔒`(사람이 못 박음, 재기획 제외) · **신선도** `최신` ↔ `재검토 필요(stale)`(입력이 바뀌면 그 입력으로 만든 산출물이 stale).
+
+### 7.2 단계 · 예산 3상태 · 업체 4단계
+- **워크스페이스 단계**: `기획 → 진행중 → 정산·완료`. 완료 확정은 **사람 몫**(→ 사례 적립).
+- **예산 3상태**: 계획(planned, 재배분 가능) · 확정🔒(confirmed, 잠김) · 집행(spent, 불변). 요약 막대 `집행 │ 확정·미집행 │ 계획 잔여`.
+- **업체 4단계**: `후보 → 견적 → 확정🔒 → 계약`. **확정부터 잠금**(비교·재기획 제외), **계약에서 집행 예산 반영**.
+
+### 7.3 재기획 (stale 감지)
+산출물을 만든 **입력 스냅샷 ↔ 지금 입력**을 비교 → 실질 변화 시 영향 산출물에 `재검토 필요` + 재기획 배너.
+**재기획은 잠금 항목을 건드리지 않는다** — 잔여 예산(전체 − 집행 − 확정) 범위에서 **계획만 재배분**, 버전 +1.
+운영 중 변화는 `update_state`의 `replanChangedInputs`로 배너만 올리고, 실제 재기획은 사용자가 요청할 때 수행.
+
+### 7.4 스키마 (`state.json` 중심)
+```
+meta.json     { id, name, type, status: 기획|진행중|완료, summary, createdAt }
+state.json    { stage, budgetTotal, conditions[], budget[], vendors[], venue, weather,
+                milestones[], versions[], proposalVersion, replanChangedInputs?, caseId? }
+conditions[]  { key, label, value, locked }                  // 확정 게이트 → locked:true
+budget[]      { name, planned, confirmed: bool, spent }      // 예산 3상태
+vendors[]     { name, category, stage: 후보|견적|확정|계약, locked, spent }
+venue         { name, note }
+weather       { label, temp, pop, stale, source, basis }     // get_weather/REST가 그대로 채움
+milestones[]  { dday(음수=행사 전), title, due:YYYY-MM-DD, status, owner }  // = 제안서 액션 플랜
+versions[]    { v, author: ai|human, at, summary }           // 제안서 버전 이력
+Case          # cases/<id>.md frontmatter { id, title, type, headcount, venue, date, satisfaction, budgetActual[], citedBy[] }
+Contact       # contacts.json { name, role, org, email, phone, scope: 내부|외부 }
+Comms         # comms.json [{ from, subject, date, relevant, reason, insight }]   // secretary 분류
+```
+규칙: `locked`·`confirmed`·`stage≥확정` 항목은 재기획 제외(event-tools 훅이 위반 자동 차단). `stage==계약` → `budget.spent` 반영.
+
+### 7.5 연락처
+이메일 수신자는 **하드코딩하지 않고** `workspace/<id>/contacts.json`에서 조회한다(승인 게이트 뒤 Gmail MCP 발송).
+
+---
+
+## 8. 레포 구조
 
 ```
 .
@@ -142,7 +185,7 @@
 
 ---
 
-## 8. 검증된 Pi 사양 (rpc 모드 · 추측 금지)
+## 9. 검증된 Pi 사양 (rpc 모드 · 추측 금지)
 
 > 근거: 실측 + 메모리 `pi-rpc-protocol`·`pi-extension-authoring`. CLAUDE.md의 "검증된 사양만" 포인터가 가리키는 곳.
 
@@ -156,4 +199,4 @@
   훅=`pi.on("tool_call", (e,ctx)=>({block,reason}))`(남의 MCP 도구도 차단 가능), 승인/되묻기=`ctx.ui.confirm/select/input`,
   상태=`ctx.cwd` 파일 직접. **`createExtension` API는 없다.** 로딩=`cwd/.pi/extensions/<name>/index.ts`(jiti, TS 직접).
 - **서브에이전트**: `.pi/agents/<name>.md`(네이티브) + `@tintinweb/pi-subagents`. Planner는 `Agent` 도구로 spawn(`subagent_type`·`run_in_background`).
-- **MCP**: 코어는 MCP 미지원 → `pi-mcp-adapter`가 `.pi/mcp.json` 자동 로드(`MCP_DETAILS.md`).
+- **MCP**: 코어는 MCP 미지원 → `pi-mcp-adapter`가 `.pi/mcp.json` 자동 로드. 서버 목록·설정은 `README.md`(설치), 요소 상세는 `PI_ELEMENTS.md §5`.
