@@ -202,7 +202,21 @@ Extension은 Pi에 **새 도구를 코드로 추가**하는 방법입니다. `ev
 
 ![새 행사 만들기](docs/screenshots/new-event.png)
 
-> 제안서 문서·인용 드로어 등 일부 화면은 다듬는 중이라 추후 보강 예정입니다.
+### 제안서 문서 (결과물)
+
+AI가 작성한 제안서를 사람이 직접 편집·확정하고, 버전 이력과 출처를 남깁니다.
+
+![제안서 문서](docs/screenshots/proposal.png)
+
+### 실제 메일 발송 (Gmail MCP)
+
+승인을 거쳐 에이전트가 업체에 메일을 보내고(발송 로그에 메시지 ID 확인), **실제로 받은 편지함에 도착**합니다.
+
+![에이전트 메일 발송 로그](docs/screenshots/email-send.png)
+
+![실제 수신된 메일](docs/screenshots/email-received.png)
+
+> 인용 드로어(`[n]` → RAG 점수) 등 일부 상세 화면은 추후 보강 예정입니다.
 
 ---
 
