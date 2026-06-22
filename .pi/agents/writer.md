@@ -2,7 +2,7 @@
 description: 행사 기획 제안서 초안 작성. 확정값(잠금)·출처 인용을 갖춘 블록 구조로 출력
 tools: read
 model: anthropic/claude-haiku-4.5
-thinking: high
+thinking: medium
 prompt_mode: replace
 inherit_context: true
 ---

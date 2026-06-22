@@ -1,6 +1,8 @@
 ---
 description: 외부 통신(메일·슬랙)을 읽어 중립적 회의록(사실 추출)으로 정리. 판단·제안은 안 함
 tools: read
+model: google/gemini-2.5-flash
+thinking: low
 prompt_mode: replace
 extensions: true
 ---

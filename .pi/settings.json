@@ -1,6 +1,6 @@
 {
   "defaultProvider": "openrouter",
-  "defaultModel": "google/gemini-2.5-flash",
+  "defaultModel": "anthropic/claude-sonnet-4.6",
   "defaultThinkingLevel": "medium",
   "packages": [
     "npm:@tintinweb/pi-subagents",

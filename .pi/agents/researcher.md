@@ -1,6 +1,7 @@
 ---
 description: 행사 기획용 외부 정보 조사 (장소·업체·시세·사례·날씨). web_search/fetch_content로 출처와 함께 수집
 tools: read, bash, grep, find, ls
+model: google/gemini-2.5-flash
 prompt_mode: replace
 run_in_background: true
 ---
