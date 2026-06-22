@@ -1,5 +1,5 @@
 // agent/realClient.ts — 실제 백엔드(WS)에 붙는 AgentClient 구현 (B2).
-// mockClient와 동일한 contract만 구현하므로 useAgentRun은 무수정으로 교체된다.
+// contract.ts(AgentClient)만 구현. 에이전트 mock 제거됨 — useAgentRun이 항상 이걸 쓴다.
 // ⚠️ 실제 Pi(OpenRouter) 호출. 프런트 개발 기본값은 mock — 이건 검증/실사용 때만.
 
 import type { AgentClient, AgentEvent, AgentEventHandler } from "./contract.ts";

@@ -34,7 +34,8 @@
 - [ ] **홈 알림 센터 소스 정의(설계 구멍)** — 자동 트리거 없음 → 비동기 알림이 어디서 오나? 후보: Planner 대화 추천 / 사용자 액션 / secretary 온디맨드. 정해야 알림이 채워짐.
 - [ ] **메인 세션 도구 제한 주의** — `tools` 허용목록을 좁히면 `ask_user_question`·`Agent`·`web_search` 등이 빠질 수 있음. 메인엔 제한을 걸지 않거나 명시 포함.
 - [ ] `ask_user_question`/승인 게이트의 RPC `extension_ui_request` 이벤트 → 프런트 `ask`/`gate` 타임라인 매핑 (PI_INTEGRATION §8).
-- [ ] 프런트 mock→실제 교체 지점: `frontend/src/agent/mockClient.ts`, `data/workspaces.ts` (CLAUDE.md 참조).
+- [x] 에이전트 mock 제거 → `realClient` 일원화(`mockClient`·`harness` 삭제).
+- [ ] **데이터 mock 교체(REST 필요)**: `data/{workspaces,home,proposal,cases}.ts`·`boardState.ts`·`store/workspaces.tsx` 시드 → 백엔드 REST 조회로. (그 전엔 home·board·doc·cases 화면이 mock)
 
 ## 검증
 - [x] 실제 `pi` 세션에서 **풀 파이프라인 라이브 동작 확인**(2026-06-21): researcher 3개 병렬 fan-out → `ask_user_question` 선택 게이트(장소·케이터링·예산방향) → writer(haiku) → critic(sonnet, 치명3/권고4) → 예산 사용자판단 재게이트. 한 세션에서 쭉 돔.

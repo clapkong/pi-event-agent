@@ -40,9 +40,9 @@ Google은 공식 원격 MCP(`gmailmcp.googleapis.com`·`calendarmcp.googleapis.c
 | `~/.gmail-mcp/gcp-oauth.keys.json` | ✗ (홈) | **OAuth 클라이언트** (gmail·calendar 공용) |
 | `~/.gmail-mcp/credentials.json` | ✗ (홈) | gmail 토큰(refresh 포함) |
 | `~/.config/google-calendar-mcp/tokens.json` | ✗ (홈) | calendar 토큰 |
-| `~/.zshrc` 의 `GOOGLE_MAPS_API_KEY` | ✗ (셸 env) | maps API 키 |
+| `.env` 의 `GOOGLE_MAPS_API_KEY` | ✗ (gitignore) | maps API 키 (`OPENROUTER_API_KEY`와 같은 파일 = 비밀 단일 소스) |
 
-> **커밋되는 건 `.pi/mcp.json` 뿐이고, 비밀은 전부 홈/env.** 그래서 repo에 비밀 노출 0.
+> **커밋되는 건 `.pi/mcp.json` 뿐이고, 비밀은 전부 홈/`.env`.** 그래서 repo에 비밀 노출 0.
 
 ---
 
@@ -81,11 +81,11 @@ gcloud services enable geocoding-backend.googleapis.com places-backend.googleapi
   elevation-backend.googleapis.com apikeys.googleapis.com --project=<PID>
 gcloud services api-keys create --display-name="Maps MCP" --project=<PID>   # keyString 복사
 
-# 키를 셸 env로 (커밋 안 됨). 둘 중 택1:
+# 키를 셸 env로 (커밋 안 됨). 이 프로젝트는 (A) .env 단일 소스 사용:
 #  (A) .env에 모음 — 비밀 한 곳(OPENROUTER_API_KEY 옆에). pi 실행 셸에서 로드.
 echo 'GOOGLE_MAPS_API_KEY=<발급된 키>' >> .env
 set -a; source .env; set +a                          # 이 셸에 export → 바로 pi
-#  (B) ~/.zshrc에 영구 export — 새 터미널마다 자동
+#  (B) 대안: ~/.zshrc에 영구 export — 새 터미널마다 자동(.env 안 거쳐도 됨)
 echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zshrc
 ```
 > ⚠️ 학교(Workspace) 계정은 보통 카드 결제가 막힘 → Maps는 **개인 계정**에서.
@@ -106,7 +106,7 @@ echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zsh
 - maps 키는 **pi 실행 셸의 env**에 있어야 함(§3.3 A/B). 백엔드 경유 실행이면 백엔드가 `.env`를 로드(dotenv)해 pi 서브프로세스에 넘기므로 자동. **터미널 직접 실행**이면 `set -a; source .env; set +a` 후 `pi` (또는 ~/.zshrc 방식).
 
 ### 3.5 사용·검증 (Pi 안)
-**새 터미널에서** Pi 실행 후:
+`.env` 로드 후 Pi 실행(`set -a; source .env; set +a && pi`) 다음:
 ```
 "내 메일 라벨 보여줘"        → gmail_list_email_labels
 "내 캘린더 일정 보여줘"      → calendar_list-calendars / list-events
@@ -122,7 +122,7 @@ echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zsh
 | 공식 MCP가 `The caller does not have permission` | 프리뷰 게이팅 → 공식은 못 씀. 커뮤니티 서버로(§0). |
 | `/mcp` 패널에 `(not cached)` | 새 서버 첫 세션. `/mcp reconnect <서버>` 또는 Pi 재시작. npx 첫 다운로드라 잠깐 걸림. |
 | `MCP: 1/3` 등 일부만 연결 | lazy라 **쓴 서버만** 연결됨. 정상. |
-| Maps만 안 됨 / 키 없음 | `${GOOGLE_MAPS_API_KEY}` 미설정 — **새 터미널**(`~/.zshrc` 로드)에서 Pi 실행. 키 전파 1~2분. |
+| Maps만 안 됨 / 키 없음 | `${GOOGLE_MAPS_API_KEY}` 미설정 — pi 실행 전 **`.env` 로드**(`set -a; source .env; set +a`). 키 전파 1~2분. |
 | "확인되지 않은 앱" 경고 | 테스트 모드. 고급 → 계속. |
 | gmail/calendar 권한 거부 | 학교(Workspace) 조직이 third-party 앱 차단 가능 → **개인 계정** 사용. |
 
@@ -130,7 +130,7 @@ echo 'export GOOGLE_MAPS_API_KEY="<발급된 키>"' >> ~/.zshrc && source ~/.zsh
 
 ## 5. 보안
 
-- 커밋되는 `.pi/mcp.json`엔 **비밀 없음**(`${VAR}`만). 실제 비밀(OAuth 클라이언트·토큰·Maps 키)은 **홈 디렉터리·셸 env**.
+- 커밋되는 `.pi/mcp.json`엔 **비밀 없음**(`${VAR}`만). 실제 비밀: OAuth 클라이언트·토큰은 **홈 디렉터리**(`~/.gmail-mcp/` 등), Maps 키는 **`.env`**(gitignore).
 - 스코프: gmail = `mail.google.com`, calendar = `calendar`. Maps 키는 데모용 무제한 — 운영 시 API/도메인 제한 권장.
 - 모든 작업은 사용자 계정 권한을 상속(데이터 거버넌스). 발송·생성 등은 에이전트 응답을 검토하고 사용.
 

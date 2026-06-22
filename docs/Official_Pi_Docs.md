@@ -1,0 +1,5 @@
+- Pi Documentation: https://pi.dev/docs/latest
+- Pi Skills Documentation: https://pi.dev/docs/latest/skills
+- Pi Packages Documentation: https://pi.dev/docs/latest/packages
+- Agent Skills Overview: https://agentskills.io/home
+- Agent Skills Specification: https://agentskills.io/specification

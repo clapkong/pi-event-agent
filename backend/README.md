@@ -27,7 +27,7 @@ npm install
 npm run dev          # 풀 에이전트
 PI_SMOKE=1 npm run dev   # 배관만 싸게(.pi/ 컨텍스트·확장 끔)
 ```
-프런트: `frontend/.env.local` 에 `VITE_USE_REAL_AGENT=1` → realClient 가 ws://127.0.0.1:8787/ws 로 붙음.
+프런트: realClient 가 **항상** ws://127.0.0.1:8787/ws 로 붙음(에이전트 mock 제거됨, env 토글 없음). 에이전트 화면 쓰려면 이 백엔드가 떠 있어야 함.
 
 ## 구현 순서 (골격 → 하나씩)
 - [x] 스캐폴드(타입·config·모듈 골격)

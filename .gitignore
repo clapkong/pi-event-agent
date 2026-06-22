@@ -1,6 +1,21 @@
+# 환경변수·비밀 (예시 파일만 커밋)
 .env
+.env.*
+!.env.example
+
 .DS_Store
 node_modules/
+
+# 로그
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 테스트 커버리지
+coverage/
+*.lcov
+.nyc_output
 
 # Pi 확장 설치 캐시 (node_modules). 매니페스트(.pi/settings.json)만 커밋, 복원은 `pi install`
 .pi/npm/
@@ -11,6 +26,9 @@ notes.txt
 
 # 런타임 워크스페이스 (행사별 cwd: 제안서·예산 등 산출물) — 루트만(프런트 screens/workspace 제외)
 /workspace/
+
+# 에이전트 보드 상태 (개발 중 cwd=레포 루트일 때 update_state가 루트에 떨굼)
+/state.json
 
 # V0 스파이크 잔여 (있을 경우)
 scratch/

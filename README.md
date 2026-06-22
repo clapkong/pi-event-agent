@@ -69,6 +69,14 @@ pi install npm:pi-local-rag -l        # 사례 RAG (하이브리드 검색)
 - MCP는 lazy라 **이 셋업 없이도 앱은 실행**된다(검색·기획 동작, 외부 도구만 비활성).
 - **상세·처음부터 재현·트러블슈팅: [`docs/MCP_DETAILS.md`](docs/MCP_DETAILS.md)**
 
+### Pi 실행
+
+```bash
+set -a; source .env; set +a   # .env의 키(OpenRouter·Maps)를 현재 셸에 로드
+pi                            # 행사 워크스페이스(cwd)에서 실행 — 확장·MCP 자동 로드
+```
+> 매번 치기 번거로우면 `~/.zshrc`에 `alias pie='set -a; source .env; set +a && pi'` 추가 → 이후 `pie`만 치면 됨. (키는 `.env`에 그대로 — 단일 소스 유지)
+
 ## Pi 필수 5요소
 
 - **Pi** — 코어 임베드 + 스트리밍
