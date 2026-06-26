@@ -30,9 +30,6 @@ notes.txt
 # 워크스페이스 런 산출물(state.json·proposal.md 등)은 기본 무시 — 단 예시 1개만 커밋.
 workspace/*
 !workspace/w-mqp48cgt/
-# 루트에 떨어지는 런/발표 노트
-/데모용_사전준비.md
-/발표_슬라이드.md
 
 # 커뮤니티 MCP OAuth 클라이언트 키 (비밀 — 커밋 금지)
 gcp-oauth.json
