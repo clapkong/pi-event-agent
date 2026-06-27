@@ -80,12 +80,18 @@ app.get("/api/cases", async () => {
 
 app.get("/api/cases/:id", async (req, reply) => {
   const id = safeId((req.params as Record<string, string>).id);
+  // 파일명이 아니라 frontmatter id 로 찾는다 — 파일명에 mock_ 등 접두사가 붙어도(id 는 그대로) 안전.
+  const dir = join(DATA_ROOT, "cases");
   try {
-    return parseCase(await readFile(join(DATA_ROOT, "cases", `${id}.md`), "utf-8"), id);
+    for (const f of (await readdir(dir)).filter((f) => f.endsWith(".md"))) {
+      const c = parseCase(await readFile(join(dir, f), "utf-8"), f.replace(/\.md$/, ""));
+      if (c.id === id) return c;
+    }
   } catch {
-    reply.code(404);
-    return { error: "not_found", id };
+    /* cases 폴더 없음 */
   }
+  reply.code(404);
+  return { error: "not_found", id };
 });
 
 // 연결 상태(사이드바 ConnPanel): 실제 .pi 설정에서 파생 — 하드코딩 더미 제거.
