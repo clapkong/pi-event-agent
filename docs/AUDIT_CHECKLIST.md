@@ -21,7 +21,7 @@
 
 - [ ] researcher fan-out → `ask_user_question`(선택 게이트, **모달**로 뜨는지) → writer 초안 → critic 판정 → 라우팅(writer/재조사/사용자판단) → `판정: 통과` 시 종료.
 - [ ] critic이 `inherit_context:false`인데도 입력계약(ⓐ초안 ⓑ제약 ⓒ근거 ⓓ확정결정 ⓔ이전지적)으로 **무한루프 없이** 도는가.
-- [ ] `save_report` → `workspace/<id>/proposal.md` 저장 → 문서 탭에 렌더·**편집·버전 이력** 동작.
+- [ ] `save_report` → `data/workspace/<id>/proposal.md` 저장 → 문서 탭에 렌더·**편집·버전 이력** 동작.
 - [ ] **제안서에 `[n]` 인용 + `## 출처` 섹션**이 실제로 들어가고, 문서에서 `[n]` 클릭 시 드로어(사례/URL)로 연결되는가.
 - [ ] **제안서 저장 직후 "업체 메일 보낼까요?" `ask_user_question`** 이 뜨고, 승인 시 Gmail로 발송되는가(데모 핵심).
 
@@ -37,13 +37,13 @@
 
 - [ ] **'점검'(백그라운드)**: secretary 새 메일 분류(`save_comms`, **출처=메일** 표시) + 날씨 + monitor 변경 판단 → 필요 시 재기획 배너. AI 탭으로 안 넘어가고 작업공간 유지.
 - [ ] 운영 단계 워크스페이스 1주 경과 후 열면 **자동 점검 1회**.
-- [ ] **'정산·완료'** 확인 → 회고 `ask` → `save_case`로 `cases/<id>.md` → `rag_index` 적립 → state.json caseId → 산출물에 '사례 적립됨'.
+- [ ] **'정산·완료'** 확인 → 회고 `ask` → `save_case`로 `data/cases/<id>.md` → `rag_index` 적립 → state.json caseId → 산출물에 '사례 적립됨'.
 
 ## E. 화면(거짓/누락 없음)
 
 - [ ] 사이드바 연결 상태 = 실제 `.pi` 설정(모델 claude-sonnet-4.6·MCP 3종·검색·RAG, 캘린더 연결됨).
 - [ ] 홈: 워크스페이스 타일·알림(replan/마감)·체크리스트·달력 = 실데이터. mock 0.
-- [ ] **사례 목록(/cases)**: cases/*.md 전체가 표로, 행 클릭 → 상세.
+- [ ] **사례 목록(/cases)**: data/cases/*.md 전체가 표로, 행 클릭 → 상세.
 - [ ] 산출물: 워크스페이스 모든 문서(.md) 나열 + 사례 링크. proposal 외 문서 읽기전용 뷰(`?doc=`).
 - [ ] 통신 카드: 각 항목에 **출처 채널(메일)** 표시.
 

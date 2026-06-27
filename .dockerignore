@@ -1,0 +1,27 @@
+# 백엔드 이미지 빌드 컨텍스트(레포 루트)에서 제외 — 이미지 안에서 새로 설치/복원.
+**/node_modules
+.git
+.gitignore
+
+# 비밀 — 런타임에 env_file 로만 주입 (이미지에 굽지 않음)
+.env
+.env.*
+!.env.example
+
+# 재생성물 — 컨테이너 안에서 native 로 다시 만든다
+.pi/npm
+.pi/rag
+
+# 프런트는 별도 이미지(frontend/Dockerfile)
+frontend
+
+# 로컬 전용·산출물
+plans
+notes.txt
+docs/screenshots
+*.log
+.DS_Store
+
+# 도커 산출물
+docker-compose.yml
+backend/Dockerfile

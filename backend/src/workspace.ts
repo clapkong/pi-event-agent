@@ -1,15 +1,15 @@
 // workspace.ts — 행사 1개 = 워크스페이스 1개 = cwd 1개 = pi 세션 1개.
-// 파일은 행사당 하나: workspace/<id>/state.json (보드 + 이름). 목록 타일은 거기서 파생.
+// 파일은 행사당 하나: data/workspace/<id>/state.json (보드 + 이름). 목록 타일은 거기서 파생.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { REPO_ROOT } from "./config.ts";
+import { DATA_ROOT } from "./config.ts";
 
 /** 안전한 id (경로 주입 방지). */
 export function safeId(raw: string): string {
   return (raw || "demo").replace(/[^a-zA-Z0-9_-]/g, "") || "demo";
 }
 
-const WORKSPACES_ROOT = join(REPO_ROOT, "workspace");
+const WORKSPACES_ROOT = join(DATA_ROOT, "workspace");
 
 /** 행사 보드 상태파일 (update_state·생성이 쓰는 단일 파일). */
 export function stateFile(id: string): string {

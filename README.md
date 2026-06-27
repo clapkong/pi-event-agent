@@ -62,7 +62,7 @@
 7. 저장: 완성된 제안서를 `save_report`로 저장한다.
 8. 업체 메일 발송: "케이터링 업체에 견적 요청 메일을 보낼까요?"라고 묻고, 사용자가 승인하면 메일 문안을 작성해 Gmail로 발송한다.
 9. 운영 중 점검: 작업 공간의 '점검'을 누르거나 일정 주기마다, `secretary`가 받은 편지함에서 이 행사 관련 메일을 정리하고 `monitor`가 날씨·통신 변화를 보고 재기획이 필요한지 판단한다. 영향이 있으면 "다시 검토 필요" 배너가 뜨고, 잠근 값은 유지한 채 남은 예산만 다시 구성한다.
-10. 행사 후 적립: 사용자가 "완료"로 확정하면 에이전트가 회고·만족도를 받고(`satisfaction-survey` 스킬), 이 행사를 조건·핵심 결정·예산 실집행·교훈이 담긴 사례 파일(`cases/<id>.md`)로 정리해 `save_case`로 저장하고 `rag_index`로 검색 색인에 추가한다. 이 사례는 다음 행사 기획의 1번 단계에서 다시 검색·인용된다.
+10. 행사 후 적립: 사용자가 "완료"로 확정하면 에이전트가 회고·만족도를 받고(`satisfaction-survey` 스킬), 이 행사를 조건·핵심 결정·예산 실집행·교훈이 담긴 사례 파일(`data/cases/<id>.md`)로 정리해 `save_case`로 저장하고 `rag_index`로 검색 색인에 추가한다. 이 사례는 다음 행사 기획의 1번 단계에서 다시 검색·인용된다.
 
 ## 3. Pi / Skill / MCP / Pi Extension 활용
 
@@ -259,7 +259,20 @@ echo 'GOOGLE_MAPS_API_KEY=<발급받은 Maps 키>' >> .env
 
 설치를 마친 뒤에는 OpenRouter 키 하나만으로 핵심 기능(에이전트 대화·기획·제안서)이 동작한다. 메일·캘린더·지도 연동은 선택 사항이다.
 
-### 실행
+### 실행 — Docker (한 번에)
+
+Docker가 있으면 아래 한 줄로 중계 서버·웹 화면을 함께 띄운다. Node·Pi·확장 설치가 모두 이미지 안에서 처리되므로 호스트엔 Docker만 있으면 된다.
+
+```bash
+cp .env.example .env          # OPENROUTER_API_KEY 채우기 (GOOGLE_MAPS_API_KEY는 선택)
+docker compose up --build     # 웹 http://localhost:5173 · 백엔드 http://localhost:8787
+```
+
+- 메일·캘린더(Gmail·Calendar MCP)는 호스트에 1회 로그인해 둔 OAuth(`~/.gmail-mcp`, `~/.config/google-calendar-mcp`, `~/.pi/agent/mcp-oauth`)를 그대로 마운트해 쓴다. 그 인증이 없으면 빈 디렉터리가 마운트될 뿐 앱은 정상 동작하며 메일·캘린더만 비활성된다(설정은 [6. 설치 방법](#6-설치-방법)의 외부 도구 연결 참고).
+- 산출물(`data/workspace/`·`data/cases/`)과 사례 검색 색인(`.pi/rag`)은 호스트 레포에 그대로 쌓인다(볼륨 공유).
+- 종료는 `docker compose down`.
+
+### 실행 — 직접(개발)
 
 터미널 두 개에서 중계 서버와 웹 화면을 각각 실행한다.
 

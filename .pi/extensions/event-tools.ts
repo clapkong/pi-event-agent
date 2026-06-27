@@ -133,8 +133,8 @@ function mergeById<T>(cur: T[], patch: T[] | undefined, key: keyof T): T[] {
 // 보드 상태 파일 경로 — 행사별로 분리한다.
 // pi 는 cwd(=레포 루트)에서 뇌(.pi)를 읽지만, 세션마다 cwd 가 같아 state.json 이 섞인다.
 // 그래서 pi 가 떠 있는 **세션 ID**(`pi --session-id ws-<wsId>`, process.argv 에 있음)로
-// 행사를 식별해 backend 가 읽는 `<cwd>/workspace/<wsId>/state.json` 에 직접 쓴다.
-// (cwd·심링크·env 안 건드림. 세션 ID 하나가 채팅↔보드를 묶음.) 세션 ID 없으면(smoke 등) cwd 직하.
+// 행사를 식별해 backend 가 읽는 `<cwd>/data/workspace/<wsId>/state.json` 에 직접 쓴다.
+// (cwd·심링크·env 안 건드림. 세션 ID 하나가 채팅↔보드를 묶음.) 세션 ID 없으면(단독 실행 등) cwd 직하.
 function sessionWsId(): string | null {
 	const i = process.argv.indexOf("--session-id");
 	const sid = i >= 0 ? process.argv[i + 1] : undefined;
@@ -142,21 +142,21 @@ function sessionWsId(): string | null {
 }
 const STATE_FILE = (cwd: string) => {
 	const wsId = sessionWsId();
-	return wsId ? join(cwd, "workspace", wsId, "state.json") : join(cwd, "state.json");
+	return wsId ? join(cwd, "data", "workspace", wsId, "state.json") : join(cwd, "state.json");
 };
-// 제안서(결과 리포트)도 같은 방식으로 행사 폴더에 — backend 가 workspace/<wsId>/proposal.md 를 서빙.
+// 제안서(결과 리포트)도 같은 방식으로 행사 폴더에 — backend 가 data/workspace/<wsId>/proposal.md 를 서빙.
 const REPORT_FILE = (cwd: string) => {
 	const wsId = sessionWsId();
-	return wsId ? join(cwd, "workspace", wsId, "proposal.md") : join(cwd, "proposal.md");
+	return wsId ? join(cwd, "data", "workspace", wsId, "proposal.md") : join(cwd, "proposal.md");
 };
-// 통신(메일 분류·회의록)도 행사 폴더에 — backend 가 workspace/<wsId>/comms.json 을 서빙.
+// 통신(메일 분류·회의록)도 행사 폴더에 — backend 가 data/workspace/<wsId>/comms.json 을 서빙.
 const COMMS_FILE = (cwd: string) => {
 	const wsId = sessionWsId();
-	return wsId ? join(cwd, "workspace", wsId, "comms.json") : join(cwd, "comms.json");
+	return wsId ? join(cwd, "data", "workspace", wsId, "comms.json") : join(cwd, "comms.json");
 };
-// 사례(case)는 워크스페이스가 아니라 공용 사례 라이브러리(cwd/cases/<slug>.md)에 — pi-local-rag 가 인덱싱.
+// 사례(case)는 워크스페이스가 아니라 공용 사례 라이브러리(cwd/data/cases/<slug>.md)에 — pi-local-rag 가 인덱싱.
 const CASE_FILE = (cwd: string, id: string) =>
-	join(cwd, "cases", `${(id || "case").replace(/[^a-zA-Z0-9_-]/g, "") || "case"}.md`);
+	join(cwd, "data", "cases", `${(id || "case").replace(/[^a-zA-Z0-9_-]/g, "") || "case"}.md`);
 
 function emptyBoard(): BoardState {
 	return {
@@ -507,7 +507,7 @@ const saveCase = defineTool({
 	name: "save_case",
 	label: "사례 적립",
 	description:
-		"완료된 행사를 재사용 가능한 사례로 cases/<id>.md 에 저장한다(공용 사례 라이브러리). frontmatter(id·title·type·date)와 본문(조건·결정·예산 실집행·교훈)을 마크다운으로 넘긴다. 저장 후 반환된 file 경로를 `rag_index` 로 적립할 것.",
+		"완료된 행사를 재사용 가능한 사례로 data/cases/<id>.md 에 저장한다(공용 사례 라이브러리). frontmatter(id·title·type·date)와 본문(조건·결정·예산 실집행·교훈)을 마크다운으로 넘긴다. 저장 후 반환된 file 경로를 `rag_index` 로 적립할 것.",
 	parameters: Type.Object({
 		id: Type.String({ description: "사례 slug (예: c-musicfest-2026)" }),
 		markdown: Type.String({ description: "frontmatter 포함 사례 전체 마크다운" }),

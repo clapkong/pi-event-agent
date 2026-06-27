@@ -69,10 +69,10 @@
 | `estimate_budget` | 유형·인원·총예산 → 항목별 배분 | 결정론적 산수(+재배분) |
 | `build_checklist` | 행사일 → D-30/14/7/1/당일 마감 베이스 | 날짜 계산 |
 | `update_state` | 상태 변경 → **보드(state.json) 쓰기 유일 통로** | 잠금🔒·집행 가드 내장(Hook) |
-| `save_report` | 마크다운 → `workspace/<id>/proposal.md` | 결과 리포트(1개) |
+| `save_report` | 마크다운 → `data/workspace/<id>/proposal.md` | 결과 리포트(1개) |
 | `get_weather` | 좌표/장소+날짜 → 날씨 | Open-Meteo |
 | `save_comms` | 통신 분류 → `comms.json` | secretary 결과 적립 |
-| `save_case` | 사례 md → `cases/<id>.md` | 적립(이후 `rag_index`) |
+| `save_case` | 사례 md → `data/cases/<id>.md` | 적립(이후 `rag_index`) |
 | `ask_user_question` | 질문·선택지 → 구조화 되묻기 | `ctx.ui`(되묻기/승인) |
 
 **Hook(가드, 코드 강제):** 잠금 가드(`confirmed🔒`·계약 항목 변경 차단) · 집행 가드(`spent` 변경 차단) ·
@@ -86,7 +86,7 @@
 
 | 패키지 | 역할 |
 |---|---|
-| `pi-local-rag` | **사례 RAG**. `rag_query`(하이브리드 벡터+BM25)·`rag_index`. 내부 SQLite(FTS5+sqlite-vec), 별도 MCP·DB 없음. 사례 = `cases/*.md` |
+| `pi-local-rag` | **사례 RAG**. `rag_query`(하이브리드 벡터+BM25)·`rag_index`. 내부 SQLite(FTS5+sqlite-vec), 별도 MCP·DB 없음. 사례 = `data/cases/*.md` |
 | `pi-mcp-adapter` | `.pi/mcp.json` MCP 서버를 에이전트에 노출 |
 | `pi-web-access` | researcher 웹·검색(네이티브 확장, MCP 아님) |
 | `@tintinweb/pi-subagents` | 서브에이전트 spawn(`Agent` 도구) |

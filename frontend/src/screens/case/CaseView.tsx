@@ -66,7 +66,7 @@ export function CaseView() {
           완료
         </span>
         <span className={styles.spacer} />
-        <span className={styles.source}>pi-local-rag · cases/{c.id}.md</span>
+        <span className={styles.source}>pi-local-rag · data/cases/{c.id}.md</span>
       </header>
 
       <div className={styles.scroll}>

@@ -1,0 +1,40 @@
+# 한 번에 실행:  docker compose up --build
+#
+# 준비물(레포 루트 .env — .env.example 복사해서 채우기):
+#   OPENROUTER_API_KEY   (필수 — 없으면 에이전트가 동작하지 않음)
+#   GOOGLE_MAPS_API_KEY  (선택 — 지도 도구)
+# 메일·캘린더(Gmail/Calendar MCP)는 호스트에 1회 로그인해 둔 OAuth 를 그대로 마운트한다(아래 volumes).
+# 호스트에 그 인증이 없으면 빈 디렉터리가 마운트될 뿐, 앱은 정상 동작(외부 메일/캘린더만 비활성).
+#
+#   접속:  웹 http://localhost:5173   ·   백엔드 http://localhost:8787
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env
+    environment:
+      HOME: /home/app          # mcp.json 의 ${HOME}, 세션·MCP 캐시 기준
+      HOST: 0.0.0.0            # 컨테이너 외부(호스트 포워딩)에서 접속 가능하게 바인딩
+      PORT: "8787"
+    ports:
+      - "8787:8787"
+    volumes:
+      # 영속 데이터 — 호스트 레포와 공유(에이전트 산출물이 호스트에 그대로 쌓임)
+      - ./data:/app/data
+      - ./.pi/rag:/app/.pi/rag
+      # (선택) 호스트 Google OAuth — 있으면 메일·캘린더 동작, 없으면 빈 디렉터리
+      - ${HOME}/.gmail-mcp:/home/app/.gmail-mcp
+      - ${HOME}/.config/google-calendar-mcp:/home/app/.config/google-calendar-mcp
+      - ${HOME}/.pi/agent/mcp-oauth:/home/app/.pi/agent/mcp-oauth
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

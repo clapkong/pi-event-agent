@@ -117,7 +117,7 @@ export function Home() {
   const notifs = useMemo(() => deriveNotifs(boards), [boards]);
   const checklist = useMemo(() => deriveChecklist(boards), [boards]);
 
-  // 과거 사례(cases/*.md) 존재 여부 — 있으면 사례 목록(/cases) 버튼 노출.
+  // 과거 사례(data/cases/*.md) 존재 여부 — 있으면 사례 목록(/cases) 버튼 노출.
   const [hasCases, setHasCases] = useState(false);
   useEffect(() => {
     let alive = true;

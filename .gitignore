@@ -20,7 +20,7 @@ coverage/
 # Pi 확장 설치 캐시 (node_modules). 매니페스트(.pi/settings.json)만 커밋, 복원은 `pi install`
 .pi/npm/
 
-# pi-local-rag 로컬 인덱스 (SQLite, regenerable — 소스 cases/*.md만 커밋)
+# pi-local-rag 로컬 인덱스 (SQLite, regenerable — 소스 data/cases/*.md만 커밋)
 .pi/rag/
 
 # 로컬 전용 기획/작업 문서 (공개 repo엔 코드 + README만)
@@ -28,8 +28,9 @@ plans/
 notes.txt
 
 # 워크스페이스 런 산출물(state.json·proposal.md 등)은 기본 무시 — 단 예시 1개만 커밋.
-workspace/*
-!workspace/w-mqp48cgt/
+# (cases/ 는 공용 사례 라이브러리라 전부 커밋 — data/cases/*.md)
+data/workspace/*
+!data/workspace/w-mqp48cgt/
 
 # 커뮤니티 MCP OAuth 클라이언트 키 (비밀 — 커밋 금지)
 gcp-oauth.json

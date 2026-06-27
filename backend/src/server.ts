@@ -3,7 +3,7 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import Fastify from "fastify";
 import fastifyWebsocket from "@fastify/websocket";
-import { PORT, REPO_ROOT, SMOKE } from "./config.ts";
+import { DATA_ROOT, HOST, PORT, REPO_ROOT } from "./config.ts";
 import { getWeather } from "./weather.ts";
 import { handleConnection } from "./ws-handler.ts";
 import {
@@ -32,7 +32,7 @@ app.addHook("onRequest", async (req, reply) => {
   }
 });
 
-app.get("/health", async () => ({ ok: true, smoke: SMOKE }));
+app.get("/health", async () => ({ ok: true }));
 
 // 사례(cases/*.md) 파싱 — frontmatter(id·title·type·headcount·venue·date·satisfaction·budgetActual) + 본문.
 // pi-local-rag 가 인덱싱하는 같은 파일을 프런트 사례 화면도 읽게 한다(하드코딩 사례 제거).
@@ -60,7 +60,7 @@ function parseCase(md: string, fallbackId: string) {
 }
 
 app.get("/api/cases", async () => {
-  const dir = join(REPO_ROOT, "cases");
+  const dir = join(DATA_ROOT, "cases");
   let files: string[] = [];
   try {
     files = (await readdir(dir)).filter((f) => f.endsWith(".md")).sort();
@@ -81,7 +81,7 @@ app.get("/api/cases", async () => {
 app.get("/api/cases/:id", async (req, reply) => {
   const id = safeId((req.params as Record<string, string>).id);
   try {
-    return parseCase(await readFile(join(REPO_ROOT, "cases", `${id}.md`), "utf-8"), id);
+    return parseCase(await readFile(join(DATA_ROOT, "cases", `${id}.md`), "utf-8"), id);
   } catch {
     reply.code(404);
     return { error: "not_found", id };
@@ -290,9 +290,9 @@ app.get("/api/workspaces/:id/weather", async (req, reply) => {
 // 프런트 realClient 가 붙는 곳: ws://127.0.0.1:8787/ws?ws=<id>
 app.get("/ws", { websocket: true }, (socket, req) => {
   const wsId = safeId(((req.query as Record<string, string>)?.ws ?? "demo"));
-  console.log(`[ws] connected ws=${wsId}${SMOKE ? " (smoke)" : ""}`);
+  console.log(`[ws] connected ws=${wsId}`);
   handleConnection(socket, wsId);
 });
 
-await app.listen({ port: PORT, host: "127.0.0.1" });
-console.log(`backend up: http://127.0.0.1:${PORT}  (ws /ws?ws=<id>)${SMOKE ? "  [PI_SMOKE]" : ""}`);
+await app.listen({ port: PORT, host: HOST });
+console.log(`backend up: http://${HOST}:${PORT}  (ws /ws?ws=<id>)`);

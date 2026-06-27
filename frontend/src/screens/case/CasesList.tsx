@@ -37,7 +37,7 @@ export function CasesList() {
         </button>
         <h1 className={styles.title}>과거 진행 사례</h1>
         <span className={styles.spacer} />
-        <span className={styles.source}>pi-local-rag · cases/*.md</span>
+        <span className={styles.source}>pi-local-rag · data/cases/*.md</span>
       </header>
 
       <div className={styles.scroll}>

@@ -18,7 +18,7 @@
    │
 [LLM]  .pi/settings.json: openrouter · anthropic/claude-sonnet-4.6
    │
-[데이터 = 파일]  행사별 workspace/<id>/ (.json·.md) + 공통 cases/*.md (pi-local-rag 인덱싱)
+[데이터 = 파일]  행사별 data/workspace/<id>/ (.json·.md) + 공통 data/cases/*.md (pi-local-rag 인덱싱)
 ```
 
 **핵심 흐름:** 프런트 `prompt` → WS → 백엔드 `pi.send(rpc)` → pi stdout JSONL 이벤트 → `bridge` 변환 → WS → 프런트 타임라인.
@@ -50,20 +50,20 @@
 
 | 파일 | 책임 |
 |---|---|
-| `config.ts` | 상수(`PORT=8787`·`PI_BIN`·`PI_BASE_ARGS=["--mode","rpc"]`·`REPO_ROOT`·`SMOKE`) |
+| `config.ts` | 상수(`PORT=8787`·`HOST`·`PI_BIN`·`PI_BASE_ARGS=["--mode","rpc"]`·`REPO_ROOT`·`DATA_ROOT`) |
 | `server.ts` | Fastify 와이어링 + **REST 엔드포인트**(아래 §4) + `/ws` |
 | `ws-handler.ts` | WS 연결당 Pi 세션 1개 수명 관리 · 명령/이벤트 펌프 · ask/gate 대기상태 상관 |
 | `pi-session.ts` | `pi --mode rpc` 자식 프로세스 소유. spawn·`send`(stdin JSON)·`onEvent`(stdout JSONL **LF split**, U+2028/2029 때문에 readline 금지)·`close` |
 | `rpc.ts` | pi rpc 명령/이벤트 타입 |
 | `bridge.ts` | **순수 변환기** rpc ↔ `contract`. 도구명→요소분류, 스킬 로드 감지, 서브에이전트 라벨 |
 | `contract.ts` | **WS API 타입 정의** — 이벤트 `AgentEvent` + 명령 `ClientCommand`. 프런트(`frontend/src/agent/contract.ts`)에 같은 형태를 미러(수동 동기화)하며, 그게 프런트의 유일한 백엔드 접점 |
-| `workspace.ts` | 행사별 `cwd`(`workspace/<id>/`)·파일 경로·목록 헬퍼 |
+| `workspace.ts` | 행사별 `cwd`(`data/workspace/<id>/`)·파일 경로·목록 헬퍼 |
 | `weather.ts` | Open-Meteo 예보(≤16일)/평년값 |
 | `subagent-tail.ts` | 서브에이전트 내부 출력 파일 tail → `subagent_delta` |
 
 ### 보안/격리
-- 워크스페이스별 **세션·cwd 분리**(`?ws=<id>` → `workspace/<id>`). 레포 루트·`.env` 노출 방지.
-- `PI_SMOKE=1` → 배관만 싸게 테스트(`--no-session --no-context-files --no-extensions --no-skills`).
+- 워크스페이스별 **세션·cwd 분리**(`?ws=<id>` → `data/workspace/<id>`). 레포 루트·`.env` 노출 방지.
+- pi 는 `--approve`로 띄워 프로젝트-로컬 확장(`.pi`)을 신뢰 — trust.json 없는 새 환경(컨테이너 등)에서도 우리 확장이 로드된다.
 
 ---
 
@@ -110,10 +110,10 @@
   통신은 `save_comms`(→`comms.json`). 사람은 작업공간/문서에서 직접 편집(REST PATCH/PUT) → 다음 요청 때 에이전트가 읽음.
 - **사례 RAG 루프**(`pi-local-rag`, 별도 DB·MCP 없음):
   ```
-  새 기획 ──rag_query(하이브리드 벡터+BM25)──▶ cases/*.md + .pi/rag/ 인덱스
-  행사 완료·승인 ──save_case(cases/<id>.md)─▶ rag_index ─▶ 다음 기획에서 재검색·인용
+  새 기획 ──rag_query(하이브리드 벡터+BM25)──▶ data/cases/*.md + .pi/rag/ 인덱스
+  행사 완료·승인 ──save_case(data/cases/<id>.md)─▶ rag_index ─▶ 다음 기획에서 재검색·인용
   ```
-  사례 = `cases/<id>.md`(frontmatter 메타 + 본문 전문). 임베딩·색인은 `pi-local-rag`가 내부 처리(소스 `.md`만 커밋).
+  사례 = `data/cases/<id>.md`(frontmatter 메타 + 본문 전문). 임베딩·색인은 `pi-local-rag`가 내부 처리(소스 `.md`만 커밋).
   역추적(`citedBy`): 에이전트가 사례를 인용하면 그 frontmatter에 workspaceId를 추가해 "이 사례를 인용한 행사들" 순환을 가시화.
   ⚠️ 사례 RAG는 **보조 자료지 필수 단계가 아니다** — 인덱스가 비면 외부 조사만으로 진행(반복·중단 금지).
 
@@ -154,14 +154,14 @@ venue         { name, note }
 weather       { label, temp, pop, stale, source, basis }     // get_weather/REST가 그대로 채움
 milestones[]  { dday(음수=행사 전), title, due:YYYY-MM-DD, status, owner }  // = 제안서 액션 플랜
 versions[]    { v, author: ai|human, at, summary }           // 제안서 버전 이력
-Case          # cases/<id>.md frontmatter { id, title, type, headcount, venue, date, satisfaction, budgetActual[], citedBy[] }
+Case          # data/cases/<id>.md frontmatter { id, title, type, headcount, venue, date, satisfaction, budgetActual[], citedBy[] }
 Contact       # contacts.json { name, role, org, email, phone, scope: 내부|외부 }
 Comms         # comms.json [{ from, subject, date, relevant, reason, insight }]   // secretary 분류
 ```
 규칙: `locked`·`confirmed`·`stage≥확정` 항목은 재기획 제외(event-tools 훅이 위반 자동 차단). `stage==계약` → `budget.spent` 반영.
 
 ### 7.5 연락처
-이메일 수신자는 **하드코딩하지 않고** `workspace/<id>/contacts.json`에서 조회한다(승인 게이트 뒤 Gmail MCP 발송).
+이메일 수신자는 **하드코딩하지 않고** `data/workspace/<id>/contacts.json`에서 조회한다(승인 게이트 뒤 Gmail MCP 발송).
 
 ---
 
@@ -176,10 +176,10 @@ Comms         # comms.json [{ from, subject, date, relevant, reason, insight }] 
 │  ├─ mcp.json                   # MCP 서버 (gmail·calendar·maps)
 │  └─ settings.json              # 모델·로드할 패키지
 ├─ AGENTS.md                     # 세션 메인(Planner) 시스템 프롬프트
-├─ cases/*.md                    # 공통 과거 사례 (pi-local-rag 인덱싱 대상)
+├─ data/cases/*.md                    # 공통 과거 사례 (pi-local-rag 인덱싱 대상)
 ├─ backend/src/                  # 얇은 Node + WS/REST + pi rpc 브리지 (위 §3)
 ├─ frontend/src/                 # React + Vite (홈·폼·타임라인·작업공간·문서·사례)
-├─ workspace/<id>/               # 런타임: 행사별 cwd (state.json·proposal.md·comms.json·meta.json·contacts)
+├─ data/workspace/<id>/               # 런타임: 행사별 cwd (state.json·proposal.md·comms.json·meta.json·contacts)
 └─ docs/                         # 공개 문서 (이 문서 등)
 ```
 

@@ -7,7 +7,6 @@ import type { RpcCommand, RpcEvent } from "./rpc.ts";
 export interface PiSessionOptions {
   cwd: string;
   sessionId: string;
-  smoke?: boolean; // true면 풀 에이전트 끔 + 세션 비영속(싸게 배관만)
 }
 
 export class PiSession {
@@ -17,9 +16,10 @@ export class PiSession {
   private readonly onExitCbs = new Set<(code: number | null) => void>();
 
   constructor(opts: PiSessionOptions) {
-    const args: string[] = [...PI_BASE_ARGS];
-    if (opts.smoke) args.push("--no-session", "--no-context-files", "--no-extensions", "--no-skills");
-    else args.push("--session-id", opts.sessionId); // 영속 → 재접속 시 resume
+    // --approve: 프로젝트-로컬 파일(.pi 확장·skill)을 이 런에서 신뢰 → 새 환경(컨테이너 등 trust.json 없는 곳)에서도
+    //            event-tools 등 우리 확장이 로드된다. 호스트는 이미 신뢰돼 있어 무해(idempotent).
+    // --session-id: 영속 세션 → 재접속 시 resume.
+    const args: string[] = [...PI_BASE_ARGS, "--approve", "--session-id", opts.sessionId];
 
     this.child = spawn(PI_BIN, args, { cwd: opts.cwd, stdio: ["pipe", "pipe", "pipe"] });
 

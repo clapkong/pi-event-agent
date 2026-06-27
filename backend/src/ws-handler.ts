@@ -3,7 +3,7 @@
 //    세션을 레지스트리에 살려두고, grace 안에 재연결하면 소켓만 갈아끼워 **재부착**(reattach).
 //    grace 동안 재연결 없으면 그때 정리. → 작업공간 내 어느 탭을 가도 런은 계속 돈다.
 import type { WebSocket } from "@fastify/websocket";
-import { REPO_ROOT, SMOKE } from "./config.ts";
+import { REPO_ROOT } from "./config.ts";
 import type { ClientCommand } from "./contract.ts";
 import { contractToRpc, rpcToContract } from "./bridge.ts";
 import { PiSession } from "./pi-session.ts";
@@ -39,7 +39,7 @@ export function handleConnection(socket: WebSocket, wsId: string): void {
     if (entry) sessions.delete(wsId); // 죽은 잔여 정리
     // cwd=REPO_ROOT: pi 는 cwd/.pi 만 보고 상위로 안 올라가므로 뇌(.pi·AGENTS.md)가 있는 레포 루트에서.
     // 대화는 sessionId(`ws-<wsId>`)로 분리, 보드 state.json 은 event-tools 가 그 id 로 행사 식별해 씀.
-    const session = new PiSession({ cwd: REPO_ROOT, sessionId: sessionId(wsId), smoke: SMOKE });
+    const session = new PiSession({ cwd: REPO_ROOT, sessionId: sessionId(wsId) });
     const e: SessionEntry = { session, socket, pending: null, stopTail: () => {} };
     sessions.set(wsId, e);
     entry = e;
